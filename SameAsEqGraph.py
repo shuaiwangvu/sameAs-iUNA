@@ -5,7 +5,7 @@ import tldextract
 
 
 
-def simp(e):
+def get_simp_IRI(e):
 	# simplify this uri by introducing the namespace abbreviation
 	ext = tldextract.extract(e)
 	# ExtractResult(subdomain='af', domain='dbpedia', suffix='org')
@@ -28,7 +28,17 @@ def simp(e):
 	else:
 		short_IRI = namespace + ':' + name[:10] + '...' # this can be shortened !!!
 
-	# print ('\n\noriginal e = ', e)
-	# print ('short_IRI =  ', short_IRI)
-
 	return short_IRI
+
+def get_namespace (e):
+	sign_index  = 0
+	if e.rfind('#') == -1: # if not found , return -1
+		if e.rfind('/') != -1:
+			sign_index = e.rfind('/')
+	else:
+		sign_index = e.rfind('#')
+
+	# print ('\noriginal = ', e)
+	# print ('sharp index = ', sign_index)
+	# print ('namespace = ', e[:sign_index+1])
+	return e[:sign_index+1]
