@@ -1,6 +1,6 @@
 # this script tests the redirection of URIs
 import requests
-
+import networkx as nx
 # responses = requests.get("http://gooogle.com")
 # print (type(responses))
 # for response in responses.history:
@@ -20,7 +20,7 @@ import requests
 # 	for resp in response.history:
 # 		print(resp.status_code, resp.url)
 
-def find_all_redirects (iri):
+def find_redirects (iri):
 	try:
 		print ('test 2')
 		collect_urls = []
@@ -41,11 +41,35 @@ def find_all_redirects (iri):
 		print ('error')
 		return []
 
+
+
+
+def obtain_redirect_graph (graph):
+	redi_graph = nx.DiGraph()
+	for n in graph.nodes:
+		redirected = find_redirects(n)
+		for index, iri in enumerate(redirected):
+			if index == len (redirected) - 1:
+				pass
+				# redi_graph.add_edge(iri, redirected[0])
+			else:
+				redi_graph.add_edge(iri, redirected[index+1])
+
+	return redi_graph
+
+
 iri = 'https://shorturl.at/HIK58'
-collect_urls = find_all_redirects(iri)
+collect_urls = find_redirects(iri)
 print('my collected urls = ', collect_urls)
 
-How many pages do exist?
+g = nx.DiGraph()
+g.add_node(iri)
+
+r = obtain_redirect_graph(g)
+print (r.nodes())
+print (r.edges())
+
+# How many pages do exist?
 
 # url = 'http://github.com/'
 # r = requests.head(url, allow_redirects=True)
@@ -71,5 +95,5 @@ How many pages do exist?
 # https://photos.google.com/
 
 
-https://yago-knowledge.org/resource/Propositional_function
-http://yago-knowledge.org/resource/Propositional_function
+# https://yago-knowledge.org/resource/Propositional_function
+# http://yago-knowledge.org/resource/Propositional_function

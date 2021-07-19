@@ -38,6 +38,19 @@ def find_redirects (iri):
 
 
 
+def obtain_redirect_graph (graph):
+	redi_graph = nx.DiGraph()
+	for n in graph.nodes:
+		redirected = find_redirects(n)
+		for index, iri in enumerate(redirected):
+			if index == len (redirected) - 1:
+				pass
+				# redi_graph.add_edge(iri, redirected[0])
+			else:
+				redi_graph.add_edge(iri, redirected[index+1])
+
+	return redi_graph
+
 # define a class of graph solver
 class GraphSolver():
 	# configure the weight file
