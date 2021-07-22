@@ -1,6 +1,7 @@
 # this script tests the redirection of URIs
 import requests
 import networkx as nx
+from collections import Counter
 # responses = requests.get("http://gooogle.com")
 # print (type(responses))
 # for response in responses.history:

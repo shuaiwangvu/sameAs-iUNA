@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from random import randint
 import pandas as pd
 import requests
+from collections import Counter
 
 
 # get all redirect in a list. If no redirect, then return []
@@ -38,18 +39,9 @@ def find_redirects (iri):
 
 
 
-def obtain_redirect_graph (graph):
-	redi_graph = nx.DiGraph()
-	for n in graph.nodes:
-		redirected = find_redirects(n)
-		for index, iri in enumerate(redirected):
-			if index == len (redirected) - 1:
-				pass
-				# redi_graph.add_edge(iri, redirected[0])
-			else:
-				redi_graph.add_edge(iri, redirected[index+1])
 
-	return redi_graph
+
+
 
 # define a class of graph solver
 class GraphSolver():
@@ -59,10 +51,11 @@ class GraphSolver():
 	def __init__(self, path_to_graph):
 		# input graph
 		self.input_graph = nx.Graph()
-		got_data = pd.read_csv(path_to_graph)
 
-		sources = got_data['SUBJECT']
-		targets = got_data['OBJECT']
+		input_graph_data = pd.read_csv(path_to_graph)
+
+		sources = input_graph_data['SUBJECT']
+		targets = input_graph_data['OBJECT']
 		edge_data = zip(sources, targets)
 
 		for (s,t) in edge_data:
@@ -73,6 +66,11 @@ class GraphSolver():
 		# for visulization
 		self.position = nx.spring_layout(self.input_graph)
 		net = Network()
+
+		# additional information
+		self.redirect_graph = nx.DiGraph()
+		self.encoding_equality_graph = nx.Graph()
+
 
 		# solving: (weighted unique name constraints, from UNA)
 		self.positive_UNC = [] # redirect and equivalence encoding
@@ -86,22 +84,41 @@ class GraphSolver():
 		self.partition = None
 		self.result_graph = None
 
-	def obtain_all_redirects(self):
-		redirect_list = []
-		for e in self.input_graph.nodes:
-			if find_redirects(e) != []:
-				redirect_list.append(len(find_redirects(e)))
-				# print (e, len(find_redirects(e)))
-			else:
-				redirect_list.append(0)
+	def get_redirect_graph (self):
+		redi_graph = nx.DiGraph()
+		ct = Counter()
+		new_nodes = set()
+		count_nodes_not_in_graph = 0
+		for n in self.input_graph.nodes:
+			new_count_nodes_not_in_graph = 0
+			redirected = find_redirects(n)
+			ct[len(redirected)] += 1
+			if len(redirected) >0: # indeed has been redirected,
+				for m in redirected[1:]: # the first is the iri itself.
+					if m not in self.input_graph.nodes:
+						new_nodes.add(m)
+					else:
+						redi_graph.add_edge(n, m)
 
-		counter = collections.Counter(redirect_list)
-		print(counter)
-		count = sum (redirect_list)
-		print ('average redirect = ', count/ self.input_graph.number_of_nodes())
+			# if len(redirected) != 0:
+			# 	print ('was redirected ',len(redirected), ' times')
+			# 	print ('now there are ', len(new_nodes), ' new nodes not in graph')
+			count_nodes_not_in_graph += new_count_nodes_not_in_graph
 
-	def obtain_redirect_graph(self):
-		# how is the redirection graph overlapping with the input graph?
+		print (ct)
+		print ('there are in total', len(new_nodes), 'new nodes not in the input graph')
+		print('--')
+		print ('there are in total', len(redi_graph.nodes()), 'new nodes not in redirect graph')
+		print ('there are in total', len(redi_graph.edges()), 'new edges not in redirect graph')
+
+		self.redirect_graph = redi_graph
+
+	def get_encoding_equality_graph(self):
+		equality_graph = nx.DiGraph()
+		for n in self.input_graph.nodes:
+			
+		self.encoding_equality_graph = equality_graph
+
 
 	def solve (self, method): # get partition
 		if method == 'leuven':
@@ -165,10 +182,18 @@ class GraphSolver():
 		self.partition = [self.result_graph.nodes[node]['group'] for node in self.result_graph.nodes()]
 
 
-	def show_input(self):
+	def show_input_graph(self):
 		g = self.input_graph
 		# sp = nx.spring_layout(g)
-		nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=35)
+		nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=25)
+		plt.show()
+
+	def show_redirect_graph(self):
+		g = self.redirect_graph
+		# sp = nx.spring_layout(g)
+		# nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=35)
+		nx.draw_networkx_edges(g, pos=self.position, edge_color='red', connectionstyle='arc3,rad=0.2')
+		nx.draw_networkx(self.input_graph, pos=self.position, with_labels=False, node_size=25)
 		plt.show()
 
 	def show_result (self):
@@ -183,10 +208,14 @@ class GraphSolver():
 # main
 gs = GraphSolver('./Evaluate_May/11116_edges_original.csv')
 print (nx.info(gs.input_graph))
-gs.show_input()
-
-gs.obtain_all_redirects()
+gs.show_input_graph()
 #
+# gs.get_redirect_graph()
+# gs.show_redirect_graph()
+
+# gs.get_encoding_equality_graph()
+
 # gs.solve('namespace')
+# gs.solve('leuven')
 #
 # gs.show_result()
