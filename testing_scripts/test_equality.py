@@ -16,16 +16,7 @@ def find_redirects (iri):
 	try:
 		# print ('test 2')
 		collect_urls = []
-		response = requests.get(iri, timeout=1.0, allow_redirects=True)
-
-		# import urllib3
-		#
-		# resp = urllib3.request(
-		#     "GET",
-		#     "https://httpbin.org/delay/3",
-		#     timeout=4.0
-		# )
-
+		response = requests.get(iri, timeout=0.1, allow_redirects=True)
 		if response.history:
 			if response.url == iri:
 				return []
@@ -109,30 +100,22 @@ class GraphSolver():
 					else:
 						redi_graph.add_edge(n, m)
 
-			if len(redirected) != 0:
-				print ('was redirected ',len(redirected), ' times')
-				if len(redirected) > 7:
-					for index, iri in enumerate(redirected):
-						print ('\tNo.',index, ' -> ', iri)
-					print ('\n')
-				# print ('now there are ', len(new_nodes), ' new nodes not in graph')
+			# if len(redirected) != 0:
+			# 	print ('was redirected ',len(redirected), ' times')
+			# 	print ('now there are ', len(new_nodes), ' new nodes not in graph')
 			count_nodes_not_in_graph += new_count_nodes_not_in_graph
 
 		print (ct)
 		print ('there are in total', len(new_nodes), 'new nodes not in the input graph')
 		print('--')
-		# print ('there are in total', len(redi_graph.nodes()), 'new nodes not in redirect graph')
+		print ('there are in total', len(redi_graph.nodes()), 'new nodes not in redirect graph')
 		print ('there are in total', len(redi_graph.edges()), 'new edges not in redirect graph')
 
 		self.redirect_graph = redi_graph
 
 	def get_encoding_equality_graph(self):
 		pass
-		# equality_graph = nx.DiGraph()
-		# for n in self.input_graph.nodes:
-		#
-		# self.encoding_equality_graph = equality_graph
-		#
+
 
 	def solve (self, method): # get partition
 		if method == 'leuven':
@@ -220,109 +203,50 @@ class GraphSolver():
 		plt.show()
 
 # main
-gs = GraphSolver('./Evaluate_May/11116_edges_original.csv')
-print (nx.info(gs.input_graph))
+gs = GraphSolver('../Evaluate_May/11116_edges_original.csv')
 # http://yago-knowledge.org/resource/Propositional_function
 
-# print ('There are ', len (gs.input_graph.nodes()), ' nodes')
+print ('There are ', len (gs.nodes()), ' nodes')
 
-# import ndef
-# # record = ndef.UriRecord("http://www.hääyö.com/~user/")
-# record = ndef.UriRecord("http://ta.dbpedia.org/resource/%E0%AE%9A%E0%AE%BE%E0%AE%B0%E0%AF%8D%E0%AE%AA%E0%AF%81")
-# print('IRI: ',record.iri)
-# print('URI: ', record.uri)
-# record.uri
-# print ('from URI to IRI: ')
+import ndef
+record = ndef.UriRecord("http://www.hääyö.com/~user/")
+print(record.iri)
+'http://www.hääyö.com/~user/'
+print(record.uri)
+'http://www.xn--hy-viaa5g.com/~user/'
 
+# they are the same due to encoding differences URI /IRI UTF-8?
+# they use non-English information,
 
-# https://pypi.org/project/rfc3987/
-s = "http://ta.dbpedia.org/resource/%E0%AE%9A%E0%AE%BE%E0%AE%B0%E0%AF%8D%E0%AE%AA%E0%AF%81"
-from rfc3987 import match, parse, get_compiled_pattern
+# http://www.textuality.com/tag/uri-comp-3.html
 
-# print (match('%C7X', 'pct_encoded'))
-# print (match('%C7', 'pct_encoded'))
+# URL normalize?
 
-# d = parse('http://tools.ietf.org/html/rfc3986#appendix-A', rule='URI')
-rule='IRI'
-d = parse(s, rule) # ’IRI_reference’
-print ('\n\n->Use Rfc3987')
-print ('parsing ', s)
-print ('rule = ', rule, '\n')
+# libraries related :
+# from urllib.parse import urlparse, parse_qsl, unquote_plus
+# urlparse?
 
-print ('scheme = ', d['scheme'])
-print ('authority = ',d['authority'])
-print ('path = ',d['path'])
-print ('query = ' ,d['query'])
-# print ('scheme = ', d['scheme'])
-print ('fragment = ', d['fragment'])
-
-import tldextract
-print ('\n\n->Use tldextract')
-ext = tldextract.extract(s)
-print ('domain = ', ext.domain)
-print ('subdomain = ', ext.subdomain)
-print ('suffix = ', ext.suffix)
-print ('registered domain = ', ext.registered_domain)
-# print ('all = ', ext)
-
-import urllib.parse
-print ('\n\n->Using urllib')
-d = urllib.parse.unquote(s)
-print (d)
-
-
-# k = "http://ar.dbpedia.org/resource/المسيحية_والعبودية"
-k="http://rdf.freebase.com/ns/m/061z5w"
-
-print ('\n\nnow encode ',k)
-d = urllib.parse.quote(k)
-print (d)
-d = urllib.parse.quote_plus(k)
-print (d)
-
-# print ('Alternatively, using match/groupdict')
-# uri = get_compiled_pattern('^%(URI)s$')
-# m = uri.match(s)
-# d = m.groupdict()
+# --https://www.urlencoder.io/faq/
+# What is %20 in a URL?
+# %20 is the percent encoding of the space character.
 #
-# print ('scheme = ', d['scheme'])
-# print ('authority = ',d['authority'])
-# print ('path = ',d['path'])
-# print ('query = ' ,d['query'])
-# print ('scheme = ', d['scheme'])
-# print ('fragment = ', d['fragment'])
-
-
-# as for "http://ta.dbpedia.org/resource/%E0%AE%9A%E0%AE%BE%E0%AE%B0%E0%AF%8D%E0%AE%AA%E0%AF%81"
-# scheme =  http
-# authority =  ta.dbpedia.org
-# path =  /resource/%E0%AE%9A%E0%AE%BE%E0%AE%B0%E0%AF%8D%E0%AE%AA%E0%AF%81
-# query =  None
-# scheme =  http
-# fragment =  None
-
-
-
-
-
-# >>> d = parse('http://tools.ietf.org/html/rfc3986#appendix-A',
-# ...           rule='URI')
-# >>> assert all([ d['scheme'] == 'http',
-# ...              d['authority'] == 'tools.ietf.org',
-# ...              d['path'] == '/html/rfc3986',
-# ...              d['query'] == None,
-# ...              d['fragment'] == 'appendix-A' ])
-
-# Parsing and validation of URIs (RFC 3986) and IRIs (RFC 3987)
-# validation???
-
-# #
-# gs.get_redirect_graph()
-# gs.show_redirect_graph()
-
-# gs.get_encoding_equality_graph()
-
-# gs.solve('namespace')
-# gs.solve('leuven')
+# What is %2f in a URL?
+# %2f is the percent encoding of forward slash (/) character.
 #
-# gs.show_result()
+# What is %3f in a URL?
+# %3f is the percent encoding of question mark (?)
+# Parsing IRI: https://rdf4j.org/javadoc/3.2.0/org/eclipse/rdf4j/common/net/ParsedIRI.html
+#  RFC 3987: Internationalized Resource Identifiers (IRI): IRI Syntax.
+# An IRI instance has the following seven components in string form has the syntax
+# [scheme:][//[user-info@]host[:port]][path][?query][#fragment]
+# --
+# IRIs, URIs, URLs, and URNs
+# IRIs are meant to replace URIs in identifying resources for protocols, formats, and software components that use a UCS-based character repertoire.
+# Internationalized Resource Identifier (IRI) is a complement to the Uniform Resource Identifier (URI).
+# An IRI is a sequence of characters from the Universal Character Set (Unicode/ISO 10646).
+# A mapping from IRIs to URIs is defined using toASCIIString(), which means that IRIs can be used instead of URIs, where appropriate, to identify resources.
+#  While all URIs are also IRIs, the normalize() method can be used to convert a URI back into a normalized IRI.
+
+
+
+# https://github.com/CLARIAH/iribaker
