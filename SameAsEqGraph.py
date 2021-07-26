@@ -17,9 +17,9 @@ def get_simp_IRI(e):
 
 	short_IRI = ''
 
-	if e.split('#') == [e] :
-		if e.split('/') != [e]:
-			name = e.split('/')[-1]
+	if e.split('/') == [e] :
+		if e.split('#') != [e]:
+			name = e.split('#')[-1]
 	else:
 		name = e.split('/')[-1]
 
@@ -42,3 +42,20 @@ def get_namespace (e):
 	# print ('sharp index = ', sign_index)
 	# print ('namespace = ', e[:sign_index+1])
 	return e[:sign_index+1]
+
+
+def get_name (e):
+	name = ''
+	prefix = ''
+	sign = ''
+	if e.split('/') == [e] : # the char '/' is not in the iri
+		if e.split('/') != [e]: # but the char '/' is in the iri
+			name = e.split('#')[-1]
+			prefix = ''.join(e.split('#')[:-1])
+			sign = '#'
+	else:
+		name = e.split('/')[-1] # the char '#' is in the iri
+		prefix = ''.join(e.split('/')[:-1])
+		sign = '/'
+
+	return prefix, sign, name

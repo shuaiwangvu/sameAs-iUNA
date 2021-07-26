@@ -1,6 +1,6 @@
 # this is the class where SameAsEqSolver is defined
 import networkx as nx
-from SameAsEqGraph import get_simp_IRI, get_namespace
+from SameAsEqGraph import get_simp_IRI, get_namespace, get_name
 from pyvis.network import Network
 import community
 import collections
@@ -9,6 +9,8 @@ from random import randint
 import pandas as pd
 import requests
 from collections import Counter
+from rfc3987 import  parse
+import urllib.parse
 
 
 # get all redirect in a list. If no redirect, then return []
@@ -16,7 +18,7 @@ def find_redirects (iri):
 	try:
 		# print ('test 2')
 		collect_urls = []
-		response = requests.get(iri, timeout=1.0, allow_redirects=True)
+		response = requests.get(iri, timeout=0.1, allow_redirects=True)
 
 		# import urllib3
 		#
@@ -110,8 +112,8 @@ class GraphSolver():
 						redi_graph.add_edge(n, m)
 
 			if len(redirected) != 0:
-				print ('was redirected ',len(redirected), ' times')
-				if len(redirected) > 7:
+				if len(redirected) > 10:
+					print ('was redirected ',len(redirected), ' times')
 					for index, iri in enumerate(redirected):
 						print ('\tNo.',index, ' -> ', iri)
 					print ('\n')
@@ -127,12 +129,63 @@ class GraphSolver():
 		self.redirect_graph = redi_graph
 
 	def get_encoding_equality_graph(self):
-		pass
-		# equality_graph = nx.DiGraph()
-		# for n in self.input_graph.nodes:
-		#
-		# self.encoding_equality_graph = equality_graph
-		#
+		#step 1: make an authority map to node
+		authority_map = {}
+		variance_map = {}
+
+		for n in self.input_graph.nodes:
+			# print ('\n\niri = ', n)
+			rule='IRI'
+			d = parse(n, rule) # ’IRI_reference’
+
+			# print ('authority = ',d['authority'])
+			if d['authority'] in authority_map.keys():
+				authority_map[d['authority']].append(n)
+			else:
+				authority_map[d['authority']] = []
+			# print ('authority map: ',authority_map[d['authority']])
+		# step 2: construct a dictionary of each node against
+			# first, do the decoding and add to the list
+
+			uq = urllib.parse.unquote(n)
+			# print ('uq = ', uq)
+			variance_map[n] = set()
+			if d != n:
+				variance_map[n].add(uq)
+			# second, get an ecoding of the current iri
+			prefix, sign, name  = get_name(n)
+			quote_name = urllib.parse.quote(name)
+			new_iri = prefix + sign + quote_name
+			# print ('new_iri = ', new_iri)
+			if new_iri != n:
+				variance_map[n].add(new_iri)
+
+			# print ('prefix', prefix)
+			# print ('sign', sign)
+			# print ('name', name)
+			# print ('quote_name', quote_name)
+			# print ('new iri = ', new_iri)
+
+			# print ('variance map = ',variance_map[n])
+
+		encoding_equality_graph = nx.Graph()
+		for iri_with_same_authority in authority_map.values():
+			for i in iri_with_same_authority:
+				for j in iri_with_same_authority:
+					if i != j:
+						# test if i is the same as any of j's variances
+						for jv in variance_map[j]:
+							if i == jv:
+								encoding_equality_graph.add_edge(i, j)
+		encoding_equivalence_edges = encoding_equality_graph.edges()
+		print ('there are ', len (encoding_equivalence_edges), ' edges in the equivalence graph')
+		for (s,t) in encoding_equivalence_edges:
+			if not s in self.input_graph.nodes():
+				print ('not in original graph ', s)
+			if not t in self.input_graph.nodes():
+				print ('not in original graph ', t)
+		self.encoding_equality_graph = encoding_equality_graph
+
 
 	def solve (self, method): # get partition
 		if method == 'leuven':
@@ -200,129 +253,53 @@ class GraphSolver():
 		g = self.input_graph
 		# sp = nx.spring_layout(g)
 		nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=25)
+		plt.title('Input')
 		plt.show()
 
 	def show_redirect_graph(self):
 		g = self.redirect_graph
 		# sp = nx.spring_layout(g)
 		# nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=35)
-		nx.draw_networkx_edges(g, pos=self.position, edge_color='red', connectionstyle='arc3,rad=0.2')
+
 		nx.draw_networkx(self.input_graph, pos=self.position, with_labels=False, node_size=25)
+		nx.draw_networkx_edges(g, pos=self.position, edge_color='red', connectionstyle='arc3,rad=0.2')
+
+		plt.title('Redirect')
 		plt.show()
 
-	def show_result (self):
+	def show_encoding_equivalence_graph(self):
+		g = self.encoding_equality_graph
+		# print ('now plot a graph with ', len (g.edges()), ' equivalence edges')
+		# sp = nx.spring_layout(g)
+		# nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=35)
+
+		nx.draw_networkx(self.input_graph, pos=self.position, with_labels=False, node_size=25)
+		nx.draw_networkx_edges(g, pos=self.position, edge_color='red', connectionstyle='arc3,rad=0.2')
+
+		plt.title('Encoding Equivalence')
+		plt.show()
+
+	def show_result_graph (self):
 		g = self.result_graph
 		# counter = collections.Counter(values)
 		# print(counter)
 		# sp = nx.spring_layout(g)
 		nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=35, node_color=self.partition)
 		# plt.axes('off')
+		plt.title('Result')
 		plt.show()
 
 # main
 gs = GraphSolver('./Evaluate_May/11116_edges_original.csv')
 print (nx.info(gs.input_graph))
-# http://yago-knowledge.org/resource/Propositional_function
 
-# print ('There are ', len (gs.input_graph.nodes()), ' nodes')
+gs.get_encoding_equality_graph()
+gs.get_redirect_graph()
 
-# import ndef
-# # record = ndef.UriRecord("http://www.hääyö.com/~user/")
-# record = ndef.UriRecord("http://ta.dbpedia.org/resource/%E0%AE%9A%E0%AE%BE%E0%AE%B0%E0%AF%8D%E0%AE%AA%E0%AF%81")
-# print('IRI: ',record.iri)
-# print('URI: ', record.uri)
-# record.uri
-# print ('from URI to IRI: ')
+gs.show_input_graph()
+gs.show_redirect_graph()
+gs.show_encoding_equivalence_graph()
 
+# --solve --
 
-# https://pypi.org/project/rfc3987/
-s = "http://ta.dbpedia.org/resource/%E0%AE%9A%E0%AE%BE%E0%AE%B0%E0%AF%8D%E0%AE%AA%E0%AF%81"
-from rfc3987 import match, parse, get_compiled_pattern
-
-# print (match('%C7X', 'pct_encoded'))
-# print (match('%C7', 'pct_encoded'))
-
-# d = parse('http://tools.ietf.org/html/rfc3986#appendix-A', rule='URI')
-rule='IRI'
-d = parse(s, rule) # ’IRI_reference’
-print ('\n\n->Use Rfc3987')
-print ('parsing ', s)
-print ('rule = ', rule, '\n')
-
-print ('scheme = ', d['scheme'])
-print ('authority = ',d['authority'])
-print ('path = ',d['path'])
-print ('query = ' ,d['query'])
-# print ('scheme = ', d['scheme'])
-print ('fragment = ', d['fragment'])
-
-import tldextract
-print ('\n\n->Use tldextract')
-ext = tldextract.extract(s)
-print ('domain = ', ext.domain)
-print ('subdomain = ', ext.subdomain)
-print ('suffix = ', ext.suffix)
-print ('registered domain = ', ext.registered_domain)
-# print ('all = ', ext)
-
-import urllib.parse
-print ('\n\n->Using urllib')
-d = urllib.parse.unquote(s)
-print (d)
-
-
-# k = "http://ar.dbpedia.org/resource/المسيحية_والعبودية"
-k="http://rdf.freebase.com/ns/m/061z5w"
-
-print ('\n\nnow encode ',k)
-d = urllib.parse.quote(k)
-print (d)
-d = urllib.parse.quote_plus(k)
-print (d)
-
-# print ('Alternatively, using match/groupdict')
-# uri = get_compiled_pattern('^%(URI)s$')
-# m = uri.match(s)
-# d = m.groupdict()
-#
-# print ('scheme = ', d['scheme'])
-# print ('authority = ',d['authority'])
-# print ('path = ',d['path'])
-# print ('query = ' ,d['query'])
-# print ('scheme = ', d['scheme'])
-# print ('fragment = ', d['fragment'])
-
-
-# as for "http://ta.dbpedia.org/resource/%E0%AE%9A%E0%AE%BE%E0%AE%B0%E0%AF%8D%E0%AE%AA%E0%AF%81"
-# scheme =  http
-# authority =  ta.dbpedia.org
-# path =  /resource/%E0%AE%9A%E0%AE%BE%E0%AE%B0%E0%AF%8D%E0%AE%AA%E0%AF%81
-# query =  None
-# scheme =  http
-# fragment =  None
-
-
-
-
-
-# >>> d = parse('http://tools.ietf.org/html/rfc3986#appendix-A',
-# ...           rule='URI')
-# >>> assert all([ d['scheme'] == 'http',
-# ...              d['authority'] == 'tools.ietf.org',
-# ...              d['path'] == '/html/rfc3986',
-# ...              d['query'] == None,
-# ...              d['fragment'] == 'appendix-A' ])
-
-# Parsing and validation of URIs (RFC 3986) and IRIs (RFC 3987)
-# validation???
-
-# #
-# gs.get_redirect_graph()
-# gs.show_redirect_graph()
-
-# gs.get_encoding_equality_graph()
-
-# gs.solve('namespace')
-# gs.solve('leuven')
-#
-# gs.show_result()
+# gs.show_result_graph()

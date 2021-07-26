@@ -250,3 +250,111 @@ print(record.uri)
 
 
 # https://github.com/CLARIAH/iribaker
+
+
+
+
+# http://yago-knowledge.org/resource/Propositional_function
+
+# print ('There are ', len (gs.input_graph.nodes()), ' nodes')
+
+# import ndef
+# # record = ndef.UriRecord("http://www.hääyö.com/~user/")
+# record = ndef.UriRecord("http://ta.dbpedia.org/resource/%E0%AE%9A%E0%AE%BE%E0%AE%B0%E0%AF%8D%E0%AE%AA%E0%AF%81")
+# print('IRI: ',record.iri)
+# print('URI: ', record.uri)
+# record.uri
+# print ('from URI to IRI: ')
+
+
+# https://pypi.org/project/rfc3987/
+# s = "http://ta.dbpedia.org/resource/%E0%AE%9A%E0%AE%BE%E0%AE%B0%E0%AF%8D%E0%AE%AA%E0%AF%81"
+# from rfc3987 import match, parse, get_compiled_pattern
+#
+# # print (match('%C7X', 'pct_encoded'))
+# # print (match('%C7', 'pct_encoded'))
+#
+# # d = parse('http://tools.ietf.org/html/rfc3986#appendix-A', rule='URI')
+# rule='IRI'
+# d = parse(s, rule) # ’IRI_reference’
+# print ('\n\n->Use Rfc3987')
+# print ('parsing ', s)
+# print ('rule = ', rule, '\n')
+#
+# print ('scheme = ', d['scheme'])
+# print ('authority = ',d['authority'])
+# print ('path = ',d['path'])
+# print ('query = ' ,d['query'])
+# # print ('scheme = ', d['scheme'])
+# print ('fragment = ', d['fragment'])
+#
+# import tldextract
+# print ('\n\n->Use tldextract')
+# ext = tldextract.extract(s)
+# print ('domain = ', ext.domain)
+# print ('subdomain = ', ext.subdomain)
+# print ('suffix = ', ext.suffix)
+# print ('registered domain = ', ext.registered_domain)
+# # print ('all = ', ext)
+#
+# import urllib.parse
+# print ('\n\n->Using urllib')
+# d = urllib.parse.unquote(s)
+# print (d)
+#
+#
+# # k = "http://ar.dbpedia.org/resource/المسيحية_والعبودية"
+# k="http://rdf.freebase.com/ns/m/061z5w"
+#
+# print ('\n\nnow encode ',k)
+# d = urllib.parse.quote(k)
+# print (d)
+# d = urllib.parse.quote_plus(k)
+# print (d)
+
+# print ('Alternatively, using match/groupdict')
+# uri = get_compiled_pattern('^%(URI)s$')
+# m = uri.match(s)
+# d = m.groupdict()
+#
+# print ('scheme = ', d['scheme'])
+# print ('authority = ',d['authority'])
+# print ('path = ',d['path'])
+# print ('query = ' ,d['query'])
+# print ('scheme = ', d['scheme'])
+# print ('fragment = ', d['fragment'])
+
+
+# as for "http://ta.dbpedia.org/resource/%E0%AE%9A%E0%AE%BE%E0%AE%B0%E0%AF%8D%E0%AE%AA%E0%AF%81"
+# scheme =  http
+# authority =  ta.dbpedia.org
+# path =  /resource/%E0%AE%9A%E0%AE%BE%E0%AE%B0%E0%AF%8D%E0%AE%AA%E0%AF%81
+# query =  None
+# scheme =  http
+# fragment =  None
+
+
+
+
+
+# >>> d = parse('http://tools.ietf.org/html/rfc3986#appendix-A',
+# ...           rule='URI')
+# >>> assert all([ d['scheme'] == 'http',
+# ...              d['authority'] == 'tools.ietf.org',
+# ...              d['path'] == '/html/rfc3986',
+# ...              d['query'] == None,
+# ...              d['fragment'] == 'appendix-A' ])
+
+# Parsing and validation of URIs (RFC 3986) and IRIs (RFC 3987)
+# validation???
+
+# #
+# gs.get_redirect_graph()
+# gs.show_redirect_graph()
+
+# gs.get_encoding_equality_graph()
+
+# gs.solve('namespace')
+# gs.solve('leuven')
+#
+# gs.show_result()
