@@ -13,6 +13,10 @@ from rfc3987 import  parse
 import urllib.parse
 
 
+UNKNOWN = 0
+REMOVE = 1
+KEEP = 2
+
 # get all redirect in a list. If no redirect, then return []
 def find_redirects (iri):
 	try:
@@ -59,11 +63,12 @@ class GraphSolver():
 	# configure the weight file
 	# location of each node
 
-	def __init__(self, path_to_graph):
+	def __init__(self, path_to_input_graph, path_to_gold_standard_graph):
 		# input graph
 		self.input_graph = nx.Graph()
-
-		input_graph_data = pd.read_csv(path_to_graph)
+		self.gold_standard_graph = nx.Graph()
+		self.gold_standard_partition = []
+		input_graph_data = pd.read_csv(path_to_input_graph)
 
 		sources = input_graph_data['SUBJECT']
 		targets = input_graph_data['OBJECT']
@@ -73,6 +78,70 @@ class GraphSolver():
 			self.input_graph.add_node(s, short_IRI = get_simp_IRI(s), namespace = get_namespace(s), group = 0)
 			self.input_graph.add_node(t, short_IRI = get_simp_IRI(t), namespace = get_namespace(t), group = 0)
 			self.input_graph.add_edge(s, t)
+
+		goldstandard_graph_data = pd.read_csv(path_to_gold_standard_graph, delimiter='\t')
+
+		entities = goldstandard_graph_data['Entity']
+		annotations = goldstandard_graph_data['Annotation']
+		goldstandard_data = zip(entities, annotations)
+		ann_to_id = {}
+		id_to_ann = {}
+		acc_group_id = 0
+		ann_to_id['unknown'] = 0
+		id_to_ann[0] = 'unknown'
+		for (e, ann) in goldstandard_data:
+			group_id = 0
+			if ann != 'unknown':
+				if ann in ann_to_id.keys():
+					group_id = ann_to_id[ann]
+					id_to_ann[group_id] = ann
+				else:
+					acc_group_id += 1
+					group_id += acc_group_id
+					ann_to_id[ann] = group_id
+					id_to_ann[group_id] = ann
+
+			self.gold_standard_graph.add_node(e, short_IRI = get_simp_IRI(e), namespace = get_namespace(e), annotation = ann, group = ann_to_id[ann])
+			#
+			# print ('\nentity: ', e)
+			# print ('annota: ', ann)
+			# print ('group : ', ann_to_id[ann])
+
+		# add edges from the input graph
+		self.gold_standard_graph.add_edges_from(self.input_graph.edges())
+
+		ct = Counter()
+		for n in self.gold_standard_graph.nodes():
+			group_id = self.gold_standard_graph.nodes[n]['group']
+			ct[group_id] += 1
+
+		print ('\n\n\n')
+		for group in ct.keys():
+			print ('Group ', group, 'is about ', id_to_ann[group], ' with ', ct[group], ' entities')
+
+		print ('now compute removed edges in the gold standard')
+		# edges
+		count_removed = 0
+		count_involving_unknown = 0
+		for (s, t) in self.gold_standard_graph.edges():
+			# print ('s = ', s, 'group =', self.gold_standard_graph.nodes[s]['group'])
+			# print ('t = ', t, 'group =', self.gold_standard_graph.nodes[t]['group'])
+
+			if self.gold_standard_graph.nodes[s]['group'] == UNKNOWN or self.gold_standard_graph.nodes[t]['group'] == UNKNOWN:
+				self.gold_standard_graph.edges[s, t]['decision'] = UNKNOWN
+				count_involving_unknown += 1
+			elif self.gold_standard_graph.nodes[s]['group'] != self.gold_standard_graph.nodes[t]['group']:
+				self.gold_standard_graph.edges[s, t]['decision'] = REMOVE
+				count_removed += 1
+			else:
+				self.gold_standard_graph.edges[s, t]['decision'] = KEEP
+
+		print ('there are in total ', count_removed, ' edges removed')
+		print ('there are in total ', count_involving_unknown, ' edges involving unknown')
+
+		for n in self.gold_standard_graph.nodes():
+			self.gold_standard_partition.append(self.gold_standard_graph.nodes[n]['group'])
+		# print ('gold standard coloring partition',self.gold_standard_partition)
 
 		# for visulization
 		self.position = nx.spring_layout(self.input_graph)
@@ -93,8 +162,9 @@ class GraphSolver():
 
 
 		# result
-		self.partition = None
+		self.result_partition = []
 		self.result_graph = None
+
 
 	def get_redirect_graph (self):
 		redi_graph = nx.DiGraph()
@@ -223,7 +293,7 @@ class GraphSolver():
 	def get_namespace_graph(self):
 		namespace_to_entities = {}
 		for e in self.input_graph.nodes():
-			ns = get_namespace(e)
+			ns = self.input_graph.nodes[e]['namespace']
 			# print (e)
 			# print ('has name space', ns)
 			if ns in namespace_to_entities.keys():
@@ -288,30 +358,44 @@ class GraphSolver():
 		plt.show()
 
 
-	def show_result_graph (self):
-		g = self.result_graph
+	def show_gold_standard_graph (self):
+		g = self.gold_standard_graph
 		# counter = collections.Counter(values)
 		# print(counter)
 		# sp = nx.spring_layout(g)
-		nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=35, node_color=self.partition)
+		edge_color = []
+		for (s,t) in self.gold_standard_graph.edges:
+			if self.gold_standard_graph.edges[s, t]['decision'] == UNKNOWN:
+				edge_color.append('yellow')
+			elif self.gold_standard_graph.edges[s, t]['decision'] == REMOVE:
+				edge_color.append('red')
+			else:
+				edge_color.append('black')
+			# edge_color.append(self.gold_standard_graph.edges[s, t]['decision'])
+
+		# print ('edge_color = ', edge_color)
+
+		nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=35, node_color=self.gold_standard_partition, edge_color=edge_color)
 		# plt.axes('off')
-		plt.title('Result')
+		plt.title('Gold standard')
 		plt.show()
 
 # main
-gs = GraphSolver('./Evaluate_May/11116_edges_original.csv')
+gs = GraphSolver(path_to_input_graph = './Evaluate_May/11116_edges_original.csv',
+				path_to_gold_standard_graph = './Evaluate_May/11116_nodes_labelled.tsv')
 print (nx.info(gs.input_graph))
 
 # gs.get_encoding_equality_graph()
 # gs.get_redirect_graph()
-gs.get_namespace_graph()
+# gs.get_namespace_graph()
 
 gs.show_input_graph()
+
 # gs.show_redirect_graph()
 # gs.show_encoding_equivalence_graph()
-gs.show_namespace_graph()
+# gs.show_namespace_graph()
 
 
 # --solve --
 
-# gs.show_result_graph()
+gs.show_gold_standard_graph()
