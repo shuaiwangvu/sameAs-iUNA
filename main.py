@@ -76,7 +76,11 @@ class GraphSolver():
 
 		# for visulization
 		self.position = nx.spring_layout(self.input_graph)
-		net = Network()
+		# net = Network()
+
+		# based on this, we generate the corresponding edges
+		self.namespace_graph = nx.Graph()
+		self.source_graph = nx.Graph()
 
 		# additional information
 		self.redirect_graph = nx.DiGraph()
@@ -84,12 +88,9 @@ class GraphSolver():
 
 
 		# solving: (weighted unique name constraints, from UNA)
-		self.positive_UNC = [] # redirect and equivalence encoding
-		self.negative_UNC = [] # namespace or source
+		# self.positive_UNC = [] # redirect and equivalence encoding
+		# self.negative_UNC = [] # namespace or source
 
-		# based on this, we generate the corresponding edges
-		self.attacking_edges = []
-		self.confirming_edges = []
 
 		# result
 		self.partition = None
@@ -219,34 +220,30 @@ class GraphSolver():
 			self.result_graph.nodes[node]['group'] = partition.get(node)
 		self.partition = [partition.get(node) for node in self.input_graph.nodes()]
 
-	def partition_namespace(self):
+	def get_namespace_graph(self):
 		namespace_to_entities = {}
 		for e in self.input_graph.nodes():
 			ns = get_namespace(e)
+			# print (e)
+			# print ('has name space', ns)
 			if ns in namespace_to_entities.keys():
 				namespace_to_entities[ns].append(e)
 			else:
 				namespace_to_entities[ns] = [e]
 
-		self.negative_UNC = namespace_to_entities.values()
-		print ('The size of negative UMC: ', len (self.negative_UNC))
-		# print (self.negative_UNC)
+		for ns in namespace_to_entities.keys():
+			ns_entities = namespace_to_entities[ns]
+			if len (ns_entities)>1:
+				print ('\nnamesapce ', ns)
+				print ('has ', len (ns_entities), ' entities:')
+				for e in namespace_to_entities[ns]:
+					print ('\t',e)
 
-		# from this, we generate the negative UNC, with uniformed weight 1 (for now)
-		for (s, t) in self.input_graph.edges():
-			if self.input_graph.nodes[s]['namespace'] ==  self.input_graph.nodes[t]['namespace']:
-				# add an attacking edges
-				# print (self.input_graph.nodes[s]['namespace'])
-				# print (self.input_graph.nodes[t]['namespace'])
-				self.attacking_edges.append((s,t))
-		print ('The size of attacking edges generated from negative UMC = ', len (self.attacking_edges))
+			for i, e in enumerate(ns_entities):
+				for f in ns_entities[i+1:]:
+					self.namespace_graph.add_edge(e, f)
 
-		self.result_graph  = self.input_graph.copy()
-
-		for node in self.result_graph.nodes():
-			self.result_graph.nodes[node]['group'] = randint(0,1)
-
-		self.partition = [self.result_graph.nodes[node]['group'] for node in self.result_graph.nodes()]
+		print ('The namespace has ', len (self.namespace_graph), ' attacking edges')
 
 
 	def show_input_graph(self):
@@ -279,6 +276,18 @@ class GraphSolver():
 		plt.title('Encoding Equivalence')
 		plt.show()
 
+	def show_namespace_graph(self):
+		g = self.namespace_graph
+		# sp = nx.spring_layout(g)
+		# nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=35)
+
+		nx.draw_networkx(self.input_graph, pos=self.position, with_labels=False, node_size=25)
+		nx.draw_networkx_edges(g, pos=self.position, edge_color='red', connectionstyle='arc3,rad=0.2')
+
+		plt.title('Namesapce Attacking edges')
+		plt.show()
+
+
 	def show_result_graph (self):
 		g = self.result_graph
 		# counter = collections.Counter(values)
@@ -293,12 +302,15 @@ class GraphSolver():
 gs = GraphSolver('./Evaluate_May/11116_edges_original.csv')
 print (nx.info(gs.input_graph))
 
-gs.get_encoding_equality_graph()
-gs.get_redirect_graph()
+# gs.get_encoding_equality_graph()
+# gs.get_redirect_graph()
+gs.get_namespace_graph()
 
 gs.show_input_graph()
-gs.show_redirect_graph()
-gs.show_encoding_equivalence_graph()
+# gs.show_redirect_graph()
+# gs.show_encoding_equivalence_graph()
+gs.show_namespace_graph()
+
 
 # --solve --
 
