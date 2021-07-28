@@ -349,6 +349,39 @@ class GraphSolver():
 
 
 		for file in file_to_entities.keys():
+			# if len(file_to_entities[file]) >1:
+			# 	print ('\nfile ', file, ' has ', len (file_to_entities[file]), 'entities')
+
+			for i, e in enumerate(file_to_entities[file]):
+				# if len(file_to_entities[file]) >1:
+				# 	print ('No.', i, ' = ', e)
+				for f in list(file_to_entities[file])[i+1:]:
+					self.typeB_graph.add_edge(e, f)
+		print ('There are in total ', len (self.typeB_graph.edges()), 'attacking edges from this label file')
+
+
+	def get_typeC_graph (self):
+		print ('\ngenerating typeC graph')
+		# load the resources and
+		source_files = []
+		for e in self.input_graph.nodes():
+			triples, cardinality = hdt_comment.search_triples(e, my_has_comment_in_file, "")
+			for (_, _, file) in triples:
+				source_files.append(file)
+		print ('There are in total ', len (source_files), 'comment source files')
+
+		file_to_entities = {}
+		for e in self.input_graph.nodes():
+			triples, cardinality = hdt_comment.search_triples(e, my_has_comment_in_file, "")
+			for (e, _, file) in triples:
+				if file not in file_to_entities.keys():
+					file_to_entities [file] = [e]
+				else:
+					file_to_entities [file].append(e)
+
+
+
+		for file in file_to_entities.keys():
 			if len(file_to_entities[file]) >1:
 				print ('\nfile ', file, ' has ', len (file_to_entities[file]), 'entities')
 
@@ -356,13 +389,9 @@ class GraphSolver():
 				if len(file_to_entities[file]) >1:
 					print ('No.', i, ' = ', e)
 				for f in list(file_to_entities[file])[i+1:]:
-					self.typeB_graph.add_edge(e, f)
-		print ('There are in total ', len (self.typeB_graph.edges()), 'attacking edges from this label file')
+					self.typeC_graph.add_edge(e, f)
+		print ('There are in total ', len (self.typeC_graph.edges()), 'attacking edges from this comment file')
 
-
-	def get_typeC_graph (self):
-		# load the resources and
-		pass
 
 
 	def show_input_graph(self):
@@ -472,8 +501,9 @@ print (nx.info(gs.input_graph))
 # gs.get_encoding_equality_graph()
 # gs.get_redirect_graph()
 # gs.get_namespace_graph()
-gs.get_typeA_graph()
-gs.get_typeB_graph()
+# gs.get_typeA_graph()
+# gs.get_typeB_graph()
+gs.get_typeC_graph()
 
 # -- visualization --
 # gs.show_input_graph()
