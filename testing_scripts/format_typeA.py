@@ -27,7 +27,6 @@ for l in file1.readlines():
 	# print ('converted to')
 	new_line= ' '.join(new_line)
 	# print (new_line)
-
 	file2.writelines(new_line)
 
 file2.close()
