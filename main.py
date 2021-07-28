@@ -22,6 +22,11 @@ hdt_source = HDTDocument("typeA.hdt")
 hdt_label = HDTDocument("label_May.hdt")
 hdt_comment = HDTDocument("comment_May.hdt")
 
+PATH_META = "/home/jraad/ssd/data/identity/metalink/metalink.hdt"
+hdt_metalink = HDTDocument(PATH_META)
+
+hdt_sameas_source = HDTDocument("sameas_source.hdt")
+
 # PATH_LOD = "/scratch/wbeek/data/LOD-a-lot/data.hdt"
 # hdt_lod = HDTDocument(PATH_LOD)
 
@@ -29,7 +34,49 @@ my_has_label_in_file = "https://krr.triply.cc/krr/metalink/def/hasLabelInFile" #
 my_has_comment_in_file = "https://krr.triply.cc/krr/metalink/def/hasCommentInFile" # a relation
 rdfs_label = "http://www.w3.org/2000/01/rdf-schema#label"
 rdfs_comment = 'http://www.w3.org/2000/01/rdf-schema#comment'
+my_file_IRI_prefix = "https://krr.triply.cc/krr/metalink/fileMD5/" # followed by the MD5 of the data
+my_file = "https://krr.triply.cc/krr/metalink/def/File"
+my_exist_in_file = "https://krr.triply.cc/krr/metalink/def/existsInFile" # a relation
+my_has_num_occurences_in_files = "https://krr.triply.cc/krr/metalink/def/numOccurences" #
 
+
+meta_eqSet = "https://krr.triply.cc/krr/metalink/def/equivalenceSet"
+meta_comm = "https://krr.triply.cc/krr/metalink/def/Community"
+meta_identity_statement = "https://krr.triply.cc/krr/metalink/def/IdentityStatement"
+rdf_statement = "http://www.w3.org/1999/02/22-rdf-syntax-ns#Statement"
+
+rdf_subject = "http://www.w3.org/1999/02/22-rdf-syntax-ns#subject"
+rdf_object = "http://www.w3.org/1999/02/22-rdf-syntax-ns#object"
+rdf_predicate = "http://www.w3.org/1999/02/22-rdf-syntax-ns#predicate"
+
+rdf_type = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+
+
+# find the metalink id for the subject-object pair.
+def find_statement_id(subject, object):
+
+	triples, cardinality = hdt_metalink.search_triples("", rdf_subject, subject)
+	collect_statement_id_regarding_subject = set()
+
+	for (s,p,o) in triples:
+		collect_statement_id_regarding_subject.add(str(s))
+
+	triples, cardinality = hdt_metalink.search_triples("", rdf_object, object)
+
+	collect_statement_id_regarding_object = set()
+
+	for (s,p,o) in triples:
+		collect_statement_id_regarding_object.add(str(s))
+
+	intersection = collect_statement_id_regarding_object.intersection(collect_statement_id_regarding_subject)
+
+	if len(intersection) == 1:
+		return list(intersection)[0]
+	elif len(intersection) > 1:
+		print ('ERROR!!!!')
+		return None
+	else:
+		return None
 
 # get all redirect in a list. If no redirect, then return []
 def find_redirects (iri):
@@ -173,6 +220,9 @@ class GraphSolver():
 		self.typeA_graph = nx.Graph()
 		self.typeB_graph = nx.Graph()
 		self.typeC_graph = nx.Graph()
+
+		# weight graph
+		# no need for this one since we have the original graph anyway
 
 		# solving: (weighted unique name constraints, from UNA)
 		# self.positive_UNC = [] # redirect and equivalence encoding
@@ -325,8 +375,6 @@ class GraphSolver():
 					self.typeA_graph.add_edge(e, f)
 		print ('There are in total ', len (self.typeA_graph.edges()), 'attacking edges from this source file')
 
-
-
 	def get_typeB_graph (self):
 		print ('\ngenerating typeB graph')
 		# load the resources and
@@ -358,7 +406,6 @@ class GraphSolver():
 				for f in list(file_to_entities[file])[i+1:]:
 					self.typeB_graph.add_edge(e, f)
 		print ('There are in total ', len (self.typeB_graph.edges()), 'attacking edges from this label file')
-
 
 	def get_typeC_graph (self):
 		print ('\ngenerating typeC graph')
@@ -392,7 +439,26 @@ class GraphSolver():
 					self.typeC_graph.add_edge(e, f)
 		print ('There are in total ', len (self.typeC_graph.edges()), 'attacking edges from this comment file')
 
+	def add_redundency_weight(self):
+		found = 0
+		# for (s, t) in self.input_graph.edges():
+		# 	if find_statement_id(s, t) != None:
+		# 		found += 1
+		# print ('found in metalink: ',found)
+		ct = Counter()
+		for (s, t) in self.input_graph.edges():
+		# hdt_sameas_source
+			sameas_statement_id = find_statement_id(s, t)
+			if sameas_statement_id != None:
+				triples, cardinality = hdt_sameas_source.search_triples(sameas_statement_id, my_exist_in_file, "")
+				ct [cardinality] += 1
+				if cardinality > 3:
+					print ('source:\t ', s)
+					print ('target:\t ', t)
+					print ('metalink id:\t ', sameas_statement_id)
+					print ('weight:\t ', cardinality)
 
+		print ('counting ', ct)
 
 	def show_input_graph(self):
 		g = self.input_graph
@@ -503,7 +569,8 @@ print (nx.info(gs.input_graph))
 # gs.get_namespace_graph()
 # gs.get_typeA_graph()
 # gs.get_typeB_graph()
-gs.get_typeC_graph()
+# gs.get_typeC_graph()
+gs.add_redundency_weight()
 
 # -- visualization --
 # gs.show_input_graph()
