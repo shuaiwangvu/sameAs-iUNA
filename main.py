@@ -11,11 +11,25 @@ import requests
 from collections import Counter
 from rfc3987 import  parse
 import urllib.parse
+from hdt import HDTDocument, IdentifierPosition
 
 
 UNKNOWN = 0
 REMOVE = 1
 KEEP = 2
+
+hdt_source = HDTDocument("typeA.hdt")
+# hdt_label = HDTDocument("label_May.hdt")
+# hdt_comment = HDTDocument("comment_May.hdt")
+
+# PATH_LOD = "/scratch/wbeek/data/LOD-a-lot/data.hdt"
+# hdt_lod = HDTDocument(PATH_LOD)
+
+my_has_label_in_file = "https://krr.triply.cc/krr/metalink/def/hasLabelInFile" # a relation
+my_has_comment_in_file = "https://krr.triply.cc/krr/metalink/def/hasCommentInFile" # a relation
+rdfs_label = "http://www.w3.org/2000/01/rdf-schema#label"
+rdfs_comment = 'http://www.w3.org/2000/01/rdf-schema#comment'
+
 
 # get all redirect in a list. If no redirect, then return []
 def find_redirects (iri):
@@ -155,6 +169,10 @@ class GraphSolver():
 		self.redirect_graph = nx.DiGraph()
 		self.encoding_equality_graph = nx.Graph()
 
+		# type A B C graphs
+		self.typeA_graph = nx.Graph()
+		self.typeB_graph = nx.Graph()
+		self.typeC_graph = nx.Graph()
 
 		# solving: (weighted unique name constraints, from UNA)
 		# self.positive_UNC = [] # redirect and equivalence encoding
@@ -257,39 +275,6 @@ class GraphSolver():
 				print ('not in original graph ', t)
 		self.encoding_equality_graph = encoding_equality_graph
 
-
-	def solve (self, method): # get partition
-		if method == 'leuven':
-			self.partition_leuven()
-		elif method == 'namespace':
-			self.partition_namespace()
-		else:
-			# first of all, compute the UNC based on namespace
-			# pass
-
-			self.result_graph  = self.input_graph.copy()
-
-			for node in self.result_graph.nodes():
-				self.result_graph.nodes[node]['group'] = randint(0,1)
-
-			self.partition = [self.result_graph.nodes[node]['group'] for node in self.result_graph.nodes()]
-
-	# def visualize(self):
-	# 	nt = Network('700px', '700px')
-	# 	nt.from_nx(self.input_graph.graph)
-	# 	# nt.enable_physics(True)
-	# 	nt.show_buttons(filter_=['physics'])
-	# 	nt.show('input.html')
-	#
-	def partition_leuven(self):
-		g = self.input_graph
-		self.result_graph = self.input_graph.copy()
-
-		partition = community.best_partition(g)
-		for node in self.input_graph.nodes():
-			self.result_graph.nodes[node]['group'] = partition.get(node)
-		self.partition = [partition.get(node) for node in self.input_graph.nodes()]
-
 	def get_namespace_graph(self):
 		namespace_to_entities = {}
 		for e in self.input_graph.nodes():
@@ -314,6 +299,63 @@ class GraphSolver():
 					self.namespace_graph.add_edge(e, f)
 
 		print ('The namespace has ', len (self.namespace_graph), ' attacking edges')
+
+	def get_typeA_graph (self):
+		print ('generating typeA graph')
+		# load the resources and
+		source_files = []
+		for e in self.input_graph.nodes():
+			triples, cardinality = hdt_source.search_triples(e, "", "")
+			for (_, _, file) in triples:
+				source_files.append(file)
+		print ('There are in total ', len (source_files), 'label source files')
+
+		file_to_entities = {}
+		for e in self.input_graph.nodes():
+			triples, cardinality = hdt_source.search_triples(e, "", "")
+			for (e, _, file) in triples:
+				if file not in file_to_entities.keys():
+					file_to_entities [file] = [e]
+				else:
+					file_to_entities [file].append(e)
+
+		for f in file_to_entities.keys():
+			for i, e in enumerate(file_to_entities.values()):
+				for f in file_to_entities.values()[i+1:]:
+					self.typeA_graph.add_edge(e, f)
+		print ('There are in total ', len (self.typeA_graph.edges()), 'attacking edges from this source file')
+
+
+
+def get_typeB_graph (self):
+	print ('generating typeB graph')
+	# load the resources and
+	source_files = []
+	for e in self.input_graph.nodes():
+		triples, cardinality = hdt_label.search_triples(e, "", "")
+		for (_, _, file) in triples:
+			source_files.append(file)
+	print ('There are in total ', len (source_files), 'label source files')
+
+	file_to_entities = {}
+	for e in self.input_graph.nodes():
+		triples, cardinality = hdt_label.search_triples(e, "", "")
+		for (e, _, file) in triples:
+			if file not in file_to_entities.keys():
+				file_to_entities [file] = [e]
+			else:
+				file_to_entities [file].append(e)
+
+	for f in file_to_entities.keys():
+		for i, e in enumerate(file_to_entities.values()):
+			for f in file_to_entities.values()[i+1:]:
+				self.typeA_graph.add_edge(e, f)
+	print ('There are in total ', len (self.typeA_graph.edges()), 'attacking edges from this source file')
+
+
+	def get_typeC_graph (self):
+		# load the resources and
+		pass
 
 
 	def show_input_graph(self):
@@ -341,7 +383,7 @@ class GraphSolver():
 		# nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=35)
 
 		nx.draw_networkx(self.input_graph, pos=self.position, with_labels=False, node_size=25)
-		nx.draw_networkx_edges(g, pos=self.position, edge_color='red', connectionstyle='arc3,rad=0.2')
+		nx.draw_networkx_edges(g, pos=self.position, edge_color='blue', connectionstyle='arc3,rad=0.2')
 
 		plt.title('Encoding Equivalence')
 		plt.show()
@@ -352,11 +394,10 @@ class GraphSolver():
 		# nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=35)
 
 		nx.draw_networkx(self.input_graph, pos=self.position, with_labels=False, node_size=25)
-		nx.draw_networkx_edges(g, pos=self.position, edge_color='red', connectionstyle='arc3,rad=0.2')
+		nx.draw_networkx_edges(g, pos=self.position, edge_color='blue', connectionstyle='arc3,rad=0.2')
 
 		plt.title('Namesapce Attacking edges')
 		plt.show()
-
 
 	def show_gold_standard_graph (self):
 		g = self.gold_standard_graph
@@ -380,22 +421,60 @@ class GraphSolver():
 		plt.title('Gold standard')
 		plt.show()
 
+
+
+	def partition_leuven(self):
+		g = self.input_graph
+		self.result_graph = self.input_graph.copy()
+
+		partition = community.best_partition(g)
+		for node in self.input_graph.nodes():
+			self.result_graph.nodes[node]['group'] = partition.get(node)
+		self.partition = [partition.get(node) for node in self.input_graph.nodes()]
+
+	def solve (self, method): # get partition
+		if method == 'leuven':
+			self.partition_leuven()
+		elif method == 'namespace':
+			self.partition_namespace()
+		else:
+			# first of all, compute the UNC based on namespace
+			# pass
+
+			self.result_graph  = self.input_graph.copy()
+
+			for node in self.result_graph.nodes():
+				self.result_graph.nodes[node]['group'] = randint(0,1)
+
+			self.partition = [self.result_graph.nodes[node]['group'] for node in self.result_graph.nodes()]
+
+
+# def visualize(self):
+# 	nt = Network('700px', '700px')
+# 	nt.from_nx(self.input_graph.graph)
+# 	# nt.enable_physics(True)
+# 	nt.show_buttons(filter_=['physics'])
+# 	nt.show('input.html')
+#
 # main
 gs = GraphSolver(path_to_input_graph = './Evaluate_May/11116_edges_original.csv',
 				path_to_gold_standard_graph = './Evaluate_May/11116_nodes_labelled.tsv')
 print (nx.info(gs.input_graph))
 
+# --
 # gs.get_encoding_equality_graph()
 # gs.get_redirect_graph()
 # gs.get_namespace_graph()
+gs.get_typeA_graph()
 
-gs.show_input_graph()
-
+# -- visualization --
+# gs.show_input_graph()
 # gs.show_redirect_graph()
 # gs.show_encoding_equivalence_graph()
 # gs.show_namespace_graph()
 
 
-# --solve --
+# -- solve --
 
-gs.show_gold_standard_graph()
+# -- show result --
+# gs.show_gold_standard_graph()
