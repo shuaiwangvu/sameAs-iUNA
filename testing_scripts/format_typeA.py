@@ -13,9 +13,15 @@ file2 = open('typeA_edited.nt', 'w')
 for l in file1.readlines():
 	splited = l.split(' ')
 	if splited[-2][1] == '"':
-		edited = splited[-2][1:-1] + "^^<http://www.w3.org/2001/XMLSchema#string>"
+		if "^^" in splited[-2]:
+			edited = splited[-2][1:-1] # keep that original one
+			# example "http://xmlns.com/foaf/0.1/"^^<http://www.w3.org/2001/XMLSchema#anyURI>
+		else: # else, add the following
+			edited = splited[-2][1:-1] + "^^<http://www.w3.org/2001/XMLSchema#string>"
 	new_line = splited[:2]
+
 	new_line.append(edited)
+
 	new_line.append(splited[-1])
 	# print ('\n',l)
 	# print ('converted to')
