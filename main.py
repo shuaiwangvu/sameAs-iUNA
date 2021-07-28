@@ -19,8 +19,8 @@ REMOVE = 1
 KEEP = 2
 
 hdt_source = HDTDocument("typeA.hdt")
-# hdt_label = HDTDocument("label_May.hdt")
-# hdt_comment = HDTDocument("comment_May.hdt")
+hdt_label = HDTDocument("label_May.hdt")
+hdt_comment = HDTDocument("comment_May.hdt")
 
 # PATH_LOD = "/scratch/wbeek/data/LOD-a-lot/data.hdt"
 # hdt_lod = HDTDocument(PATH_LOD)
@@ -301,14 +301,14 @@ class GraphSolver():
 		print ('The namespace has ', len (self.namespace_graph), ' attacking edges')
 
 	def get_typeA_graph (self):
-		print ('generating typeA graph')
+		print ('\ngenerating typeA graph')
 		# load the resources and
 		source_files = []
 		for e in self.input_graph.nodes():
 			triples, cardinality = hdt_source.search_triples(e, "", "")
 			for (_, _, file) in triples:
 				source_files.append(file)
-		print ('There are in total ', len (source_files), 'label source files')
+		print ('There are in total ', len (source_files), 'source files')
 
 		file_to_entities = {}
 		for e in self.input_graph.nodes():
@@ -320,37 +320,44 @@ class GraphSolver():
 					file_to_entities [file].append(e)
 
 		for f in file_to_entities.keys():
-			for i, e in enumerate(file_to_entities.values()):
-				for f in file_to_entities.values()[i+1:]:
+			for i, e in enumerate(file_to_entities[f]):
+				for f in list(file_to_entities[f])[i+1:]:
 					self.typeA_graph.add_edge(e, f)
 		print ('There are in total ', len (self.typeA_graph.edges()), 'attacking edges from this source file')
 
 
 
-def get_typeB_graph (self):
-	print ('generating typeB graph')
-	# load the resources and
-	source_files = []
-	for e in self.input_graph.nodes():
-		triples, cardinality = hdt_label.search_triples(e, "", "")
-		for (_, _, file) in triples:
-			source_files.append(file)
-	print ('There are in total ', len (source_files), 'label source files')
+	def get_typeB_graph (self):
+		print ('\ngenerating typeB graph')
+		# load the resources and
+		source_files = []
+		for e in self.input_graph.nodes():
+			triples, cardinality = hdt_label.search_triples(e, my_has_label_in_file, "")
+			for (_, _, file) in triples:
+				source_files.append(file)
+		print ('There are in total ', len (source_files), 'label source files')
 
-	file_to_entities = {}
-	for e in self.input_graph.nodes():
-		triples, cardinality = hdt_label.search_triples(e, "", "")
-		for (e, _, file) in triples:
-			if file not in file_to_entities.keys():
-				file_to_entities [file] = [e]
-			else:
-				file_to_entities [file].append(e)
+		file_to_entities = {}
+		for e in self.input_graph.nodes():
+			triples, cardinality = hdt_label.search_triples(e, my_has_label_in_file, "")
+			for (e, _, file) in triples:
+				if file not in file_to_entities.keys():
+					file_to_entities [file] = [e]
+				else:
+					file_to_entities [file].append(e)
 
-	for f in file_to_entities.keys():
-		for i, e in enumerate(file_to_entities.values()):
-			for f in file_to_entities.values()[i+1:]:
-				self.typeA_graph.add_edge(e, f)
-	print ('There are in total ', len (self.typeA_graph.edges()), 'attacking edges from this source file')
+
+
+		for file in file_to_entities.keys():
+			if len(file_to_entities[file]) >1:
+				print ('\nfile ', file, ' has ', len (file_to_entities[file]), 'entities')
+
+			for i, e in enumerate(file_to_entities[file]):
+				if len(file_to_entities[file]) >1:
+					print ('No.', i, ' = ', e)
+				for f in list(file_to_entities[file])[i+1:]:
+					self.typeB_graph.add_edge(e, f)
+		print ('There are in total ', len (self.typeB_graph.edges()), 'attacking edges from this label file')
 
 
 	def get_typeC_graph (self):
@@ -466,6 +473,7 @@ print (nx.info(gs.input_graph))
 # gs.get_redirect_graph()
 # gs.get_namespace_graph()
 gs.get_typeA_graph()
+gs.get_typeB_graph()
 
 # -- visualization --
 # gs.show_input_graph()
