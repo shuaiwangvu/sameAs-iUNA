@@ -18,14 +18,14 @@ UNKNOWN = 0
 REMOVE = 1
 KEEP = 2
 
-hdt_source = HDTDocument("typeA.hdt")
-hdt_label = HDTDocument("label_May.hdt")
-hdt_comment = HDTDocument("comment_May.hdt")
-
-PATH_META = "/home/jraad/ssd/data/identity/metalink/metalink.hdt"
-hdt_metalink = HDTDocument(PATH_META)
-
-hdt_sameas_source = HDTDocument("sameas_source.hdt")
+# hdt_source = HDTDocument("typeA.hdt")
+# hdt_label = HDTDocument("label_May.hdt")
+# hdt_comment = HDTDocument("comment_May.hdt")
+#
+# PATH_META = "/home/jraad/ssd/data/identity/metalink/metalink.hdt"
+# hdt_metalink = HDTDocument(PATH_META)
+#
+# hdt_sameas_source = HDTDocument("sameas_source.hdt")
 
 # PATH_LOD = "/scratch/wbeek/data/LOD-a-lot/data.hdt"
 # hdt_lod = HDTDocument(PATH_LOD)
@@ -550,7 +550,20 @@ class GraphSolver():
 
 			self.partition = [self.result_graph.nodes[node]['group'] for node in self.result_graph.nodes()]
 
+	def test_violates_iUNA(self, context='namespace'):
+		if context=='namespace':
+		for (s,t) in self.gold_standard_graph.edges():
+			if self.gold_standard_graph.edges[s, t]['decision'] == KEEP:
+				s_prefix = get_namespace(s)
+				t_prefix = get_namespace(t)
+				count_violated = 0
+				acc_violated = []
+				if s_prefix != None and t_prefix != None and s_prefix == t_prefix:
+					count_violated += 1
+					acc_violated.append((s,t))
 
+		print ('found', count_violated)
+		print ('')
 # def visualize(self):
 # 	nt = Network('700px', '700px')
 # 	nt.from_nx(self.input_graph.graph)
@@ -563,6 +576,9 @@ gs = GraphSolver(path_to_input_graph = './Evaluate_May/11116_edges_original.csv'
 				path_to_gold_standard_graph = './Evaluate_May/11116_nodes_labelled.tsv')
 print (nx.info(gs.input_graph))
 
+#---test how many violates the iUNA when context = namespace
+gs.test_violates_iUNA ()
+
 # --
 # gs.get_encoding_equality_graph()
 # gs.get_redirect_graph()
@@ -570,7 +586,7 @@ print (nx.info(gs.input_graph))
 # gs.get_typeA_graph()
 # gs.get_typeB_graph()
 # gs.get_typeC_graph()
-gs.add_redundency_weight()
+# gs.add_redundency_weight()
 
 # -- visualization --
 # gs.show_input_graph()
