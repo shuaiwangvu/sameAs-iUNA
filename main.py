@@ -550,20 +550,77 @@ class GraphSolver():
 
 			self.partition = [self.result_graph.nodes[node]['group'] for node in self.result_graph.nodes()]
 
-	def test_violates_iUNA(self, context='namespace'):
+	def test_violates_iUNA(self, context='namespace', exception = 'encoding_equivalence'):
 		if context=='namespace':
-		for (s,t) in self.gold_standard_graph.edges():
-			if self.gold_standard_graph.edges[s, t]['decision'] == KEEP:
-				s_prefix = get_namespace(s)
-				t_prefix = get_namespace(t)
-				count_violated = 0
-				acc_violated = []
-				if s_prefix != None and t_prefix != None and s_prefix == t_prefix:
-					count_violated += 1
-					acc_violated.append((s,t))
 
-		print ('found', count_violated)
-		print ('')
+			count_unknown = 0
+			count_keep = 0
+			count_remove = 0
+
+			count_keep_violates_iUNA = 0
+			count_keep_follows_iUNA = 0
+			count_keep_encoding_equivalence = 0
+
+			count_remove_violates_iUNA = 0
+			count_remove_follows_iUNA = 0
+			count_remove_encoding_equivalence = 0
+
+			for (s,t) in self.gold_standard_graph.edges():
+				if self.gold_standard_graph.edges[s, t]['decision'] == KEEP:
+					count_keep += 1
+					s_prefix = get_namespace(s)
+					t_prefix = get_namespace(t)
+
+					if s_prefix != None and t_prefix != None and s_prefix == t_prefix :
+						count_keep_violates_iUNA += 1
+						if exception == 'encoding_equivalence':
+							if (s,t) in self.encoding_equality_graph.edges():
+								count_keep_encoding_equivalence += 1
+
+					if s_prefix != None and t_prefix != None and s_prefix != t_prefix:
+						count_keep_follows_iUNA += 1
+
+				elif self.gold_standard_graph.edges[s, t]['decision'] == UNKNOWN:
+					count_unknown += 1
+				elif self.gold_standard_graph.edges[s, t]['decision'] == REMOVE:
+					count_remove += 1
+
+					s_prefix = get_namespace(s)
+					t_prefix = get_namespace(t)
+
+					if s_prefix != None and t_prefix != None and s_prefix == t_prefix:
+						count_remove_violates_iUNA += 1
+						if exception == 'encoding_equivalence':
+							if (s,t) in self.encoding_equality_graph.edges():
+								count_remove_encoding_equivalence += 1
+
+					if s_prefix != None and t_prefix != None and s_prefix != t_prefix:
+						count_remove_follows_iUNA += 1
+
+
+		print ('count unknown: ', count_unknown)
+
+		print ('count keep: ', count_keep)
+		print ('\t violating iUNA-namespace: ', count_keep_violates_iUNA)
+		print ('\t\t considering encoding equivalence: -',count_keep_encoding_equivalence)
+		print ('\t following iUNA-namespace: ', count_keep_follows_iUNA)
+
+
+		print ('count remove: ', count_remove)
+		print ('\t violating iUNA-namespace: ', count_remove_violates_iUNA)
+		print ('\t\t considering encoding equivalence: -', count_remove_encoding_equivalence)
+		print ('\t following iUNA-namespace: ', count_remove_follows_iUNA)
+
+		print ('when not considering encoding equivalence:', count_keep_follows_iUNA + count_remove_violates_iUNA, ' : ', count_keep_violates_iUNA + count_remove_follows_iUNA)
+		ratio1 = (count_keep_follows_iUNA + count_remove_violates_iUNA) / ( count_keep_follows_iUNA + count_remove_violates_iUNA + count_keep_violates_iUNA + count_remove_follows_iUNA)
+		print ('the ratio of aligned v.s. against = ', ratio1)
+
+		print ('\nwhen taking encoding equivalence into consideration', count_keep_follows_iUNA + count_remove_violates_iUNA - count_remove_encoding_equivalence  + count_keep_encoding_equivalence, ' : ', count_keep_violates_iUNA + count_remove_follows_iUNA - count_keep_encoding_equivalence + count_remove_encoding_equivalence)
+		ratio2 = (count_keep_follows_iUNA + count_remove_violates_iUNA - count_remove_encoding_equivalence  + count_keep_encoding_equivalence) / (count_keep_follows_iUNA + count_remove_violates_iUNA  + count_keep_violates_iUNA + count_remove_follows_iUNA )
+		print ('the ratio of aligned v.s. against = ', ratio2)
+
+		return (ratio1, ratio2)
+
 # def visualize(self):
 # 	nt = Network('700px', '700px')
 # 	nt.from_nx(self.input_graph.graph)
@@ -572,13 +629,33 @@ class GraphSolver():
 # 	nt.show('input.html')
 #
 # main
-gs = GraphSolver(path_to_input_graph = './Evaluate_May/11116_edges_original.csv',
-				path_to_gold_standard_graph = './Evaluate_May/11116_nodes_labelled.tsv')
-print (nx.info(gs.input_graph))
+graph_ids = [11116, 240577, 395175, 14514123]
+ratio1_avg = 0
+ratio2_avg = 0
 
-#---test how many violates the iUNA when context = namespace
-gs.test_violates_iUNA ()
+for graph_id in graph_ids:
+	# graph_id = '11116'
+	print ('\n\n\ngraph id = ', str(graph_id))
+	gs = GraphSolver(path_to_input_graph = './Evaluate_May/' + str(graph_id) + '_edges_original.csv',
+					path_to_gold_standard_graph = './Evaluate_May/'  + str(graph_id) + '_nodes_labelled.tsv')
 
+	print (nx.info(gs.input_graph))
+
+	print ('\ncomputing the encoding equivalence graph')
+	gs.get_encoding_equality_graph()
+
+
+	print ('\nNow work on the validation')
+	#---test how many violates the iUNA when context = namespace
+	ratio1,  ratio2 = gs.test_violates_iUNA (context='namespace', exception = 'encoding_equivalence')
+	ratio1_avg += ratio1
+	ratio2_avg += ratio2
+
+ratio1_avg = ratio1_avg/len(graph_ids)
+ratio2_avg = ratio2_avg/len(graph_ids)
+
+print ('ratio 1 avg = ', ratio1_avg)
+print ('ratio 2 avg = ', ratio2_avg)
 # --
 # gs.get_encoding_equality_graph()
 # gs.get_redirect_graph()
