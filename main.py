@@ -12,6 +12,7 @@ from collections import Counter
 from rfc3987 import  parse
 import urllib.parse
 from hdt import HDTDocument, IdentifierPosition
+from z3 import *
 
 
 UNKNOWN = 0
@@ -83,7 +84,7 @@ def find_redirects (iri):
 	try:
 		# print ('test 2')
 		collect_urls = []
-		response = requests.get(iri, timeout=0.1, allow_redirects=True)
+		response = requests.get(iri, timeout=0.01, allow_redirects=True)
 
 		# import urllib3
 		#
@@ -338,17 +339,17 @@ class GraphSolver():
 
 		for ns in namespace_to_entities.keys():
 			ns_entities = namespace_to_entities[ns]
-			if len (ns_entities)>1:
-				print ('\nnamesapce ', ns)
-				print ('has ', len (ns_entities), ' entities:')
-				for e in namespace_to_entities[ns]:
-					print ('\t',e)
+			# if len (ns_entities)>1:
+				# print ('\nnamesapce ', ns)
+				# print ('has ', len (ns_entities), ' entities:')
+				# for e in namespace_to_entities[ns]:
+				# 	print ('\t',e)
 
 			for i, e in enumerate(ns_entities):
 				for f in ns_entities[i+1:]:
 					self.namespace_graph.add_edge(e, f)
 
-		print ('The namespace has ', len (self.namespace_graph), ' attacking edges')
+		print ('The namespace graph has ', len (self.namespace_graph.edges()), ' attacking edges in total')
 
 	def get_typeA_graph (self):
 		print ('\ngenerating typeA graph')
@@ -534,21 +535,67 @@ class GraphSolver():
 			self.result_graph.nodes[node]['group'] = partition.get(node)
 		self.partition = [partition.get(node) for node in self.input_graph.nodes()]
 
-	def solve (self, method): # get partition
+	def solve (self, method="leuven"): # get partition
 		if method == 'leuven':
 			self.partition_leuven()
 		elif method == 'namespace':
 			self.partition_namespace()
-		else:
-			# first of all, compute the UNC based on namespace
-			# pass
+		elif method == "smt":
+			print ('solving using smt')
+			# resulting graph
+			self.result_graph = self.input_graph.copy()
 
-			self.result_graph  = self.input_graph.copy()
+			# encode the existing graph with weight 1
+			o = Optimize()
+			timeout = 1000 * 10 # depending on the size of the graph
+			o.set("timeout", timeout)
+			print('timeout = ',timeout/1000/60, 'mins')
+			encode = {}
 
-			for node in self.result_graph.nodes():
-				self.result_graph.nodes[node]['group'] = randint(0,1)
+			encode_id = 1
+			for (left, right) in self.input_graph.edges():
+				encode[(left, right)] = Bool(str(encode_id))
+				encode_id += 1
+				o.add_soft(encode[(left, right)], 1)
 
-			self.partition = [self.result_graph.nodes[node]['group'] for node in self.result_graph.nodes()]
+			# add attacking edges: namespace
+			for (left, right) in self.namespace_graph.edges():
+				if (left, right) not in encode.keys():
+					encode[(left, right)] = Bool(str(encode_id))
+					encode_id += 1
+				o.add_soft(encode[(left, right)], -1)
+
+			# add confirming edges: encoding equivalence
+			for (left, right) in self.encoding_equality_graph.edges():
+				if (left, right) not in encode.keys():
+					encode[(left, right)] = Bool(str(encode_id))
+					encode_id += 1
+				o.add_soft(encode[(left, right)], 1)
+
+
+			if o.check() == 'unknown':
+				print ('WhAT!!!')
+				num_clause_limit -= 20
+				print ('reduce clause limit to ', num_clause_limit)
+				return []
+			else:
+				# print ('start decoding')
+				# print ('>encode length ', len(encode.keys()))
+				identified_edges = []
+				m = o.model()
+				for arc in self.input_graph.edges():
+					(left, right) = arc
+					if m.evaluate(encode[arc]) == False:
+						identified_edges.append(arc)
+					elif m.evaluate(encode[arc]) == True:
+						self.result_graph.add_edge(left, right)
+					else:
+						print ('error in decoding!')
+			print ('After solving, there are ', len (identified_edges), ' removed')
+			print ('After solving, there are ', len (self.result_graph.edges()), ' remaining edges')
+			# finally, compute the partitioning
+			self.partition = None
+
 
 	def test_violates_iUNA(self, context='namespace', exception = 'encoding_equivalence'):
 		if context=='namespace':
@@ -629,10 +676,42 @@ class GraphSolver():
 # 	nt.show('input.html')
 #
 # main
-graph_ids = [11116, 240577, 395175, 14514123]
-ratio1_avg = 0
-ratio2_avg = 0
+# graph_ids = [11116, 240577, 395175, 14514123]
+# graph_ids = [11116]
+# ratio1_avg = 0
+# ratio2_avg = 0
 
+# for graph_id in graph_ids:
+# 	# graph_id = '11116'
+# 	print ('\n\n\ngraph id = ', str(graph_id))
+# 	gs = GraphSolver(path_to_input_graph = './Evaluate_May/' + str(graph_id) + '_edges_original.csv',
+# 					path_to_gold_standard_graph = './Evaluate_May/'  + str(graph_id) + '_nodes_labelled.tsv')
+#
+# 	print (nx.info(gs.input_graph))
+#
+# 	print ('\ncomputing the encoding equivalence graph')
+# 	# attacking edges:
+# 	gs.get_namespace_graph()
+# 	# confirming edges:
+# 	gs.get_redirect_graph()
+# 	gs.get_encoding_equality_graph()
+#
+# 	print ('\nNow work on the validation')
+# 	#---test how many violates the iUNA when context = namespace
+# 	ratio1,  ratio2 = gs.test_violates_iUNA (context='namespace', exception = 'encoding_equivalence')
+# 	ratio1_avg += ratio1
+# 	ratio2_avg += ratio2
+#
+# ratio1_avg = ratio1_avg/len(graph_ids)
+# ratio2_avg = ratio2_avg/len(graph_ids)
+#
+# print ('ratio 1 avg = ', ratio1_avg)
+# print ('ratio 2 avg = ', ratio2_avg)
+#
+#
+
+
+graph_ids = [11116]
 for graph_id in graph_ids:
 	# graph_id = '11116'
 	print ('\n\n\ngraph id = ', str(graph_id))
@@ -641,21 +720,18 @@ for graph_id in graph_ids:
 
 	print (nx.info(gs.input_graph))
 
-	print ('\ncomputing the encoding equivalence graph')
+	# print ('\ncomputing the encoding equivalence graph')
+	# attacking edges:
+	gs.get_namespace_graph()
+	# confirming edges:
+	# gs.get_redirect_graph()
 	gs.get_encoding_equality_graph()
 
-
-	print ('\nNow work on the validation')
+	# print ('\nNow work on the validation')
 	#---test how many violates the iUNA when context = namespace
-	ratio1,  ratio2 = gs.test_violates_iUNA (context='namespace', exception = 'encoding_equivalence')
-	ratio1_avg += ratio1
-	ratio2_avg += ratio2
+	gs.solve(method = 'smt')
 
-ratio1_avg = ratio1_avg/len(graph_ids)
-ratio2_avg = ratio2_avg/len(graph_ids)
 
-print ('ratio 1 avg = ', ratio1_avg)
-print ('ratio 2 avg = ', ratio2_avg)
 # --
 # gs.get_encoding_equality_graph()
 # gs.get_redirect_graph()
