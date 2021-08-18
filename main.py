@@ -84,7 +84,7 @@ def find_redirects (iri):
 	try:
 		# print ('test 2')
 		collect_urls = []
-		response = requests.get(iri, timeout=0.01, allow_redirects=True)
+		response = requests.get(iri, timeout=0.1, allow_redirects=True)
 
 		# import urllib3
 		#
@@ -269,6 +269,7 @@ class GraphSolver():
 		self.redirect_graph = redi_graph
 
 	def get_encoding_equality_graph(self):
+		print ('\n\n <<< Getting encoding equality graph >>>')
 		#step 1: make an authority map to node
 		authority_map = {}
 		variance_map = {}
@@ -327,6 +328,7 @@ class GraphSolver():
 		self.encoding_equality_graph = encoding_equality_graph
 
 	def get_namespace_graph(self):
+		print ('\n\n <<< Getting namespace graph >>>')
 		namespace_to_entities = {}
 		for e in self.input_graph.nodes():
 			ns = self.input_graph.nodes[e]['namespace']
@@ -371,9 +373,9 @@ class GraphSolver():
 					file_to_entities [file].append(e)
 
 		for f in file_to_entities.keys():
-			for i, e in enumerate(file_to_entities[f]):
-				for f in list(file_to_entities[f])[i+1:]:
-					self.typeA_graph.add_edge(e, f)
+			for i, s in enumerate(file_to_entities[f]):
+				for t in list(file_to_entities[f])[i+1:]:
+					self.typeA_graph.add_edge(s, t)
 		print ('There are in total ', len (self.typeA_graph.edges()), 'attacking edges from this source file')
 
 	def get_typeB_graph (self):
@@ -394,7 +396,6 @@ class GraphSolver():
 					file_to_entities [file] = [e]
 				else:
 					file_to_entities [file].append(e)
-
 
 
 		for file in file_to_entities.keys():
@@ -468,7 +469,15 @@ class GraphSolver():
 		plt.title('Input')
 		plt.show()
 
+	def show_result_graph(self):
+		g = self.result_graph
+		# sp = nx.spring_layout(g)
+		nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=25)
+		plt.title('Result')
+		plt.show()
+
 	def show_redirect_graph(self):
+		print ('\n\n <<< Getting redirect graph >>>')
 		g = self.redirect_graph
 		# sp = nx.spring_layout(g)
 		# nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=35)
@@ -536,18 +545,20 @@ class GraphSolver():
 		self.partition = [partition.get(node) for node in self.input_graph.nodes()]
 
 	def solve (self, method="leuven"): # get partition
+		print ('*********** SOLVING ************')
 		if method == 'leuven':
 			self.partition_leuven()
 		elif method == 'namespace':
 			self.partition_namespace()
 		elif method == "smt":
-			print ('solving using smt')
+			print ('\n\nsolving using smt')
 			# resulting graph
-			self.result_graph = self.input_graph.copy()
+			self.result_graph = nx.Graph()
+			self.result_graph.add_nodes_from(self.input_graph.nodes())
 
 			# encode the existing graph with weight 1
 			o = Optimize()
-			timeout = 1000 * 10 # depending on the size of the graph
+			timeout = 1000 * 60 # depending on the size of the graph
 			o.set("timeout", timeout)
 			print('timeout = ',timeout/1000/60, 'mins')
 			encode = {}
@@ -556,28 +567,36 @@ class GraphSolver():
 			for (left, right) in self.input_graph.edges():
 				encode[(left, right)] = Bool(str(encode_id))
 				encode_id += 1
-				o.add_soft(encode[(left, right)], 1)
+				o.add_soft(encode[(left, right)], 2)
 
+			count_namespace = 0
 			# add attacking edges: namespace
 			for (left, right) in self.namespace_graph.edges():
 				if (left, right) not in encode.keys():
 					encode[(left, right)] = Bool(str(encode_id))
 					encode_id += 1
-				o.add_soft(encode[(left, right)], -1)
+				if (left, right) not in self.redirect_graph and (left, right) not in self.encoding_equality_graph:
+					o.add_soft(Not(encode[(left, right)]), 2)
+					count_namespace += 1
+			print ('count namesapce soft clauses = ', count_namespace)
 
 			# add confirming edges: encoding equivalence
 			for (left, right) in self.encoding_equality_graph.edges():
 				if (left, right) not in encode.keys():
 					encode[(left, right)] = Bool(str(encode_id))
 					encode_id += 1
-				o.add_soft(encode[(left, right)], 1)
+				o.add_soft(encode[(left, right)], 10)
+
+			# add confirming edges: redirect
+			for (left, right) in self.redirect_graph.edges():
+				if (left, right) not in encode.keys():
+					encode[(left, right)] = Bool(str(encode_id))
+					encode_id += 1
+				o.add_soft(encode[(left, right)], 10)
 
 
 			if o.check() == 'unknown':
-				print ('WhAT!!!')
-				num_clause_limit -= 20
-				print ('reduce clause limit to ', num_clause_limit)
-				return []
+				print ('What!!!')
 			else:
 				# print ('start decoding')
 				# print ('>encode length ', len(encode.keys()))
@@ -591,9 +610,16 @@ class GraphSolver():
 						self.result_graph.add_edge(left, right)
 					else:
 						print ('error in decoding!')
+
 			print ('After solving, there are ', len (identified_edges), ' removed')
 			print ('After solving, there are ', len (self.result_graph.edges()), ' remaining edges')
-			# finally, compute the partitioning
+			print ('After solving, there are ', len (self.result_graph.nodes()), ' remaining nodes')
+
+			# compute the connected components (for undirected graphs)
+			comps  = nx.connected_components(self.result_graph)
+			print ([len(c) for c in sorted(comps, key=len, reverse=True)])
+
+			# Finally, compute the partitions
 			self.partition = None
 
 
@@ -711,7 +737,8 @@ class GraphSolver():
 #
 
 
-graph_ids = [11116]
+graph_ids = [11116, 240577, 395175, 14514123]
+
 for graph_id in graph_ids:
 	# graph_id = '11116'
 	print ('\n\n\ngraph id = ', str(graph_id))
@@ -724,12 +751,13 @@ for graph_id in graph_ids:
 	# attacking edges:
 	gs.get_namespace_graph()
 	# confirming edges:
-	# gs.get_redirect_graph()
+	gs.get_redirect_graph()
 	gs.get_encoding_equality_graph()
 
 	# print ('\nNow work on the validation')
 	#---test how many violates the iUNA when context = namespace
 	gs.solve(method = 'smt')
+	gs.show_result_graph()
 
 
 # --

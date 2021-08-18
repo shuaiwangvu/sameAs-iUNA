@@ -1,0 +1,131 @@
+# the record of iUNA validation
+# Part 1: first is only testing with namespace, without using encoding equivalence
+
+
+
+graph id =  11116
+
+
+
+
+Group  1 is about  mathematical_function  with  143  entities
+Group  0 is about  unknown  with  84  entities
+Group  2 is about  value  with  9  entities
+Group  3 is about  function_disambiguition  with  25  entities
+Group  4 is about  real_function  with  18  entities
+Group  5 is about  propositional_function  with  11  entities
+Group  6 is about  value_disambiguition  with  2  entities
+now compute removed edges in the gold standard
+there are in total  33  edges removed
+there are in total  1151  edges involving unknown
+Name:
+Type: Graph
+Number of nodes: 292
+Number of edges: 4403
+Average degree:  30.1575
+count unknown:  1151
+count keep:  3219
+	 violating iUNA-namespace:  57
+	 following iUNA-namespace:  3162
+count remove:  33
+	 violating iUNA-namespace:  32
+	 following iUNA-namespace:  1
+
+
+
+graph id =  240577
+
+
+
+
+Group  1 is about  Formula2012  with  69  entities
+Group  2 is about  AbuDhabi2012  with  39  entities
+Group  3 is about  Indian2012  with  37  entities
+Group  4 is about  Belgian2012  with  39  entities
+Group  5 is about  Brazil2012  with  38  entities
+Group  6 is about  UK2012  with  37  entities
+Group  7 is about  Germany2012  with  31  entities
+Group  8 is about  Canada2012  with  40  entities
+Group  9 is about  Singapore2012  with  39  entities
+Group  10 is about  Hungarian2012  with  36  entities
+Group  11 is about  Korean2012  with  37  entities
+Group  12 is about  Japanese2012  with  39  entities
+Group  13 is about  Europe2012  with  34  entities
+Group  0 is about  unknown  with  73  entities
+Group  14 is about  Italy2012  with  37  entities
+Group  15 is about  German2012  with  8  entities
+now compute removed edges in the gold standard
+there are in total  129  edges removed
+there are in total  1445  edges involving unknown
+Name:
+Type: Graph
+Number of nodes: 633
+Number of edges: 6012
+Average degree:  18.9953
+count unknown:  1445
+count keep:  4438
+	 violating iUNA-namespace:  149
+	 following iUNA-namespace:  4289
+count remove:  129
+	 violating iUNA-namespace:  122
+	 following iUNA-namespace:  7
+
+
+
+graph id =  395175
+
+
+
+
+Group  1 is about  Iguazu_Waterfall  with  141  entities
+Group  2 is about  Virginia_Beach  with  102  entities
+Group  0 is about  unknown  with  60  entities
+Group  3 is about  Iguacu_river  with  89  entities
+Group  4 is about  Iguacu_disambiguition  with  30  entities
+now compute removed edges in the gold standard
+there are in total  140  edges removed
+there are in total  898  edges involving unknown
+Name:
+Type: Graph
+Number of nodes: 422
+Number of edges: 5144
+Average degree:  24.3791
+count unknown:  898
+count keep:  4106
+	 violating iUNA-namespace:  127
+	 following iUNA-namespace:  3979
+count remove:  140
+	 violating iUNA-namespace:  140
+	 following iUNA-namespace:  0
+
+
+
+graph id =  14514123
+
+
+
+
+Group  0 is about  unknown  with  18  entities
+Group  1 is about  container_deposite_legislation/law/deposite_return_system/bottle_bill  with  23  entities
+Group  2 is about  reuse_of_bottles  with  9  entities
+Group  3 is about  container_warranty/container_deposite  with  4  entities
+Group  4 is about  reusable_bottles  with  2  entities
+now compute removed edges in the gold standard
+there are in total  19  edges removed
+there are in total  71  edges involving unknown
+Name:
+Type: Graph
+Number of nodes: 56
+Number of edges: 137
+Average degree:   4.8929
+count unknown:  71
+count keep:  47
+	 violating iUNA-namespace:  8
+	 following iUNA-namespace:  39
+count remove:  19
+	 violating iUNA-namespace:  19
+	 following iUNA-namespace:  0
+
+
+
+# Part 2: namespace + encoding equivalence
