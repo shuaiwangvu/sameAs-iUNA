@@ -19,6 +19,10 @@ UNKNOWN = 0
 REMOVE = 1
 KEEP = 2
 
+hdt_source = None
+hdt_label = None
+hdt_comment = None
+
 # hdt_source = HDTDocument("typeA.hdt")
 # hdt_label = HDTDocument("label_May.hdt")
 # hdt_comment = HDTDocument("comment_May.hdt")
@@ -84,7 +88,7 @@ def find_redirects (iri):
 	try:
 		# print ('test 2')
 		collect_urls = []
-		response = requests.get(iri, timeout=0.1, allow_redirects=True)
+		response = requests.get(iri, timeout=0.01, allow_redirects=True)
 
 		# import urllib3
 		#
@@ -214,7 +218,7 @@ class GraphSolver():
 		self.source_graph = nx.Graph()
 
 		# additional information
-		self.redirect_graph = nx.DiGraph()
+		self.redirect_graph = nx.Graph()
 		self.encoding_equality_graph = nx.Graph()
 
 		# type A B C graphs
@@ -236,7 +240,7 @@ class GraphSolver():
 
 
 	def get_redirect_graph (self):
-		redi_graph = nx.DiGraph()
+		redi_graph = nx.Graph()
 		ct = Counter()
 		new_nodes = set()
 		count_nodes_not_in_graph = 0
@@ -354,7 +358,7 @@ class GraphSolver():
 		print ('The namespace graph has ', len (self.namespace_graph.edges()), ' attacking edges in total')
 
 	def get_typeA_graph (self):
-		print ('\ngenerating typeA graph')
+		print ('\n<<< generating typeA graph>>>')
 		# load the resources and
 		source_files = []
 		for e in self.input_graph.nodes():
@@ -379,7 +383,7 @@ class GraphSolver():
 		print ('There are in total ', len (self.typeA_graph.edges()), 'attacking edges from this source file')
 
 	def get_typeB_graph (self):
-		print ('\ngenerating typeB graph')
+		print ('\n<<<<generating typeB graph>>>')
 		# load the resources and
 		source_files = []
 		for e in self.input_graph.nodes():
@@ -410,7 +414,7 @@ class GraphSolver():
 		print ('There are in total ', len (self.typeB_graph.edges()), 'attacking edges from this label file')
 
 	def get_typeC_graph (self):
-		print ('\ngenerating typeC graph')
+		print ('\n<<<<generating typeC graph>>>')
 		# load the resources and
 		source_files = []
 		for e in self.input_graph.nodes():
@@ -428,15 +432,13 @@ class GraphSolver():
 				else:
 					file_to_entities [file].append(e)
 
-
-
 		for file in file_to_entities.keys():
-			if len(file_to_entities[file]) >1:
-				print ('\nfile ', file, ' has ', len (file_to_entities[file]), 'entities')
+		# 	if len(file_to_entities[file]) >1:
+		# 		print ('\nfile ', file, ' has ', len (file_to_entities[file]), 'entities')
 
 			for i, e in enumerate(file_to_entities[file]):
-				if len(file_to_entities[file]) >1:
-					print ('No.', i, ' = ', e)
+				# if len(file_to_entities[file]) >1:
+				# 	print ('No.', i, ' = ', e)
 				for f in list(file_to_entities[file])[i+1:]:
 					self.typeC_graph.add_edge(e, f)
 		print ('There are in total ', len (self.typeC_graph.edges()), 'attacking edges from this comment file')
@@ -562,40 +564,110 @@ class GraphSolver():
 			o.set("timeout", timeout)
 			print('timeout = ',timeout/1000/60, 'mins')
 			encode = {}
+			soft_clauses = {}
 
 			encode_id = 1
-			for (left, right) in self.input_graph.edges():
-				encode[(left, right)] = Bool(str(encode_id))
+			weight_input = 2
+			for n in self.input_graph.nodes():
+				encode[n] = Int(str(encode_id))
 				encode_id += 1
-				o.add_soft(encode[(left, right)], 2)
+				o.add(encode[n] > Int(0))
+				o.add(encode[n] < Int(10))
 
-			count_namespace = 0
-			# add attacking edges: namespace
-			for (left, right) in self.namespace_graph.edges():
-				if (left, right) not in encode.keys():
-					encode[(left, right)] = Bool(str(encode_id))
-					encode_id += 1
+			for (left, right) in self.input_graph.edges():
+				clause = (encode[left] == encode[right])
+				soft_clauses[clause] = weight_input
+
+			# count_attacking = 0
+			# # add attacking edges: namespace
+			# weight_namespace = 2
+			# for (left, right) in self.namespace_graph.edges():
+			#
+			# 	if (left, right) not in self.redirect_graph and (left, right) not in self.encoding_equality_graph:
+			# 		clause = Not(encode[left] == encode[right])
+			# 		if clause in soft_clauses.keys():
+			# 			soft_clauses[clause] += weight_namespace
+			# 		else:
+			# 			soft_clauses[clause] = weight_namespace
+			# 		count_attacking += 1
+			# print ('count namesapce soft clauses = ', count_attacking)
+
+			# add attacking edges: typeA
+			count_attacking = 0
+			weight_typeA = 1
+			for (left, right) in self.typeA_graph.edges():
+
 				if (left, right) not in self.redirect_graph and (left, right) not in self.encoding_equality_graph:
-					o.add_soft(Not(encode[(left, right)]), 2)
-					count_namespace += 1
-			print ('count namesapce soft clauses = ', count_namespace)
+					# print (left, '-- A --', right)
+					clause = Not(encode[left] == encode[right])
+					if clause in soft_clauses.keys():
+						soft_clauses[clause] += weight_typeA
+					else:
+						soft_clauses[clause] = weight_typeA
+					count_attacking += 1
+			print ('type A: count soft clauses = ', count_attacking)
+
+			# add attacking edges: typeB
+			count_attacking = 0
+			weight_typeB = 1
+			for (left, right) in self.typeB_graph.edges():
+
+				if (left, right) not in self.redirect_graph and (left, right) not in self.encoding_equality_graph:
+					# print (left, '-- B --', right)
+					clause = Not(encode[left] == encode[right])
+					if clause in soft_clauses.keys():
+						soft_clauses[clause] += weight_typeB
+					else:
+						soft_clauses[clause] = weight_typeB
+					count_attacking += 1
+			print ('type B: count soft clauses = ', count_attacking)
+
+			# add attacking edges: typeC
+			count_attacking = 0
+			weight_typeC = 1
+			for (left, right) in self.typeC_graph.edges():
+
+				if (left, right) not in self.redirect_graph and (left, right) not in self.encoding_equality_graph:
+					# print (left, '-- C --', right)
+					clause = Not(encode[left] == encode[right])
+					if clause in soft_clauses.keys():
+						soft_clauses[clause] += weight_typeC
+					else:
+						soft_clauses[clause] = weight_typeC
+					count_attacking += 1
+			print ('type C: count soft clauses = ', count_attacking)
+
+			for clause in soft_clauses.keys():
+				# print ('clause = ', clause)
+				o.add_soft(clause, soft_clauses[clause])
+
 
 			# add confirming edges: encoding equivalence
+			weight_encoding_equivalence = 5
 			for (left, right) in self.encoding_equality_graph.edges():
-				if (left, right) not in encode.keys():
-					encode[(left, right)] = Bool(str(encode_id))
-					encode_id += 1
-				o.add_soft(encode[(left, right)], 10)
+				clause = (encode[left] == encode[right])
+				if clause in soft_clauses.keys():
+					soft_clauses[clause] += weight_encoding_equivalence
+				else:
+					soft_clauses[clause] = weight_encoding_equivalence
 
 			# add confirming edges: redirect
+			weight_redirect = 5
 			for (left, right) in self.redirect_graph.edges():
-				if (left, right) not in encode.keys():
-					encode[(left, right)] = Bool(str(encode_id))
-					encode_id += 1
-				o.add_soft(encode[(left, right)], 10)
+				clause = (encode[left] == encode[right])
+				if clause in soft_clauses.keys():
+					soft_clauses[clause] += weight_redirect
+				else:
+					soft_clauses[clause] = weight_redirect
 
 
-			if o.check() == 'unknown':
+			# print(o.statistics())
+			# print(o)
+
+			smt_result = o.check()
+			print ('the SMT result is ', smt_result)
+			# smt_result = o.maximize()
+			if smt_result == 'unknown':
 				print ('What!!!')
 			else:
 				# print ('start decoding')
@@ -604,20 +676,24 @@ class GraphSolver():
 				m = o.model()
 				for arc in self.input_graph.edges():
 					(left, right) = arc
-					if m.evaluate(encode[arc]) == False:
+					if m.evaluate(encode[left] == encode[right]) == False:
 						identified_edges.append(arc)
-					elif m.evaluate(encode[arc]) == True:
+					elif m.evaluate((encode[left] == encode[right])) == True:
 						self.result_graph.add_edge(left, right)
 					else:
 						print ('error in decoding!')
 
-			print ('After solving, there are ', len (identified_edges), ' removed')
-			print ('After solving, there are ', len (self.result_graph.edges()), ' remaining edges')
-			print ('After solving, there are ', len (self.result_graph.nodes()), ' remaining nodes')
+			print ('After solving,,, there are ', len (identified_edges), ' removed')
+			print ('After solving,,, there are ', len (self.result_graph.edges()), ' remaining edges')
+			print ('After solving,,, there are ', len (self.result_graph.nodes()), ' remaining nodes')
 
 			# compute the connected components (for undirected graphs)
 			comps  = nx.connected_components(self.result_graph)
-			print ([len(c) for c in sorted(comps, key=len, reverse=True)])
+			for c in comps:
+				if (len (c) == 1):
+					print ('component: ', c)
+			comps  = nx.connected_components(self.result_graph)
+			print ('size list = ',[len(c) for c in sorted(comps, key=len, reverse=True)])
 
 			# Finally, compute the partitions
 			self.partition = None
@@ -737,7 +813,8 @@ class GraphSolver():
 #
 
 
-graph_ids = [11116, 240577, 395175, 14514123]
+# graph_ids = [11116]
+graph_ids = [ 240577, 395175, 14514123]
 
 for graph_id in graph_ids:
 	# graph_id = '11116'
@@ -753,6 +830,17 @@ for graph_id in graph_ids:
 	# confirming edges:
 	gs.get_redirect_graph()
 	gs.get_encoding_equality_graph()
+
+	typeA_filename = str(graph_id) + "_explicit_source.hdt"
+	typeB_filename = str(graph_id) + "_implicit_label_source.hdt"
+	typeC_filename = str(graph_id) + "_implicit_comment_source.hdt"
+
+	hdt_source = HDTDocument(typeA_filename)
+	hdt_label = HDTDocument(typeB_filename)
+	hdt_comment = HDTDocument(typeC_filename)
+	gs.get_typeA_graph()
+	gs.get_typeB_graph()
+	gs.get_typeC_graph()
 
 	# print ('\nNow work on the validation')
 	#---test how many violates the iUNA when context = namespace
