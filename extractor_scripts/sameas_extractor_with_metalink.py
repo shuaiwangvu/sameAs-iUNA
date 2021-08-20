@@ -14,7 +14,9 @@ import json
 import random
 from collections import Counter
 from hdt import HDTDocument, IdentifierPosition
-
+import glob
+from urllib.parse import urlparse
+import gzip
 
 PATH_META = "/home/jraad/ssd/data/identity/metalink/metalink.hdt"
 hdt = HDTDocument(PATH_META)
@@ -65,8 +67,8 @@ ZIPFILES_PATH = '/scratch/wbeek/data/LOD-Laundromat/'
 
 # top_dir = list(ct.keys())
 top_dir = []
-# lst = ['0', '1','2','3','4','5','6','7','8','9','a','b','c','d','e','f']
-lst = ['0', '1', '2']
+lst = ['0', '1','2','3','4','5','6','7','8','9','a','b','c','d','e','f']
+# lst = ['0', '1', '2','3','4','5','6']
 for l in lst:
 	for r in lst:
 		top_dir.append(l+r)
@@ -100,6 +102,14 @@ def find_statement_id(subject, object):
 
 count_short = 0
 
+count_sameAs_statement = 0
+count_sameAs_statement_with_metalinkID = 0
+
+log_file = open( which + "_laundromat_metalink.nt.log", 'w')
+log_file_writer = csv.writer(log_file, delimiter=' ')
+log_file_writer.writerow(['top_dir', 'sameAs_statement_processed', 'with_metalink_id', 'taime_taken'])
+
+start = time.time()
 
 with open( which + "_laundromat_metalink.nt", 'w') as output:
 	writer = csv.writer(output, delimiter=' ')
@@ -112,10 +122,13 @@ with open( which + "_laundromat_metalink.nt", 'w') as output:
 		# ZIPFILES = ZIPFILES_PATH + t + '/**/data.nq.gz'
 		filelist = glob.glob(ZIPFILES)
 		file_path=""
-		print ('This directory has ', len(filelist), ' files')
+		# print ('This directory has ', len(filelist), ' files')
+		# filelist = filelist [:20]
+		# print ('take only the first 20')
 		count_processed_targeting_predicate = 0
 
-		start = time.time()
+
+
 		# total_files_processed = 0
 		for gzfile in filelist: # may skip the first 1000 , there is no decoding error
 
@@ -148,22 +161,33 @@ with open( which + "_laundromat_metalink.nt", 'w') as output:
 					bline_split = bline.split(b' ')
 
 					if len (bline_split) == 4:
-						object = bline_split[2].decode('latin-1')
-						if object[0] != '"':
-							predicate = bline_split[1].decode('latin-1') [1:-1]
-							if predicate == full_IRI:
-								subject = bline_split[0].decode('latin-1') [1:-1]
-								# now we have the subject, predicate, object
+						predicate = bline_split[1].decode('latin-1') [1:-1]
+						if predicate == full_IRI:
 
+							count_sameAs_statement += 1
+							# print ('\n\nNo. ', count_sameAs_statement)
+							# print ('sameas statement = ', bline)
+
+							subject = bline_split[0].decode('latin-1') [1:-1]
+							object = bline_split[2].decode('latin-1')
+							if object[0] != '"' and object[0] == '<':
+								object = object[1:-1]
+								# now we have the subject, predicate, object
 								statementID = find_statement_id (subject, object)
 								if statementID != None:
+									count_sameAs_statement_with_metalinkID += 1
+									# print ('metalinkID = ', statementID)
 									# out put two lines
 									# 1) metalink_id has a source file+MD5
+									md5 = folder[6]
 									writer.writerow(['<'+statementID+'>', '<'+my_exist_in_file+'>', '<'+my_file_IRI_prefix+md5+'>', '.'])
 									# 2) source file+MD5 is a of type file
 									writer.writerow(['<'+my_file_IRI_prefix+md5+'>', '<'+rdf_type+'>', '<'+my_file+'>', '.'])
-
+								# else:
+									# print ('sameAs but no metalink ID: ', bline)
 								output.write(str(line))
+							# else:
+							# 	print ("strange object = ", object)
 
 				except StopIteration:
 					break
@@ -173,56 +197,15 @@ with open( which + "_laundromat_metalink.nt", 'w') as output:
 						error.write('\n\nFile path = ' +str(file_path) + '\n')
 						error.write('\n\nLine = ' +str(line) + '\n')
 						error.write(" Error: {}".format(err))
-				# except UnicodeDecodeError:
-				# 	print ('\n\ndecoding error, ', last.decode('latin-1'))
-				# 	tec  = chardet.detect(last)
-				# 	print (tec)
-				# 	if tec['encoding'] != None and tec['encoding'] != "utf-8" and tec['encoding'] != "utf8":
-				# 		print ('decode = ', last.decode(tec['encoding']))
-				# 	else:
-				# 		print ('decoding as latin-1 = ', last.decode('latin-1'))
-				# 		print ('decoding as ISO-8859-9 = ', last.decode('ISO-8859-9'))
-				# except Exception as err:
-				# 		print ('error found : ', err)
-					# if tec['encoding'] == 'ISO-8859-1':
-					# 	print ('decoding as ISO-8859-1: ', last.decode('iso-8859-1'))
-					# elif tec['encoding'] == 'Windows-1252':
-					# 	print ('decoding as Windows-1252: ', last.decode('cp1252'))
-					# elif tec['encoding'] == 'Windows-1254':
-					# 	print ('decoding as Windows-1254: ', last.decode('cp1254'))
-					# else:
-					# 	print ('decoding as latin-1: ', last.decode('latin-1'))
-
-					# code
-					# # current_file = list(f)
-					# for line in current_file:
-					# 	try:
-					# 	decoded_line = line.decode()
-					# 	#check if the file contains this property
-					# 	if full_IRI in line or short_URI in line:
-					# 		# remove .\n from the end of the line
-					# 		line = line.replace(' .\n','')
-					# 		# Add to the line: The most frequent site + the dataset's folder's name + end to the line
-					# 		line = line + " <" + folder[6]+"/"+folder[7]+"> .\n"
-					# 		# raise Exception(line)
-					# 		# output the result to the output file
-					# 		output.write(str(line))
-					#
-					# 		# throw an error with mentioning the file's path and the error.
-					# 		# then store it to the exception File.
-					# 	except Exception as err:
-					# 		print ('error found : ', err)
-					# 		with open(which+"_exception.txt", "a") as error:
-					# 			error.write('\n\nFile path = ' +str(file_path) + '\n')
-					# 			error.write(" Line: {}".format(err))
-		# 	total_files_processed += 1
-		# print ("I processed ", total_files_processed , ' files')
-
 
 
 		end = time.time()
 		hours, rem = divmod(end-start, 3600)
 		minutes, seconds = divmod(rem, 60)
-		print("Time taken: {:0>2}:{:0>2}:{:05.2f}".format(int(hours),int(minutes),seconds))
+
+		time_formated = "{:0>2}:{:0>2}:{:05.2f}".format(int(hours),int(minutes),seconds)
+		print("Time taken = ", time_formated)
+
+		log_file_writer.writerow([t, count_sameAs_statement, count_sameAs_statement_with_metalinkID, time_formated])
 
 print ('count_short_URI ', count_short)
