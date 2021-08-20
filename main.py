@@ -84,43 +84,15 @@ def find_statement_id(subject, object):
 		return None
 
 # get all redirect in a list. If no redirect, then return []
-def find_redirects (iri):
-	try:
-		# print ('test 2')
-		collect_urls = []
-		response = requests.get(iri, timeout=0.01, allow_redirects=True)
 
-		# import urllib3
-		#
-		# resp = urllib3.request(
-		#     "GET",
-		#     "https://httpbin.org/delay/3",
-		#     timeout=4.0
-		# )
+import requests
+from requests.exceptions import Timeout
 
-		if response.history:
-			if response.url == iri:
-				return []
-			else:
-				# print("Request was redirected")
-				for resp in response.history:
-					# print(resp.status_code, resp.url)
-					collect_urls.append(resp.url)
-				# print("Final destination:")
-				# print(response.status_code, response.url)
-
-				collect_urls.append(response.url)
-				return collect_urls
-		else:
-			# print("Request was not redirected")
-			return []
-	except:
-		# print ('error')
-		return []
-
-
-
-
+NOTFOUND = 1
+NOREDIRECT = 2
+ERROR = 3
+TIMEOUT = 4
+REDIRECT = 5
 
 
 
@@ -814,7 +786,7 @@ class GraphSolver():
 
 
 # graph_ids = [11116]
-graph_ids = [ 240577, 395175, 14514123]
+graph_ids = [ 11116, 240577, 395175, 14514123]
 
 for graph_id in graph_ids:
 	# graph_id = '11116'
