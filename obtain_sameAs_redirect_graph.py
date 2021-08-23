@@ -223,7 +223,7 @@ for graph_id in graph_ids:
 	print("Time taken = ", time_formated)
 
 	print ('Exporting')
-	file = open( which + "_redirect.nt", 'w')
+	file = open( str(graph_id) + "_redirect.nt", 'w')
 	redirect_file_writer = csv.writer(file, delimiter=' ')
 	for (s,t) in redi_graph.edges():
 		# log_file_writer.writerow([s,t])
