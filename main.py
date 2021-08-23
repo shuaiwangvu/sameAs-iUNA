@@ -210,7 +210,6 @@ class GraphSolver():
 		self.result_partition = []
 		self.result_graph = None
 
-
 	def get_redirect_graph (self):
 		redi_graph = nx.Graph()
 		ct = Counter()
