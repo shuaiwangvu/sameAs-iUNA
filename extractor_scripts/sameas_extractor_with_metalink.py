@@ -58,7 +58,7 @@ my_file_IRI_prefix = "https://krr.triply.cc/krr/metalink/fileMD5/" # followed by
 my_file = "https://krr.triply.cc/krr/metalink/def/File"
 my_exist_in_file = "https://krr.triply.cc/krr/metalink/def/existsInFile" # a relation
 my_has_num_occurences_in_files = "https://krr.triply.cc/krr/metalink/def/numOccurences" #
-
+my_redirect = "https://krr.triply.cc/krr/metalink/def/redirectedTo" # a relation
 
 
 # The location of the data
