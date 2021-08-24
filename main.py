@@ -243,6 +243,18 @@ class GraphSolver():
 
 		self.redirect_graph = redi_graph
 
+	def add_weight(self, path_to_weight):
+		print ('weight file at ', path_to_weight)
+		hdt_weight = HDTDocument(path_to_weight)
+		for s, t in self.input_graph.edges():
+			id = find_statement_id(s,t)
+			if id != None:
+				triples, cardinality = hdt_weight.search_triples(id, my_has_num_occurences_in_files, "")
+				if cardinality == 1:
+					for (_,_,w) in triples:
+						self.input_graph.edges[(s,t)]['weight'] = int(w)
+						print ('weight = ', w)
+
 	def get_encoding_equality_graph(self):
 		print ('\n\n <<< Getting encoding equality graph >>>')
 		#step 1: make an authority map to node
@@ -330,6 +342,8 @@ class GraphSolver():
 
 	def get_typeA_graph (self):
 		print ('\n<<< generating typeA graph>>>')
+		hdt_source = HDTDocument(typeA_filename)
+
 		# load the resources and
 		source_files = []
 		for e in self.input_graph.nodes():
@@ -355,6 +369,9 @@ class GraphSolver():
 
 	def get_typeB_graph (self):
 		print ('\n<<<<generating typeB graph>>>')
+
+		hdt_label = HDTDocument(typeB_filename)
+
 		# load the resources and
 		source_files = []
 		for e in self.input_graph.nodes():
@@ -386,6 +403,7 @@ class GraphSolver():
 
 	def get_typeC_graph (self):
 		print ('\n<<<<generating typeC graph>>>')
+		hdt_comment = HDTDocument(typeC_filename)
 		# load the resources and
 		source_files = []
 		for e in self.input_graph.nodes():
@@ -517,7 +535,7 @@ class GraphSolver():
 			self.result_graph.nodes[node]['group'] = partition.get(node)
 		self.partition = [partition.get(node) for node in self.input_graph.nodes()]
 
-	def solve (self, method="leuven"): # get partition
+	def solve (self, method="leuven", weights = False): # get partition
 		print ('*********** SOLVING ************')
 		if method == 'leuven':
 			self.partition_leuven()
@@ -784,38 +802,39 @@ class GraphSolver():
 #
 
 
-# graph_ids = [11116]
-graph_ids = [ 11116, 240577, 395175, 14514123]
+graph_ids = [11116]
+# graph_ids = [ 11116, 240577, 395175, 14514123]
 
 for graph_id in graph_ids:
 	# graph_id = '11116'
 	print ('\n\n\ngraph id = ', str(graph_id))
-	gs = GraphSolver(path_to_input_graph = './Evaluate_May/' + str(graph_id) + '_edges_original.csv',
-					path_to_gold_standard_graph = './Evaluate_May/'  + str(graph_id) + '_nodes_labelled.tsv')
+	gs = GraphSolver(path_to_input_graph = str(graph_id) + '/' + str(graph_id) + '_edges_original.csv',
+					path_to_gold_standard_graph = str(graph_id) + '/' + str(graph_id) + '_nodes_labelled.tsv')
+
 
 	print (nx.info(gs.input_graph))
 
+	path_to_weights = str(graph_id) + '/' + str(graph_id) + '_sum_weight.hdt'
+	gs.add_weight(path_to_weights)
 	# print ('\ncomputing the encoding equivalence graph')
 	# attacking edges:
 	gs.get_namespace_graph()
 	# confirming edges:
-	gs.get_redirect_graph()
+	path_to_redirect_graph = str(graph_id) + '/' + str(graph_id) + '_redirect.hdt'
+	gs.get_redirect_graph(path_to_redirect_graph)
+
 	gs.get_encoding_equality_graph()
 
-	typeA_filename = str(graph_id) + "_explicit_source.hdt"
-	typeB_filename = str(graph_id) + "_implicit_label_source.hdt"
-	typeC_filename = str(graph_id) + "_implicit_comment_source.hdt"
+	typeA_filename = str(graph_id) + '/' + str(graph_id) + "_explicit_source.hdt"
+	typeB_filename = str(graph_id) + '/' + str(graph_id) + "_implicit_label_source.hdt"
+	typeC_filename = str(graph_id) + '/' + str(graph_id) + "_implicit_comment_source.hdt"
 
-	hdt_source = HDTDocument(typeA_filename)
-	hdt_label = HDTDocument(typeB_filename)
-	hdt_comment = HDTDocument(typeC_filename)
+
 	gs.get_typeA_graph()
 	gs.get_typeB_graph()
 	gs.get_typeC_graph()
 
-	# print ('\nNow work on the validation')
-	#---test how many violates the iUNA when context = namespace
-	gs.solve(method = 'smt')
+	gs.solve(method = 'smt', weights = False)
 	gs.show_result_graph()
 
 
