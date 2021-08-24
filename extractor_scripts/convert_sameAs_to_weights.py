@@ -14,7 +14,8 @@ from rfc3987 import  parse
 import urllib.parse
 from hdt import HDTDocument, IdentifierPosition
 from z3 import *
-
+from rdflib.namespace import XSD
+import csv
 
 UNKNOWN = 0
 REMOVE = 1
@@ -54,6 +55,8 @@ rdf_predicate = "http://www.w3.org/1999/02/22-rdf-syntax-ns#predicate"
 
 rdf_type = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 
+xsd= "http://www.w3.org/2001/XMLSchema#"
+
 sameas = 'http://www.w3.org/2002/07/owl#sameAs'
 # load LOD-a-lot
 # for each sameAs link, compute its weight
@@ -69,7 +72,7 @@ def find_statement_id(subject, object):
 	for (s,p,o) in triples:
 		collect_statement_id_regarding_subject.add(str(s))
 
-	triples, cardinality = hdt.search_triples("", rdf_object, object)
+	triples, cardinality = hdt_metalink.search_triples("", rdf_object, object)
 
 	collect_statement_id_regarding_object = set()
 
@@ -83,27 +86,65 @@ def find_statement_id(subject, object):
 		return None
 
 def find_weight (id):
-	triples, cardinality = hdt_source.search_triples(id, my_exist_in_file, "")
+	cardinality = 0
+	try:
+	# print ('trying ', id)
+		triples, cardinality = hdt_source.search_triples(id, my_exist_in_file, "")
+	except:
+		pass
+		# print ('cannot find the id in source file')
+
 	return cardinality
+
 
 
 triples, cardinality = hdt_lod.search_triples("", sameas, "")
 ct = Counter ()
 count_sameas_triples_in_lod_a_lot = 0
 sameAs_satement_without_metalink_id = 0
-for (s, sameas, t) in triples:
-	if count_sameas_triples_in_lod_a_lot>1000:
-		break
-	try :
-		id = find_statement_id(s, t)
-	except:
-		sameAs_satement_without_metalink_id += 1
-	else:
-		ct[id] = find_weight(id)
-		# export the weight
+log_writer = open('sameas_laundromat_metalink_sum_weight.log', 'w')
+
+with open('sameas_laundromat_metalink_sum_weight.nt', 'w') as writer:
+	# writer = csv.writer(output, delimiter=' ')
+
+	for (s, sameas, t) in triples:
+		# if count_sameas_triples_in_lod_a_lot>=10000:
+		# 	break
+
+		if s != t:
+			try :
+				id = find_statement_id(s, t)
+				if id == None:
+					sameAs_satement_without_metalink_id += 1
+					line = s +' -> ' + t + ' has no id in metalink'
+					log_writer.write(str(line))
+				else:
+					weight = find_weight(id)
+					# if weight == 0:
+					# 	pass
+						# print (s, ' -> ', t, ' has no weight')
+					ct[weight] += 1
+					# export the weight
+					# print (XSD.integer)
+					line = '<' + id + '> '
+					line += '<' + my_has_num_occurences_in_files + '> '
+					line += '"'+str(weight)+'"^^<' + str(XSD.integer) + '> . \n'
+					# print (line)
+					writer.write(str(line))
+			except Exception as inst:
+				print (s, t)
+				print (inst)
+
 		count_sameas_triples_in_lod_a_lot += 1
 
 
 print ('total statements processed: ', count_sameas_triples_in_lod_a_lot)
 print ('statements without metalink id: ', sameAs_satement_without_metalink_id)
 print (ct)
+
+log_writer.write('total statements processed: ' + str(count_sameas_triples_in_lod_a_lot) +'\n')
+log_writer.write('statements without metalink id: ' + str(sameAs_satement_without_metalink_id)+'\n')
+
+for c in ct:
+	line = str(c) + ' : ' + str(ct[c]) +'\n'
+	log_writer.write(str(line))

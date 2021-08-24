@@ -1,3 +1,7 @@
+# this script extracts sameAs links with source.
+# the output is sameAs_laundromat_metalink.hdt
+# from this script, there can be an alternative form where the weight is stored.
+
 import pandas as pd
 import numpy as np
 import datetime
