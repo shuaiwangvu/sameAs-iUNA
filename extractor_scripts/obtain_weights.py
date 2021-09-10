@@ -19,7 +19,10 @@ from z3 import *
 from rdflib.namespace import XSD
 import csv
 
-PATH_META = "/home/jraad/ssd/data/identity/metalink/metalink.hdt"
+# PATH_META = "/home/jraad/ssd/data/identity/metalink/metalink.hdt"
+# /home/jraad/ssd/data/identity/metalink/metalink-2/metalink-2.hdt
+PATH_META = "/home/jraad/ssd/data/identity/metalink/metalink-2/metalink-2.hdt"
+
 hdt_metalink = HDTDocument(PATH_META)
 
 PATH_SAMEAS_SOURCE = "./sameas_laundromat_metalink.hdt"
@@ -64,8 +67,28 @@ def find_statement_id(subject, object):
 		collect_statement_id_regarding_object.add(str(s))
 
 	inter_section = collect_statement_id_regarding_object.intersection(collect_statement_id_regarding_subject)
+
+	# do it the reverse way: (object, predicate, subject)
+	triples, cardinality = hdt_metalink.search_triples("", rdf_object, subject)
+	collect_statement_id_regarding_subject = set()
+
+	for (s,p,o) in triples:
+		collect_statement_id_regarding_subject.add(str(s))
+
+	triples, cardinality = hdt_metalink.search_triples("", rdf_subject, object)
+
+	collect_statement_id_regarding_object = set()
+
+	for (s,p,o) in triples:
+		collect_statement_id_regarding_object.add(str(s))
+
+	inter_section2 = collect_statement_id_regarding_object.intersection(collect_statement_id_regarding_subject)
+
 	if len (inter_section) >= 1:
 		return list(inter_section)[0] #
+	elif len (inter_section2) >= 1:
+		# print ('\nfound one in reverse!: \n', subject, '\t', object)
+		return list(inter_section2)[0] #:
 	else:
 		return None
 
@@ -86,6 +109,10 @@ graph_ids = [11116, 240577, 395175, 14514123]
 
 	# writer = csv.writer(output, delimiter=' ')
 for graph_id in graph_ids:
+	print ('\n\n This is graph ', graph_id)
+	count_no_metalink_id = 0
+	count_reflexive = 0
+	count_total_edges = 0
 	ct = Counter ()
 	with open( str(graph_id) + '_sum_weight.nt', 'w') as writer:
 		path_to_input_graph = './Evaluate_May/' + str(graph_id) + '_edges_original.csv'
@@ -96,24 +123,40 @@ for graph_id in graph_ids:
 		targets = input_graph_data['OBJECT']
 
 		edge_data = zip(sources, targets)
+		# export the edges that do not correspond to any metalink id
+		writer_not_found = open( str(graph_id) + '_not_found.txt', 'w')
 
 		for (s,t) in edge_data:
-			id = find_statement_id(s,t)
-			if id == None:
-				pass
+			count_total_edges += 1
+			if s == t :
+				count_reflexive += 1
 			else:
-				weight = find_weight(id)
-				# if weight == 0:
-				# 	pass
-					# print (s, ' -> ', t, ' has no weight')
-				ct[weight] += 1
-				# export the weight
-				# print (XSD.integer)
-				line = '<' + id + '> '
-				line += '<' + my_has_num_occurences_in_files + '> '
-				line += '"'+str(weight)+'"^^<' + str(XSD.integer) + '> . \n'
-				# print (line)
-				writer.write(str(line))
+				id = find_statement_id(s,t)
+				if id == None:
+					# pass
+					line = s + '\t' + t + ' \n'
+					# line += '<' + my_has_num_occurences_in_files + '> '
+					# line += '"'+str(weight)+'"^^<' + str(XSD.integer) +
+					# print (line)
+					writer_not_found.write(str(line))
+					count_no_metalink_id += 1
+				else:
+					weight = find_weight(id)
+					# if weight == 0:
+					# 	pass
+						# print (s, ' -> ', t, ' has no weight')
+					ct[weight] += 1
+					# export the weight
+					# print (XSD.integer)
+					line = '<' + str(id) + '> '
+					line += '<' + my_has_num_occurences_in_files + '> '
+					line += '"'+str(weight)+'"^^<' + str(XSD.integer) + '> . \n'
+					# print (line)
+					writer.write(str(line))
+	print ('there are in total ', count_total_edges)
+	print ('excluding ', count_reflexive, ' reflexive edges')
+	print ('there are ', count_no_metalink_id, ' edges without metalink')
+	print ('and the weight distribution is now: ')
 	for c in ct:
 		line = str(c) + ' : ' + str(ct[c]) +'\n'
 		print (line)

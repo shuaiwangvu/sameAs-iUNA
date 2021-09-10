@@ -22,7 +22,9 @@ import glob
 from urllib.parse import urlparse
 import gzip
 
-PATH_META = "/home/jraad/ssd/data/identity/metalink/metalink.hdt"
+# PATH_META = "/home/jraad/ssd/data/identity/metalink/metalink.hdt"
+
+PATH_META = "/home/jraad/ssd/data/identity/metalink/metalink-2/metalink-2.hdt"
 hdt = HDTDocument(PATH_META)
 
 which = 'sameas'
@@ -79,17 +81,15 @@ for l in lst:
 
 
 
-
-
 def find_statement_id(subject, object):
 
-	triples, cardinality = hdt.search_triples("", rdf_subject, subject)
+	triples, cardinality = hdt_metalink.search_triples("", rdf_subject, subject)
 	collect_statement_id_regarding_subject = set()
 
 	for (s,p,o) in triples:
 		collect_statement_id_regarding_subject.add(str(s))
 
-	triples, cardinality = hdt.search_triples("", rdf_object, object)
+	triples, cardinality = hdt_metalink.search_triples("", rdf_object, object)
 
 	collect_statement_id_regarding_object = set()
 
@@ -97,8 +97,28 @@ def find_statement_id(subject, object):
 		collect_statement_id_regarding_object.add(str(s))
 
 	inter_section = collect_statement_id_regarding_object.intersection(collect_statement_id_regarding_subject)
+
+	# do it the reverse way: (object, predicate, subject)
+	triples, cardinality = hdt_metalink.search_triples("", rdf_object, subject)
+	collect_statement_id_regarding_subject = set()
+
+	for (s,p,o) in triples:
+		collect_statement_id_regarding_subject.add(str(s))
+
+	triples, cardinality = hdt_metalink.search_triples("", rdf_subject, object)
+
+	collect_statement_id_regarding_object = set()
+
+	for (s,p,o) in triples:
+		collect_statement_id_regarding_object.add(str(s))
+
+	inter_section2 = collect_statement_id_regarding_object.intersection(collect_statement_id_regarding_subject)
+
 	if len (inter_section) >= 1:
 		return list(inter_section)[0] #
+	elif len (inter_section2) >= 1:
+		# print ('\nfound one in reverse!: \n', subject, '\t', object)
+		return list(inter_section2)[0] #:
 	else:
 		return None
 
@@ -109,13 +129,13 @@ count_short = 0
 count_sameAs_statement = 0
 count_sameAs_statement_with_metalinkID = 0
 
-log_file = open( which + "_laundromat_metalink.nt.log", 'w')
+log_file = open( which + "_laundromat_metalink_Sep.nt.log", 'w')
 log_file_writer = csv.writer(log_file, delimiter=' ')
 log_file_writer.writerow(['top_dir', 'sameAs_statement_processed', 'with_metalink_id', 'taime_taken'])
 
 start = time.time()
 
-with open( which + "_laundromat_metalink.nt", 'w') as output:
+with open( which + "_laundromat_metalink_Sep.nt", 'w') as output:
 	writer = csv.writer(output, delimiter=' ')
 
 	for t in top_dir:

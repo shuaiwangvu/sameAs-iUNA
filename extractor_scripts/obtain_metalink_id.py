@@ -89,6 +89,7 @@ for graph_id in graph_ids:
 	ct = Counter ()
 	with open( str(graph_id) + '_metalink_id.csv', 'w') as writer:
 		csv_writer = csv.writer(writer, delimiter=' ')
+		# csv_writer = csv.writer(writer, delimiter=',')
 
 		path_to_input_graph = './Evaluate_May/' + str(graph_id) + '_edges_original.csv'
 
@@ -98,7 +99,7 @@ for graph_id in graph_ids:
 		targets = input_graph_data['OBJECT']
 
 		edge_data = zip(sources, targets)
-
+		csv_writer.writerow(['SUBJECT', 'OBJECT', 'METALINK_ID'])
 		for (s,t) in edge_data:
 			id = find_statement_id(s,t)
 			if id == None:
