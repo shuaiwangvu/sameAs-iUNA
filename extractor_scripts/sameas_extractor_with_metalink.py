@@ -25,7 +25,7 @@ import gzip
 # PATH_META = "/home/jraad/ssd/data/identity/metalink/metalink.hdt"
 
 PATH_META = "/home/jraad/ssd/data/identity/metalink/metalink-2/metalink-2.hdt"
-hdt = HDTDocument(PATH_META)
+hdt_metalink = HDTDocument(PATH_META)
 
 which = 'sameas'
 
