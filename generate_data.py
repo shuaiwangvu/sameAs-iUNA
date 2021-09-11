@@ -20,15 +20,17 @@ from hdt import HDTDocument, IdentifierPosition
 import glob
 from urllib.parse import urlparse
 import gzip
+from extend_metalink import *
 
 PATH_META = "/home/jraad/ssd/data/identity/metalink/metalink-2/metalink-2.hdt"
 hdt_metalink = HDTDocument(PATH_META)
+
 
 hdt_source = HDTDocument("typeA.hdt")
 hdt_label = HDTDocument("label_May.hdt")
 hdt_comment = HDTDocument("comment_May.hdt")
 
-sameas = "http://www.w3.org/2002/07/owl#sameAs"
+
 PATH_LOD = "/scratch/wbeek/data/LOD-a-lot/data.hdt"
 hdt_lod_a_lot = HDTDocument(PATH_LOD)
 
@@ -45,7 +47,47 @@ related = [4170, 5723, 11116]
 multiple = [6617, 6927, 12745, 14872, 33122, 37544, 39036, 42616, 236350, 240577,
 395175, 4635725, 14514123]
 
-# task one, generate the edges
+
+def find_statement_id(subject, object):
+
+	triples, cardinality = hdt_metalink.search_triples("", rdf_subject, subject)
+	collect_statement_id_regarding_subject = set()
+
+	for (s,p,o) in triples:
+		collect_statement_id_regarding_subject.add(str(s))
+
+	triples, cardinality = hdt_metalink.search_triples("", rdf_object, object)
+
+	collect_statement_id_regarding_object = set()
+
+	for (s,p,o) in triples:
+		collect_statement_id_regarding_object.add(str(s))
+
+	inter_section = collect_statement_id_regarding_object.intersection(collect_statement_id_regarding_subject)
+
+	# do it the reverse way: (object, predicate, subject)
+	triples, cardinality = hdt_metalink.search_triples("", rdf_object, subject)
+	collect_statement_id_regarding_subject = set()
+
+	for (s,p,o) in triples:
+		collect_statement_id_regarding_subject.add(str(s))
+
+	triples, cardinality = hdt_metalink.search_triples("", rdf_subject, object)
+
+	collect_statement_id_regarding_object = set()
+
+	for (s,p,o) in triples:
+		collect_statement_id_regarding_object.add(str(s))
+
+	inter_section2 = collect_statement_id_regarding_object.intersection(collect_statement_id_regarding_subject)
+
+	if len (inter_section) >= 1:
+		return list(inter_section)[0] #
+	elif len (inter_section2) >= 1:
+		# print ('\nfound one in reverse!: \n', subject, '\t', object)
+		return list(inter_section2)[0] #:
+	else:
+		return None
 
 def read_file (file_name):
 	pairs = []
@@ -70,6 +112,65 @@ def obtain_edges(g):
 	return g
 
 
+def export_graph_edges (file_name, graph):
+	file =  open(file_name, 'w', newline='')
+	writer = csv.writer(file)
+	writer.writerow([ "SUBJECT", "OBJECT", "METALINK_ID"])
+	for (l, r) in graph.edges:
+		if graph.edges[l, r]['metalink_id'] == None:
+			writer.writerow([l, r, 'None'])
+		else:
+			writer.writerow([l, r, graph.edges[l, r]['metalink_id']])
+
+# type A: explicit sources
+def export_explicit_source (file_name, graph):
+	count_A = 0
+	with open(file_name, 'w') as output:
+		for n in graph.nodes:
+			triples, cardinality = hdt_source.search_triples(n, "", "")
+			for (_, predicate, file) in triples:
+				line = '<' + n + '> '
+				line += '<' + predicate + '> '
+				if str(file)[0] == '"':
+					line += '' + file + ' .\n'
+				else:
+					line += '<' + file + '>. \n'
+
+				output.write(str(line))
+				count_A += 1
+	print ('count A ', count_A)
+
+# type B: implicit label sources
+def export_implicit_label_source (file_name, graph):
+	# type B
+	count_B = 0
+	with open( file_name, 'w') as output:
+		for n in graph.nodes:
+			triples, cardinality = hdt_label.search_triples(n, "", "")
+			for (_, predicate, file) in triples:
+				line = '<' + n + '> '
+				line += '<' + predicate + '> '
+				line += '<' + file + '>. \n'
+				output.write(str(line))
+				count_B += 1
+	print ('count B ', count_B)
+
+
+# type C: implicit comment sources
+def export_implicit_comment_source (file_name, graph):
+	count_C = 0
+	with open( file_name, 'w') as output:
+		for n in graph.nodes():
+			triples, cardinality = hdt_comment.search_triples(n, "", "")
+			for (_, predicate, file) in triples:
+				line = '<' + n + '> '
+				line += '<' + predicate + '> '
+				line += '<' + file + '>. \n'
+				output.write(str(line))
+				count_C += 1
+	print ('count C ', count_C)
+
+
 sum_num_entities = 0
 total_num_unknown = 0
 prefix_ct = Counter()
@@ -79,32 +180,37 @@ for id in gs:
 	dir = './gold/'
 	filename = dir + str(id) +'.tsv'
 	pairs = read_file(filename)
-	if id in single:
-		print ('Single: reading ', id)
-	elif id in related:
-		print ('Related: reading ', id)
-	elif id in multiple:
-		print ('Multiple: reading ', id)
-	else:
-		print ('ERROR!')
+
+	print ('Single: reading ', id)
 
 	sum_num_entities += len (pairs)
 	g = nx.DiGraph()
+
 	for (e, a) in pairs:
 		g.add_node(e, annotation = a)
-	# obtain the whole graph
+	# step 1: obtain the whole graph
 	obtain_edges(g)
-	print ('There are ',len(g.edges()), ' edges')
+	print ('There are ', g.number_of_nodes(), ' nodes')
+	print ('There are ', g.number_of_edges(), ' edges')
 
-if gs == (single + related + multiple):
-	print ('Correct')
-else:
-	for g in single:
-		if g not in gs:
-			print ('single: ', g)
-	for g in related:
-		if g not in gs:
-			print ('single: ', g)
-	for g in multiple:
-		if g not in gs:
-			print ('single: ', g)
+	# step 2: obtain metalink ID:
+	for (l, r) in g.edges():
+		meta_id = find_statement_id(l, r)
+		if meta_id != None:
+			g[l][r]['metalink_id'] = meta_id
+		else:
+			g[l][r]['metalink_id'] = None
+
+	#step 3: export the edges and the metalink ID
+	edges_file_name = dir + str(id) +'_edges.tsv'
+	# export_graph_edges(edges_file_name, g)
+
+	# step 4: export the sources: Type A B C
+	explicit_file_path = dir + str(id) + '_explicit_source.nt'
+	export_explicit_source(explicit_file_path, g)
+
+	label_file_path = dir + str(id) + '_implicit_label_source.nt'
+	export_implicit_label_source(label_file_path, g)
+
+	comment_file_path = dir +  str(id) + '_implicit_comment_source.nt'
+	export_implicit_comment_source(comment_file_path, g)
