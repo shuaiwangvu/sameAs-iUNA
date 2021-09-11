@@ -30,6 +30,8 @@ NOREDIRECT = 2
 ERROR = 3
 TIMEOUT = 4
 REDIRECT = 5
+# redirected till time out ?
+
 #
 # standard_timeout =  (0.1, 0.5)
 # retry_timeout = (1, 5)
