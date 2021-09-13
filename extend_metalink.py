@@ -26,3 +26,4 @@ my_exist_in_file = "https://krr.triply.cc/krr/metalink/def/existsInFile" # a rel
 my_has_num_occurences_in_files = "https://krr.triply.cc/krr/metalink/def/numOccurences" #
 my_redirect = "https://krr.triply.cc/krr/metalink/def/redirectedTo" # a relation
 my_has_num_occurences_in_files = "https://krr.triply.cc/krr/metalink/def/numOccurences" #
+my_redirect = "https://krr.triply.cc/krr/metalink/def/redirectedTo" # a relation
