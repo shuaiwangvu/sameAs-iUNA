@@ -357,14 +357,15 @@ def export_redirect_graph_edges(file_name, graph):
 			line = '<' + l + '> '
 			line += '<' + my_redirect + '> '
 			if r[0] == '"':
-				if "^^" in splited[-2]:
+				if "^^" in r:
 					line += '' + r + ' .\n'
 					# edited = splited[-2][1:-1] # keep that original one
 					# example "http://xmlns.com/foaf/0.1/"^^<http://www.w3.org/2001/XMLSchema#anyURI>
 				else: # else, add the following
 					line += '' + r + "^^<http://www.w3.org/2001/XMLSchema#string>" + ' .\n'
 					# edited = splited[-2][1:-1] + "^^<http://www.w3.org/2001/XMLSchema#string>"
-
+			else:
+				line +=  '<' + r +'>. \n'
 			output.write(str(line))
 			# count_line += 1
 	# print ('count line = ', count_line)
