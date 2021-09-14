@@ -39,12 +39,12 @@ hdt_comment = HDTDocument("comment_May.hdt")
 PATH_LOD = "/scratch/wbeek/data/LOD-a-lot/data.hdt"
 hdt_lod_a_lot = HDTDocument(PATH_LOD)
 
+#
+gs = [4170, 5723,6617,6927,9411,9756,11116,12745,14872,18688,25604,33122,37544,
+39036, 42616,96073,97757,99932,236350,240577,337339,395175,712342,1133953,
+1140988,4635725,9994282,14514123]
 
-# gs = [4170, 5723,6617,6927,9411,9756,11116,12745,14872,18688,25604,33122,37544,
-# 39036, 42616,96073,97757,99932,236350,240577,337339,395175,712342,1133953,
-# 1140988,4635725,9994282,14514123]
-
-gs = [18688]
+# gs = [6617]
 
 single = [9411, 9756, 18688, 25604, 96073, 97757, 99932, 337339,
 712342, 1133953, 1140988, 9994282]
@@ -140,7 +140,7 @@ def export_explicit_source (file_name, graph):
 				line += '<' + predicate + '> '
 				if str(file)[0] == '"':
 
-					if "^^" in splited[-2]:
+					if "^^" in str(file):
 						line += '' + file + ' .\n'
 						# edited = splited[-2][1:-1] # keep that original one
 						# example "http://xmlns.com/foaf/0.1/"^^<http://www.w3.org/2001/XMLSchema#anyURI>
@@ -148,7 +148,7 @@ def export_explicit_source (file_name, graph):
 						line += '' + file + "^^<http://www.w3.org/2001/XMLSchema#string>" + ' .\n'
 						# edited = splited[-2][1:-1] + "^^<http://www.w3.org/2001/XMLSchema#string>"
 
-					print (file, ' has a first char " !!!! ')
+					# print (file, ' has a first char " !!!! ')
 				else:
 					line += '<' + file + '>. \n'
 
@@ -190,6 +190,12 @@ def export_implicit_comment_source (file_name, graph):
 standard_timeout =  (0.01, 0.05)
 retry_timeout = (0.5, 2.5)
 final_try_timeout = (1, 5)
+
+
+# standard_timeout =  (0.01, 0.05)
+# retry_timeout = (0.05, 0.5)
+# final_try_timeout = (0.5, 1)
+
 
 NOTFOUND = 1
 NOREDIRECT = 2
@@ -243,6 +249,8 @@ def obtain_redirect_graph(graph):
 		redi_graph.add_node(e, remark = 'unknown')
 	entities_to_test = list( redi_graph.nodes())
 
+
+
 	for timeout_parameters in [standard_timeout, retry_timeout, final_try_timeout]:
 		timeout_entities = set()
 		end_of_redirect_entities = set()
@@ -262,7 +270,7 @@ def obtain_redirect_graph(graph):
 				redi_graph.nodes[e]['remark'] = 'error'
 			elif result == TIMEOUT:
 				timeout_entities.add(e)
-				redi_graph.nodes[e]['remark'] = 'time_out'
+				redi_graph.nodes[e]['remark'] = 'timeout'
 			elif result == REDIRECT:
 				if len (via_entities) > 1:
 					for i, s in enumerate(via_entities[:-1]):
@@ -282,16 +290,30 @@ def obtain_redirect_graph(graph):
 		print ('End Of Redirect: there are ', len (end_of_redirect_entities), ' end of redirect entities')
 		entities_to_test = list(timeout_entities.union(end_of_redirect_entities))
 
+
 	for m in end_of_redirect_entities:
 		redi_graph.add_node(m, remark = 'timeout')
 
+	update_against = set()
+	for n in redi_graph.nodes():
+		if redi_graph.nodes[n]['remark'] != 'redirected':
+			update_against.add(n)
+
 	# count_redirect_until_timeout = 0
 	for n in redi_graph.nodes():
-		for m in timeout_entities:
-			if nx.has_path(redi_graph, n, m):
-				redi_graph.nodes[n]['remark'] = 'redirect_until_timeout'
-				# count_redirect_until_timeout += 1
-	# print ('count redirect_until_timeout = ', count_redirect_until_timeout)
+		if redi_graph.nodes[n]['remark'] == 'redirected':
+			for m in update_against:
+				if nx.has_path(redi_graph, n, m):
+					if redi_graph.nodes[m]['remark'] == 'timeout':
+						redi_graph.nodes[n]['remark'] = 'redirect_until_timeout'
+					elif redi_graph.nodes[m]['remark'] == 'not_found':
+						redi_graph.nodes[n]['remark'] = 'redirect_until_not_found'
+					elif redi_graph.nodes[m]['remark'] == 'error':
+						redi_graph.nodes[n]['remark'] = 'redirect_until_error'
+					elif redi_graph.nodes[m]['remark'] == 'not_redirect':
+						redi_graph.nodes[n]['remark'] = 'redirect_until_landed'
+					else:
+						print('Error? reaching m = ', redi_graph.nodes[m]['remark'])
 
 	count_not_found = 0
 	count_not_redirected = 0
@@ -299,31 +321,47 @@ def obtain_redirect_graph(graph):
 	count_timeout = 0
 	count_redirected = 0
 	count_redirect_until_timeout = 0
+	count_redirect_until_not_found = 0
+	count_redirect_until_error = 0
+	count_redirect_until_landed = 0
 	count_other = 0
 
 	for n in redi_graph.nodes():
-		if redi_graph.nodes[n]['remark'] == 'not_found':
-			count_not_found += 1
-		elif redi_graph.nodes[n]['remark'] == 'not_redirect':
-			count_not_redirected += 1
-		elif redi_graph.nodes[n]['remark'] == 'error':
-			count_error += 1
-		elif redi_graph.nodes[n]['remark'] == 'time_out':
-			count_timeout += 1
-		elif redi_graph.nodes[n]['remark'] == 'redirected':
-			count_redirected += 1
-		elif redi_graph.nodes[n]['remark'] == 'redirect_until_timeout':
-			count_redirect_until_timeout += 1
-		else:
-			count_other += 1
+		if n in graph.nodes():
+			if redi_graph.nodes[n]['remark'] == 'not_found':
+				count_not_found += 1
+			elif redi_graph.nodes[n]['remark'] == 'not_redirect':
+				count_not_redirected += 1
+			elif redi_graph.nodes[n]['remark'] == 'error':
+				count_error += 1
+			elif redi_graph.nodes[n]['remark'] == 'timeout':
+				count_timeout += 1
+			elif redi_graph.nodes[n]['remark'] == 'redirect_until_timeout':
+				count_redirect_until_timeout += 1
+			elif redi_graph.nodes[n]['remark'] == 'redirect_until_not_found':
+				count_redirect_until_not_found += 1
+			elif redi_graph.nodes[n]['remark'] == 'redirect_until_error':
+				count_redirect_until_error += 1
+			elif redi_graph.nodes[n]['remark'] == 'redirect_until_landed':
+				count_redirect_until_landed += 1
+			else:
+				print ('strange : ', redi_graph.nodes[n]['remark'])
+				count_other += 1
 
-	print ('count not found: ', count_not_found)
-	print ('count not redirected: ', count_not_redirected)
-	print ('count error: ', count_error)
-	print ('count timeout: ', count_timeout)
-	print ('count redirected: ', count_redirected)
-	print ('count redirect until timeout: ', count_redirect_until_timeout)
-	print ('count other (mistake): ', count_other)
+	count_redirected = count_redirect_until_timeout + count_redirect_until_not_found + count_redirect_until_error + count_redirect_until_landed
+
+	print ('Regarding the original graph:')
+	print ('\tcount not found: ', count_not_found)
+	print ('\tcount not redirected: ', count_not_redirected)
+	print ('\tcount error: ', count_error)
+	print ('\tcount timeout: ', count_timeout)
+	print ('*****')
+	print ('\tcount redirect until timeout: ', count_redirect_until_timeout)
+	print ('\tcount redirect until not found: ', count_redirect_until_not_found)
+	print ('\tcount redirect until error: ', count_redirect_until_error)
+	print ('\tcount redirect until landed: ', count_redirect_until_landed)
+	print ('\tTOTAL REDIRECTED: ', count_redirected)
+	print ('\tcount other (mistake): ', count_other)
 
 	# Validate
 	count = 0
@@ -381,14 +419,20 @@ def export_redirect_graph_nodes(file_name, graph):
 			writer.writerow([n, 'NotRedirect'])
 		elif graph.nodes[n]['remark'] == 'error':
 			writer.writerow([n, 'Error'])
-		elif graph.nodes[n]['remark'] == 'time_out':
+		elif graph.nodes[n]['remark'] == 'timeout':
 			writer.writerow([n, 'Timeout'])
 		elif graph.nodes[n]['remark'] == 'redirected':
 			writer.writerow([n, 'Redirected'])
 		elif graph.nodes[n]['remark'] == 'redirect_until_timeout':
 			writer.writerow([n, 'RedirectedUntilTimeout'])
+		elif graph.nodes[n]['remark'] == 'redirect_until_error':
+			writer.writerow([n, 'RedirectedUntilError'])
+		elif graph.nodes[n]['remark'] == 'redirect_until_landed':
+			writer.writerow([n, 'RedirectedUntilLanded'])
+		elif graph.nodes[n]['remark'] == 'redirect_until_not_found':
+			writer.writerow([n, 'RedirectedUntilNotFound'])
 		else:
-			print ('Error: ', graph.nodes[n]['metalink_id'])
+			print ('Error: ', graph.nodes[n]['remark'])
 
 sum_num_entities = 0
 sum_num_edges = 0
@@ -437,7 +481,7 @@ for id in gs:
 
 	#step 3: export the edges and the metalink ID
 	edges_file_name = dir + str(id) +'_edges.tsv'
-	# export_graph_edges(edges_file_name, g)
+	export_graph_edges(edges_file_name, g)
 
 	# step 4: export the sources: Type A B C
 	explicit_file_path = dir + str(id) + '_explicit_source.nt'
