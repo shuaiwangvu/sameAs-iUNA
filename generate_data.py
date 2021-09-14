@@ -189,7 +189,7 @@ def export_implicit_comment_source (file_name, graph):
 
 standard_timeout =  (0.01, 0.05)
 retry_timeout = (0.5, 2.5)
-final_try_timeout = (1, 5)
+final_try_timeout = (5, 25)
 
 
 # standard_timeout =  (0.01, 0.05)
@@ -247,13 +247,14 @@ def obtain_redirect_graph(graph):
 
 	for e in graph.nodes():
 		redi_graph.add_node(e, remark = 'unknown')
-	entities_to_test = list( redi_graph.nodes())
-
-
+	entities_to_test = set( redi_graph.nodes())
 
 	for timeout_parameters in [standard_timeout, retry_timeout, final_try_timeout]:
 		timeout_entities = set()
 		end_of_redirect_entities = set()
+		for e in redi_graph.nodes():
+			if redi_graph.nodes[e]['remark'] == 'unknown':
+				entities_to_test.add(e)
 
 		for e in entities_to_test:
 			# print ('testing ', e)
