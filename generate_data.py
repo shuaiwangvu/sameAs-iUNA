@@ -121,7 +121,7 @@ def obtain_edges(g):
 
 def export_graph_edges (file_name, graph):
 	file =  open(file_name, 'w', newline='')
-	writer = csv.writer(file)
+	writer = csv.writer(file, delimiter='\t')
 	writer.writerow([ "SUBJECT", "OBJECT", "METALINK_ID"])
 	for (l, r) in graph.edges:
 		if graph.edges[l, r]['metalink_id'] == None:
@@ -139,7 +139,15 @@ def export_explicit_source (file_name, graph):
 				line = '<' + n + '> '
 				line += '<' + predicate + '> '
 				if str(file)[0] == '"':
-					line += '' + file + ' .\n'
+
+					if "^^" in splited[-2]:
+						line += '' + file + ' .\n'
+						# edited = splited[-2][1:-1] # keep that original one
+						# example "http://xmlns.com/foaf/0.1/"^^<http://www.w3.org/2001/XMLSchema#anyURI>
+					else: # else, add the following
+						line += '' + file + "^^<http://www.w3.org/2001/XMLSchema#string>" + ' .\n'
+						# edited = splited[-2][1:-1] + "^^<http://www.w3.org/2001/XMLSchema#string>"
+
 					print (file, ' has a first char " !!!! ')
 				else:
 					line += '<' + file + '>. \n'
@@ -277,14 +285,47 @@ def obtain_redirect_graph(graph):
 	for m in end_of_redirect_entities:
 		redi_graph.add_node(m, remark = 'timeout')
 
-	count_redirect_until_timeout = 0
+	# count_redirect_until_timeout = 0
 	for n in redi_graph.nodes():
 		for m in timeout_entities:
 			if nx.has_path(redi_graph, n, m):
 				redi_graph.nodes[n]['remark'] = 'redirect_until_timeout'
-				count_redirect_until_timeout += 1
-	print ('count redirect_until_timeout = ', count_redirect_until_timeout)
+				# count_redirect_until_timeout += 1
+	# print ('count redirect_until_timeout = ', count_redirect_until_timeout)
 
+	count_not_found = 0
+	count_not_redirected = 0
+	count_error = 0
+	count_timeout = 0
+	count_redirected = 0
+	count_redirect_until_timeout = 0
+	count_other = 0
+
+	for n in redi_graph.nodes():
+		if redi_graph.nodes[n]['remark'] == 'not_found':
+			count_not_found += 1
+		elif redi_graph.nodes[n]['remark'] == 'not_redirect':
+			count_not_redirected += 1
+		elif redi_graph.nodes[n]['remark'] == 'error':
+			count_error += 1
+		elif redi_graph.nodes[n]['remark'] == 'time_out':
+			count_timeout += 1
+		elif redi_graph.nodes[n]['remark'] == 'redirected':
+			count_redirected += 1
+		elif redi_graph.nodes[n]['remark'] == 'redirect_until_timeout':
+			count_redirect_until_timeout += 1
+		else:
+			count_other += 1
+
+	print ('count not found: ', count_not_found)
+	print ('count not redirected: ', count_not_redirected)
+	print ('count error: ', count_error)
+	print ('count timeout: ', count_timeout)
+	print ('count redirected: ', count_redirected)
+	print ('count redirect until timeout: ', count_redirect_until_timeout)
+	print ('count other (mistake): ', count_other)
+
+	# Validate
 	count = 0
 	for n in redi_graph.nodes():
 		if redi_graph.nodes[n]['remark'] == 'unknown':
@@ -316,16 +357,37 @@ def export_redirect_graph_edges(file_name, graph):
 			line = '<' + l + '> '
 			line += '<' + my_redirect + '> '
 			if r[0] == '"':
-				line += '' + r + ' .\n'
-			else:
-				line += '<' + r + '>. \n'
+				if "^^" in splited[-2]:
+					line += '' + r + ' .\n'
+					# edited = splited[-2][1:-1] # keep that original one
+					# example "http://xmlns.com/foaf/0.1/"^^<http://www.w3.org/2001/XMLSchema#anyURI>
+				else: # else, add the following
+					line += '' + r + "^^<http://www.w3.org/2001/XMLSchema#string>" + ' .\n'
+					# edited = splited[-2][1:-1] + "^^<http://www.w3.org/2001/XMLSchema#string>"
 
 			output.write(str(line))
 			# count_line += 1
 	# print ('count line = ', count_line)
 
 def export_redirect_graph_nodes(file_name, graph):
-
+	file =  open(file_name, 'w', newline='')
+	writer = csv.writer(file,  delimiter='\t')
+	writer.writerow([ "Entity", "Remark"])
+	for n in graph.nodes:
+		if graph.nodes[n]['remark'] == 'not_found':
+			writer.writerow([n, 'NotFound'])
+		elif graph.nodes[n]['remark'] == 'not_redirect':
+			writer.writerow([n, 'NotRedirect'])
+		elif graph.nodes[n]['remark'] == 'error':
+			writer.writerow([n, 'Error'])
+		elif graph.nodes[n]['remark'] == 'time_out':
+			writer.writerow([n, 'Timeout'])
+		elif graph.nodes[n]['remark'] == 'redirected':
+			writer.writerow([n, 'Redirected'])
+		elif graph.nodes[n]['remark'] == 'redirect_until_timeout':
+			writer.writerow([n, 'RedirectedUntilTimeout'])
+		else:
+			print ('Error: ', graph.nodes[n]['metalink_id'])
 
 sum_num_entities = 0
 sum_num_edges = 0
@@ -377,14 +439,14 @@ for id in gs:
 	# export_graph_edges(edges_file_name, g)
 
 	# step 4: export the sources: Type A B C
-	# explicit_file_path = dir + str(id) + '_explicit_source.nt'
-	# export_explicit_source(explicit_file_path, g)
-	#
-	# label_file_path = dir + str(id) + '_implicit_label_source.nt'
-	# export_implicit_label_source(label_file_path, g)
-	#
-	# comment_file_path = dir +  str(id) + '_implicit_comment_source.nt'
-	# export_implicit_comment_source(comment_file_path, g)
+	explicit_file_path = dir + str(id) + '_explicit_source.nt'
+	export_explicit_source(explicit_file_path, g)
+
+	label_file_path = dir + str(id) + '_implicit_label_source.nt'
+	export_implicit_label_source(label_file_path, g)
+
+	comment_file_path = dir +  str(id) + '_implicit_comment_source.nt'
+	export_implicit_comment_source(comment_file_path, g)
 
 	# step 4: obtain redirect nodes
 	redi_graph = obtain_redirect_graph(g)
