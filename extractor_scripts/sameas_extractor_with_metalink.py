@@ -79,7 +79,7 @@ for l in lst:
 	for r in lst:
 		top_dir.append(l+r)
 
-# top_dir = top_dir[:10]
+# top_dir = top_dir[:5]
 
 def find_statement_id(subject, object):
 
@@ -181,7 +181,8 @@ def decode_pair(b_subject, b_object):
 						# print ('found id when decoding using cp1252')
 						return (subject, object, id, 'cp1252')
 					else:
-						print ('not found after all trying')
+						return None
+						print ('not found after all trying: ', subject, ' -> ', object)
 	return None
 
 
@@ -205,7 +206,7 @@ with open( which + "_laundromat_metalink_Sep15.nt", 'w') as output:
 	writer = csv.writer(output, delimiter=' ')
 
 	for t in top_dir:
-
+		total_files_processed = 0
 		print ('\n\n ************\nNOW let us deal with the dir ', t)
 		# print ('it has ', ct[t], 'identified objects that are not URL from the data by Joe')
 		ZIPFILES = ZIPFILES_PATH + t + '/**/data.nq.gz'
@@ -225,8 +226,9 @@ with open( which + "_laundromat_metalink_Sep15.nt", 'w') as output:
 			# 	print ('processing ...', int (total_files_processed/1000), 'k')
 			# 	print ('now the path is ', gzfile)
 			# total_files_processed += 1
-			# if total_files_processed >= 3000:
+			# if total_files_processed >= 10:
 			# 	break
+
 			file_path = gzfile
 			# special_file_path = ZIPFILES_PATH + 'ac/' + 'ac878d93b26a21c24114631bee123bb7/data.nq.gz'
 			# file_path = special_file_path
@@ -261,7 +263,7 @@ with open( which + "_laundromat_metalink_Sep15.nt", 'w') as output:
 							result = decode_pair(bline_split[0], bline_split[2])
 							if result != None:
 								(subject, object, statementID, decoding_method) = result
-								
+
 								if statementID != None:
 									ct_decoding_method[decoding_method]+=1
 									count_sameAs_statement_with_metalinkID += 1
@@ -274,6 +276,7 @@ with open( which + "_laundromat_metalink_Sep15.nt", 'w') as output:
 									writer.writerow(['<'+my_file_IRI_prefix+md5+'>', '<'+rdf_type+'>', '<'+my_file+'>', '.'])
 								else:
 									no_metalink_writer.writerow([md5])
+									file_no_metalink.flush()
 
 							# subject = bline_split[0].decode('latin-1') [1:-1]
 							# object = bline_split[2].decode('latin-1')
@@ -315,7 +318,11 @@ with open( which + "_laundromat_metalink_Sep15.nt", 'w') as output:
 
 		time_formated = "{:0>2}:{:0>2}:{:05.2f}".format(int(hours),int(minutes),seconds)
 		print("Time taken = ", time_formated)
-
+		print ('processed: ', count_sameAs_statement)
+		print ('found id: ', count_sameAs_statement_with_metalinkID)
+		if count_sameAs_statement != 0:
+			print ('{:10.2f}'.format(count_sameAs_statement_with_metalinkID/count_sameAs_statement*100))
 		log_file_writer.writerow([t, count_sameAs_statement, count_sameAs_statement_with_metalinkID, time_formated])
+		log_file.flush()
 
 print ('count_short_URI ', count_short)
