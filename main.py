@@ -16,6 +16,7 @@ from z3 import *
 import csv
 from rdflib import Literal, XSD
 from networkx.algorithms.connectivity import is_locally_k_edge_connected
+
 UNKNOWN = 0
 REMOVE = 1
 KEEP = 2

@@ -79,7 +79,7 @@ for l in lst:
 	for r in lst:
 		top_dir.append(l+r)
 
-
+# top_dir = top_dir[:10]
 
 def find_statement_id(subject, object):
 
@@ -123,19 +123,85 @@ def find_statement_id(subject, object):
 		return None
 
 
+def decode_utf8 (b_subject, b_object):
+	subject = None
+	object = None
+	try:
+		subject = b_subject.decode('utf-8') [1:-1]
+		object = b_object.decode('utf-8') [1:-1]
+	except Exception as e:
+		return None
+	else:
+		return (subject, object)
+
+def decode_latin1 (b_subject, b_object):
+	subject = None
+	object = None
+	try:
+		subject = b_subject.decode('latin-1') [1:-1]
+		object = b_object.decode('latin-1') [1:-1]
+	except Exception as e:
+		return None
+	else:
+		return (subject, object)
+
+# cp1252 : Windows-1252(cp1252)
+def decode_cp1252 (b_subject, b_object):
+	subject = None
+	object = None
+	try:
+		subject = b_subject.decode('cp1252') [1:-1]
+		object = b_object.decode('cp1252') [1:-1]
+	except Exception as e:
+		return None
+	else:
+		return (subject, object)
+
+def decode_pair(b_subject, b_object):
+	subject = None
+	object = None
+
+	(subject, object) = decode_utf8(b_subject, b_object)
+	if subject != None and object != None:
+		id = find_statement_id(subject, object)
+		if id != None:
+			# print ('found id when decoding using utf8')
+			return (subject, object, id, 'utf8')
+		else:
+			(subject, object) = decode_latin1(b_subject, b_object)
+			if subject != None and object != None:
+				id = find_statement_id(subject, object)
+				if id != None:
+					# print ('found id when decoding using latin-1')
+					return (subject, object, id, 'latin1')
+				else:
+					(subject, object) = decode_cp1252(b_subject, b_object)
+					id = find_statement_id(subject, object)
+					if id != None:
+						# print ('found id when decoding using cp1252')
+						return (subject, object, id, 'cp1252')
+					else:
+						print ('not found after all trying')
+	return None
+
 
 count_short = 0
 
 count_sameAs_statement = 0
 count_sameAs_statement_with_metalinkID = 0
 
-log_file = open( which + "_laundromat_metalink_Sep.nt.log", 'w')
+log_file = open( which + "_laundromat_metalink_Sep15.nt.log", 'w')
 log_file_writer = csv.writer(log_file, delimiter=' ')
-log_file_writer.writerow(['top_dir', 'sameAs_statement_processed', 'with_metalink_id', 'taime_taken'])
+log_file_writer.writerow(['top_dir', 'sameAs_statement_processed', 'with_metalink_id', 'time_taken'])
+
+file_no_metalink  =open( which + "_without_metalink_Sep15.tsv", 'w')
+no_metalink_writer = csv.writer(file_no_metalink, delimiter='\t')
+no_metalink_writer.writerow(['FILE'])
 
 start = time.time()
+ct_decoding_method = Counter()
 
-with open( which + "_laundromat_metalink_Sep.nt", 'w') as output:
+with open( which + "_laundromat_metalink_Sep15.nt", 'w') as output:
 	writer = csv.writer(output, delimiter=' ')
 
 	for t in top_dir:
@@ -150,8 +216,6 @@ with open( which + "_laundromat_metalink_Sep.nt", 'w') as output:
 		# filelist = filelist [:20]
 		# print ('take only the first 20')
 		count_processed_targeting_predicate = 0
-
-
 
 		# total_files_processed = 0
 		for gzfile in filelist: # may skip the first 1000 , there is no decoding error
@@ -187,18 +251,19 @@ with open( which + "_laundromat_metalink_Sep.nt", 'w') as output:
 					if len (bline_split) == 4:
 						predicate = bline_split[1].decode('latin-1') [1:-1]
 						if predicate == full_IRI:
-
+							subject = None
+							object = None
+							statementID = None
 							count_sameAs_statement += 1
 							# print ('\n\nNo. ', count_sameAs_statement)
 							# print ('sameas statement = ', bline)
 
-							subject = bline_split[0].decode('latin-1') [1:-1]
-							object = bline_split[2].decode('latin-1')
-							if object[0] != '"' and object[0] == '<':
-								object = object[1:-1]
-								# now we have the subject, predicate, object
-								statementID = find_statement_id (subject, object)
+							result = decode_pair(bline_split[0], bline_split[2])
+							if result != None:
+								(subject, object, statementID, decoding_method) = result
+								
 								if statementID != None:
+									ct_decoding_method[decoding_method]+=1
 									count_sameAs_statement_with_metalinkID += 1
 									# print ('metalinkID = ', statementID)
 									# out put two lines
@@ -207,17 +272,38 @@ with open( which + "_laundromat_metalink_Sep.nt", 'w') as output:
 									writer.writerow(['<'+statementID+'>', '<'+my_exist_in_file+'>', '<'+my_file_IRI_prefix+md5+'>', '.'])
 									# 2) source file+MD5 is a of type file
 									writer.writerow(['<'+my_file_IRI_prefix+md5+'>', '<'+rdf_type+'>', '<'+my_file+'>', '.'])
-								# else:
-									# print ('sameAs but no metalink ID: ', bline)
-								output.write(str(line))
-							# else:
-							# 	print ("strange object = ", object)
+								else:
+									no_metalink_writer.writerow([md5])
 
+							# subject = bline_split[0].decode('latin-1') [1:-1]
+							# object = bline_split[2].decode('latin-1')
+							# if object[0] != '"' and object[0] == '<':
+							# 	object = object[1:-1]
+							# 	# now we have the subject, predicate, object
+							# 	statementID = find_statement_id (subject, object)
+							# 	if statementID != None:
+							# 		count_sameAs_statement_with_metalinkID += 1
+							# 		# print ('metalinkID = ', statementID)
+							# 		# out put two lines
+							# 		# 1) metalink_id has a source file+MD5
+							# 		md5 = folder[6]
+							# 		writer.writerow(['<'+statementID+'>', '<'+my_exist_in_file+'>', '<'+my_file_IRI_prefix+md5+'>', '.'])
+							# 		# 2) source file+MD5 is a of type file
+							# 		writer.writerow(['<'+my_file_IRI_prefix+md5+'>', '<'+rdf_type+'>', '<'+my_file+'>', '.'])
+							# 	else:
+							# 		no_metalink_writer.writerow([subject, object, md5])
+							# 	# output.write(str(line))
+							# # else:
+							# # 	print ("strange object = ", object)
+							# if count_sameAs_statement %1000 == 0:
+							# 	print ('processed: ', count_sameAs_statement)
+							# 	print ('with ID : ', count_sameAs_statement_with_metalinkID)
+							# 	print (ct_decoding_method)
 				except StopIteration:
 					break
 				except Exception as err:
 					print ('error found : ', err)
-					with open(which+"_exception.txt", "a") as error:
+					with open(which+"_exception_sep15.txt", "a") as error:
 						error.write('\n\nFile path = ' +str(file_path) + '\n')
 						error.write('\n\nLine = ' +str(line) + '\n')
 						error.write(" Error: {}".format(err))

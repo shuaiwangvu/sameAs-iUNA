@@ -55,6 +55,16 @@ multiple = [6617, 6927, 12745, 14872, 33122, 37544, 39036, 42616, 236350, 240577
 395175, 4635725, 14514123]
 
 
+# there are in total 28 entities. 14 each
+validate_single = [96073, 712342, 9994282, 18688, 1140988, 25604]
+validate_multiple = [6617, 4170, 42616, 39036, 33122, 6927, 11116, 12745]
+
+evaluation_single = [9411, 9756, 97757, 99932, 337339, 1133953]
+evaluation_multipel = [5723, 14872, 37544, 236350, 240577, 395175, 4635725, 14514123]
+
+
+
+
 def find_statement_id(subject, object):
 
 	triples, cardinality = hdt_metalink.search_triples("", rdf_subject, subject)
@@ -111,11 +121,13 @@ def obtain_edges(g):
 		(triples, cardi) = hdt_lod_a_lot.search_triples(n, sameas, "")
 		for (_,_,o) in triples:
 			if o in g.nodes():
-				g.add_edge(n, o)
+				if n != o:
+					g.add_edge(n, o)
 		(triples, cardi) = hdt_lod_a_lot.search_triples("", sameas, n)
 		for (s,_,_) in triples:
 			if s in g.nodes():
-				g.add_edge(s, n)
+				if s != n:
+					g.add_edge(s, n)
 	return g
 
 
@@ -226,6 +238,7 @@ def find_redirects (iri, timeout = standard_timeout):
 				# print(response.status_code, response.url)
 
 				collect_urls.append(response.url)
+				# print (iri,' was redirected: ', collect_urls)
 				return REDIRECT, collect_urls
 		else:
 			# print("Request was not redirected", iri)
@@ -273,11 +286,18 @@ def obtain_redirect_graph(graph):
 				timeout_entities.add(e)
 				redi_graph.nodes[e]['remark'] = 'timeout'
 			elif result == REDIRECT:
+				redi_graph.nodes[e]['remark'] = 'redirected'
 				if len (via_entities) > 1:
 					for i, s in enumerate(via_entities[:-1]):
 						t = via_entities[i+1]
-						redi_graph.add_node(s, remark = 'redirected')
-						redi_graph.add_node(t, remark = 'end_of_redirect')
+						if s not in redi_graph.nodes():
+							redi_graph.add_node(s, remark = 'redirected')
+						else:
+							redi_graph.nodes[s]['remark'] = 'redirected'
+
+						if t not in redi_graph.nodes():
+							redi_graph.add_node(t, remark = 'unknown')
+
 						redi_graph.add_edge(s, t)
 
 					if via_entities[-1] not in end_of_redirect_entities and via_entities[-1] not in timeout_entities:
@@ -289,7 +309,7 @@ def obtain_redirect_graph(graph):
 
 		print ('TIMEOUT: there are ', len (timeout_entities), ' timeout entities')
 		print ('End Of Redirect: there are ', len (end_of_redirect_entities), ' end of redirect entities')
-		entities_to_test = list(timeout_entities.union(end_of_redirect_entities))
+		entities_to_test = timeout_entities.union(end_of_redirect_entities)
 
 
 	for m in end_of_redirect_entities:
@@ -450,7 +470,7 @@ for id in gs:
 	filename = dir + str(id) +'.tsv'
 	pairs = read_file(filename)
 
-	print ('Single: reading ', id)
+	print ('Loading ', id)
 
 	sum_num_entities += len (pairs)
 	g = nx.DiGraph()
