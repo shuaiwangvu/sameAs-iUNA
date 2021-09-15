@@ -130,7 +130,7 @@ def decode_utf8 (b_subject, b_object):
 		subject = b_subject.decode('utf-8') [1:-1]
 		object = b_object.decode('utf-8') [1:-1]
 	except Exception as e:
-		return None
+		return (None, None)
 	else:
 		return (subject, object)
 
@@ -141,7 +141,7 @@ def decode_latin1 (b_subject, b_object):
 		subject = b_subject.decode('latin-1') [1:-1]
 		object = b_object.decode('latin-1') [1:-1]
 	except Exception as e:
-		return None
+		return (None, None)
 	else:
 		return (subject, object)
 
@@ -153,7 +153,7 @@ def decode_cp1252 (b_subject, b_object):
 		subject = b_subject.decode('cp1252') [1:-1]
 		object = b_object.decode('cp1252') [1:-1]
 	except Exception as e:
-		return None
+		return (None, None)
 	else:
 		return (subject, object)
 
@@ -182,7 +182,7 @@ def decode_pair(b_subject, b_object):
 						return (subject, object, id, 'cp1252')
 					else:
 						return None
-						print ('not found after all trying: ', subject, ' -> ', object)
+						# print ('not found after all trying: ', subject, ' -> ', object)
 	return None
 
 
@@ -195,7 +195,7 @@ log_file = open( which + "_laundromat_metalink_Sep15.nt.log", 'w')
 log_file_writer = csv.writer(log_file, delimiter=' ')
 log_file_writer.writerow(['top_dir', 'sameAs_statement_processed', 'with_metalink_id', 'time_taken'])
 
-file_no_metalink  =open( which + "_without_metalink_Sep15.tsv", 'w')
+file_no_metalink  = open( which + "_without_metalink_Sep15.tsv", 'w')
 no_metalink_writer = csv.writer(file_no_metalink, delimiter='\t')
 no_metalink_writer.writerow(['FILE'])
 
