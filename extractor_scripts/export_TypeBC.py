@@ -154,68 +154,68 @@ for l in comment_relations:
 # print("Time taken: {:0>2}:{:0>2}:{:05.2f}".format(int(hours),int(minutes),seconds))
 
 
-def decode_utf8 (b_subject, b_object):
+def decode_utf8 (b_subject):
 	subject = None
-	object = None
+	# object = None
 	try:
 		subject = b_subject.decode('utf-8') [1:-1]
-		object = b_object.decode('utf-8') [1:-1]
+		# object = b_object.decode('utf-8') [1:-1]
 	except Exception as e:
-		return (None, None)
+		return None
 	else:
-		return (subject, object)
+		return subject
 
-def decode_latin1 (b_subject, b_object):
+def decode_latin1 (b_subject):
 	subject = None
-	object = None
+	# object = None
 	try:
 		subject = b_subject.decode('latin-1') [1:-1]
-		object = b_object.decode('latin-1') [1:-1]
+		# object = b_object.decode('latin-1') [1:-1]
 	except Exception as e:
-		return (None, None)
+		return None
 	else:
-		return (subject, object)
+		return subject
 
 # cp1252 : Windows-1252(cp1252)
-def decode_cp1252 (b_subject, b_object):
+def decode_cp1252 (b_subject):
 	subject = None
-	object = None
+	# object = None
 	try:
 		subject = b_subject.decode('cp1252') [1:-1]
-		object = b_object.decode('cp1252') [1:-1]
+		# object = b_object.decode('cp1252') [1:-1]
 	except Exception as e:
-		return (None, None)
+		return None
 	else:
-		return (subject, object)
+		return subject
 
 
-def decode_pair(predicate, b_subject, b_object):
+def decode_pair(predicate, b_subject):
 	subject = None
-	object = None
+	# object = None
 
-	(subject, object) = decode_utf8(b_subject, b_object)
-	if subject != None and object != None:
+	subject = decode_utf8(b_subject)
+	if subject != None:
 		# print ('subject = ', subject)
 		# print ('object = ', object)
 		# print ('predicate = ', predicate)
-		triples, cardinality = hdt_lod.search_triples(subject, predicate, object)
+		triples, cardinality = hdt_lod.search_triples(subject, predicate, "")
 		if cardinality != 0:
-			return (subject, object, 'utf8')
+			return (subject, 'utf8')
 		else:
-			(subject, object) = decode_latin1(b_subject, b_object)
-			if subject != None and object != None:
-				triples, cardinality = hdt_lod.search_triples(subject, predicate, object)
+			subject = decode_latin1(b_subject)
+			if subject != None:
+				triples, cardinality = hdt_lod.search_triples(subject, predicate, "")
 				if cardinality != 0:
-					return (subject, object, 'latin1')
+					return (subject, 'latin1')
 				else:
-					(subject, object) = decode_cp1252(b_subject, b_object)
-					if subject != None and object != None:
-						triples, cardinality = hdt_lod.search_triples(subject, predicate, object)
+					subject = decode_cp1252(b_subject)
+					if subject != None:
+						triples, cardinality = hdt_lod.search_triples(subject, predicate, "")
 						if cardinality != 0:
-							return (subject, object,  'cp1252')
+							return (subject, 'cp1252')
 						else:
 							return None
-							print ('not found after all trying: ', subject, ' -> ', object)
+							# print ('not found after all trying: ', subject)
 	return None
 
 
@@ -247,21 +247,21 @@ for l in lst:
 	for r in lst:
 		top_dir.append(l+r)
 
-# top_dir = top_dir[2:10]
+# top_dir = top_dir[20:]
 
-file_name_B = 'typeB_Sep15.nt'
+file_name_B = 'typeB_Sep16.nt'
 file_B =  open(file_name_B, 'w', newline='')
 writer_B = csv.writer(file_B, delimiter=' ')
 
 
-file_name_C = 'typeC_Sep15.nt'
+file_name_C = 'typeC_Sep16.nt'
 file_C = open(file_name_C, 'w', newline='')
 writer_C = csv.writer(file_C, delimiter=' ')
 
 
-log_file = open("TypeBC_log.tsv", 'w')
+log_file = open("TypeBC_logSep16.tsv", 'w')
 log_file_writer = csv.writer(log_file, delimiter='\t')
-log_file_writer.writerow(['B', 'foundB', 'C', 'foundC', 'Time'])
+log_file_writer.writerow(['top_dir','B', 'foundB', 'C', 'foundC', 'Time'])
 
 
 count_total_B = 0
@@ -326,17 +326,17 @@ for t in top_dir:
 				if predicate in label_relations:
 					count_total_B += 1
 
-					result = decode_pair (predicate, bline_split[0], bline_split[2])
+					result = decode_pair (predicate, bline_split[0])
 					if result != None:
-						subject, object, decoding_method = result
+						subject, decoding_method = result
 						writer_B.writerow(['<'+subject+'>', '<'+my_has_label_in_file+'>', '<'+my_file_IRI_prefix+md5+'>', '.'])
 						writer_B.writerow(['<'+my_file_IRI_prefix+md5+'>', '<'+rdf_type+'>', '<'+my_file+'>', '.'])
 						count_found_B += 1
 				elif predicate in comment_relations:
 					count_total_C += 1
-					result = decode_pair (predicate, bline_split[0], bline_split[2])
+					result = decode_pair (predicate, bline_split[0])
 					if result != None:
-						subject, object, decoding_method = result
+						subject, decoding_method = result
 						writer_C.writerow(['<'+subject+'>', '<'+my_has_comment_in_file+'>', '<'+my_file_IRI_prefix+md5+'>', '.'])
 						writer_C.writerow(['<'+my_file_IRI_prefix+md5+'>', '<'+rdf_type+'>', '<'+my_file+'>', '.'])
 						count_found_C += 1
@@ -371,5 +371,5 @@ for t in top_dir:
 	minutes, seconds = divmod(rem, 60)
 	time_formated = "{:0>2}:{:0>2}:{:05.2f}".format(int(hours),int(minutes),seconds)
 	print("Time taken: {:0>2}:{:0>2}:{:05.2f}".format(int(hours),int(minutes),seconds))
-	log_file_writer.writerow([count_total_B,count_found_B, count_total_C, count_found_C, time_formated])
+	log_file_writer.writerow([t, count_total_B,count_found_B, count_total_C, count_found_C, time_formated])
 	log_file.flush()
