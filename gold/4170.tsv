@@ -84,7 +84,7 @@ http://bpy.dbpedia.org/resource/%E0%A6%86%E0%A6%97%E0%A7%8D%E0%A6%B0%E0%A6%BE	Ag
 http://ca.dbpedia.org/resource/Agra_(desambiguaci%C3%B3)	unknown	OK
 http://ca.dbpedia.org/resource/Agra_(desambiguació)	unknown	OK
 http://cs.dbpedia.org/resource/Agra	unknown	OK
-http://dbpedia.org/resource/Agra_(disambiguation)	agra_disambiguation	TBA
+http://dbpedia.org/resource/Agra_(disambiguation)	agra_disambiguation	disambiguation
 http://de.dbpedia.org/resource/Agra_(Begriffsklärung)	unknown	ER
 http://eo.dbpedia.org/resource/Agra_(apartigilo)	unknown	ER
 http://es.dbpedia.org/resource/Agra_(desambiguación)	unknown	OK
@@ -93,7 +93,7 @@ http://fr.dbpedia.org/resource/Agra_(homonymie)	unknown	OK
 http://gl.dbpedia.org/resource/Agra	unknown	OK
 http://he.dbpedia.org/resource/אגרה	unknown	ER
 http://hr.dbpedia.org/resource/Agra	unknown	ER
-http://it.dbpedia.org/resource/Agra_(disambigua)	agra_disambiguation	TBA
+http://it.dbpedia.org/resource/Agra_(disambigua)	agra_disambiguation	disambiguation
 http://ja.dbpedia.org/resource/アグラ	unknown	TBA
 http://ka.dbpedia.org/resource/აგარა_(მრავალმნიშვნელოვანი)	unknown	ER
 http://lmo.dbpedia.org/resource/Agra	unknown	ER
@@ -152,7 +152,7 @@ http://dbpedia.org/resource/Agara	unknown	OK
 http://mpii.de/yago/resource/Agara	unknown	TBA
 http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000a1d3bc7	unknown	TBA
 http://vi.dbpedia.org/resource/Agara,_Yelandur	Agara_Yelandur	ER
-http://wikidata.dbpedia.org/resource/Q4691273	agra_disambiguation	TBA
+http://wikidata.dbpedia.org/resource/Q4691273	agra_disambiguation	disambiguation
 http://wikidata.org/entity/Q4691273	unknown	OK
 http://www.wikidata.org/entity/Q4691273	unknown	OK
 http://dbpedia.org/resource/Agra%2C_India	Agra_City_India	OK
@@ -174,9 +174,9 @@ http://wikidata.dbpedia.org/resource/Q42941	Agra_City_India	TBA
 http://wikidata.org/entity/Q42941	Agra_City_India	OK
 http://www4.wiwiss.fu-berlin.de/flickrwrappr/photos/Agra	Photos_DBpedia_Agra	TBA
 http://yago-knowledge.org/resource/Agra	Agra_City_India	TBA
-http://sco.dbpedia.org/resource/Agra_(disambiguation)	agra_disambiguation	TBA
+http://sco.dbpedia.org/resource/Agra_(disambiguation)	agra_disambiguation	disambiguation
 http://sh.dbpedia.org/resource/Ogra	unknown	TBA
-http://wikidata.dbpedia.org/resource/Q395821	agra_disambiguation	TBA
+http://wikidata.dbpedia.org/resource/Q395821	agra_disambiguation	disambiguation
 http://wikidata.org/entity/Q395821	unknown	TBA
 http://dbpedia.org/resource/Agra_District	Agra_District_India	OK
 http://rdf.freebase.com/ns/guid.9202a8c04000641f80000000007bca63	unknown	TBA

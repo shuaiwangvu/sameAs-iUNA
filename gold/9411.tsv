@@ -106,9 +106,9 @@ http://bn.dbpedia.org/resource/%E0%A6%AA%E0%A7%82%E0%A6%B0%E0%A7%8D%E0%A6%AC_%E0
 http://bs.dbpedia.org/resource/DDR_(%C4%8Dvor)	unknown	TBA
 http://bs.dbpedia.org/resource/DDR_(čvor)	unknown	ER
 http://cs.dbpedia.org/resource/DDR	unknown	TBA
-http://dbpedia.org/resource/DDR	DDR_disambiguation	TBA
-http://de.dbpedia.org/resource/DDR_(Begriffsklärung)	DDR_disambiguation	TBA
-http://el.dbpedia.org/resource/DDR	DDR_disambiguation	TBA
+http://dbpedia.org/resource/DDR	DDR_disambiguation	disambiguation
+http://de.dbpedia.org/resource/DDR_(Begriffsklärung)	DDR_disambiguation	disambiguation
+http://el.dbpedia.org/resource/DDR	DDR_disambiguation	disambiguation
 http://es.dbpedia.org/resource/DDR	unknown	TBA
 http://fa.dbpedia.org/resource/DDR	unknown	TBA
 http://fi.dbpedia.org/resource/DDR_(täsmennyssivu)	unknown	TBA
@@ -116,7 +116,7 @@ http://fr.dbpedia.org/resource/DDR	unknown	TBA
 http://he.dbpedia.org/resource/DDR	unknown	TBA
 http://hu.dbpedia.org/resource/DDR_(egyértelműsítő_lap)	unknown	ER
 http://id.dbpedia.org/resource/DDR	unknown	TBA
-http://it.dbpedia.org/resource/DDR_(disambigua)	unknown	TBA
+http://it.dbpedia.org/resource/DDR_(disambigua)	unknown	disambiguation
 http://ja.dbpedia.org/resource/DDR	unknown	OK
 http://ko.dbpedia.org/resource/DDR	unknown	OK
 http://nl.dbpedia.org/resource/DDR	unknown	OK
@@ -127,7 +127,7 @@ http://pl.dbpedia.org/resource/DDR	unknown	ER
 http://pt.dbpedia.org/resource/DDR	unknown	OK
 http://ro.dbpedia.org/resource/DDR	unknown	ER
 http://ru.dbpedia.org/resource/DDR	unknown	ER
-http://simple.dbpedia.org/resource/DDR_(disambiguation)	unknown	ER
+http://simple.dbpedia.org/resource/DDR_(disambiguation)	unknown	disambiguation
 http://sk.dbpedia.org/resource/DDR	unknown	ER
 http://sv.dbpedia.org/resource/DDR_(olika_betydelser)	unknown	ER
 http://th.dbpedia.org/resource/DDR	unknown	ER

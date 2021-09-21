@@ -57,7 +57,7 @@ http://data.bibsys.no/data/notrbib/authorityentry/x97024381	unknown	TBA
 http://datos.bne.es/resource/XX5074719	musician_Collidge	TBA
 http://dbpedia.org/resource/2nd_President_of_the_United_States	vice_president	TBA
 http://dbpedia.org/resource/Adams%2C_John	vice_president	TBA
-http://dbpedia.org/resource/J._Adams	disambiguation	TBA
+http://dbpedia.org/resource/J._Adams	disambiguation	disambiguation
 http://dbpedia.org/resource/John_Adam%27s_Administration	Presidency_John_Adams_1797_1801	TBA
 http://dbpedia.org/resource/John_Adams%2C_Jr.	vice_president	TBA
 http://dbpedia.org/resource/John_Adams%2C_Jr	vice_president	TBA
@@ -71,7 +71,7 @@ http://dbpedia.org/resource/John_Adams_(composer)	musician_Collidge	TBA
 http://dbpedia.org/resource/John_Adams_Administration	Presidency_John_Adams_1797_1801	TBA
 http://dbpedia.org/resource/John_Adams_Inaugural_Speech	Inauguration_of_John_Adams	TBA
 http://dbpedia.org/resource/John_adams	vice_president	TBA
-http://dbpedia.org/resource/Jon_Adams	disambiguation	TBA
+http://dbpedia.org/resource/Jon_Adams	disambiguation	disambiguation
 http://dbpedia.org/resource/Novanglus	vice_president	TBA
 http://dbpedia.org/resource/Presidency_of_John_Adams	Presidency_John_Adams_1797_1801	TBA
 http://dbpedia.org/resource/Second_President_of_the_United_States	vice_president	TBA
@@ -183,7 +183,7 @@ http://scn.dbpedia.org/resource/John_Adams	vice_president	TBA
 http://sco.dbpedia.org/resource/John_Adams	unknown	TBA
 http://sh.dbpedia.org/resource/John_Adams	vice_president	TBA
 http://si.dbpedia.org/resource/ජෝන්_ඇඩම්ස්	unknown	TBA
-http://simple.dbpedia.org/resource/John_Adams	disambiguation	TBA
+http://simple.dbpedia.org/resource/John_Adams	disambiguation	disambiguation
 http://simple.dbpedia.org/resource/John_Adams_(composer)	musician_Collidge	TBA
 http://sk.dbpedia.org/resource/John_Adams_(prezident_USA)	vice_president	TBA
 http://sk.dbpedia.org/resource/John_Coolidge_Adams	musician_Collidge	TBA
@@ -234,12 +234,12 @@ http://wikidata.dbpedia.org/resource/Q11806	vice_president	TBA
 http://wikidata.dbpedia.org/resource/Q6104558	unknown	TBA
 http://wikidata.dbpedia.org/resource/Q84114	musician_Collidge	TBA
 http://wikidata.org/entity/Q11806	unknown	TBA
-http://wikidata.org/entity/Q6104558	disambiguation	TBA
+http://wikidata.org/entity/Q6104558	disambiguation	disambiguation
 http://wikidata.org/entity/Q84114	musician_Collidge	TBA
 http://www.idref.fr/077719514/id	musician_Collidge	TBA
 http://www.wikidata.org/entity/Q11806	vice_president	TBA
 http://www.wikidata.org/entity/Q12952080	vice_president	TBA
-http://www.wikidata.org/entity/Q6104558	disambiguation	TBA
+http://www.wikidata.org/entity/Q6104558	disambiguation	disambiguation
 http://www.wikidata.org/entity/Q84114	musician_Collidge	TBA
 http://www4.wiwiss.fu-berlin.de/flickrwrappr/photos/John_Adams	unknown	TBA
 http://www4.wiwiss.fu-berlin.de/gutendata/resource/people/Adams_John_1735-1826	vice_president	TBA
