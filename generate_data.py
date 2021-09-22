@@ -197,14 +197,14 @@ def export_implicit_comment_source (file_name, graph):
 	print ('count C ', count_C)
 
 
-# standard_timeout =  (0.01, 0.05)
-# retry_timeout = (0.5, 2.5)
-# final_try_timeout = (5, 25)
-
-
 standard_timeout =  (0.01, 0.05)
-retry_timeout = (0.05, 0.1)
-final_try_timeout = (0.1, 0.1)
+retry_timeout = (0.5, 2.5)
+final_try_timeout = (5, 25)
+
+
+# standard_timeout =  (0.01, 0.05)
+# retry_timeout = (0.05, 0.1)
+# final_try_timeout = (0.1, 0.1)
 
 
 NOTFOUND = 1
@@ -564,3 +564,24 @@ print ('\tamong them, ', total_num_unknown, ' are unkonwn')
 print ('\nthere are in total ', sum_num_edges, ' edges')
 print ('\tamong them,', sum_correct_edges, ' are correct ->{:10.2f}'.format(sum_correct_edges/sum_num_edges * 100))
 print ('\tamong them,', sum_error_edges, ' are errorenous ->{:10.2f}'.format(sum_error_edges/sum_num_edges *100))
+
+
+
+
+
+# The following is to generate the script to translate nt to hdt
+# for id in gs:
+# 	# 42616_redirect_nodes.tsv
+# 	path_to_redi_graph_nodes = dir + str(id) +'_redirect_nodes.tsv'
+# 	# 42616_redirect_edges.nt
+# 	path_to_redi_graph_edges = dir + str(id) +'_redirect_edges.nt'
+# 	print ('rdf2hdt ', path_to_redi_graph_edges, ' ', path_to_redi_graph_edges[:-2]+'hdt')
+#
+# 	path_to_explicit_source = dir+str(id) + '_explicit_source.nt'
+# 	print ('rdf2hdt ', path_to_explicit_source, ' ', path_to_explicit_source[:-2]+'hdt')
+#
+# 	path_to_implicit_label_source = dir+str(id) + '_implicit_label_source.nt'
+# 	print ('rdf2hdt ', path_to_implicit_label_source, ' ', path_to_implicit_label_source[:-2]+'hdt')
+#
+# 	path_to_implicit_comment_source = dir+str(id) + '_implicit_comment_source.nt'
+# 	print ('rdf2hdt ', path_to_implicit_comment_source, ' ', path_to_implicit_comment_source[:-2]+'hdt')
