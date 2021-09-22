@@ -170,10 +170,15 @@ def load_implicit_comment_source (path_to_implicit_comment_source, graph):
 print ('in the validation dataset, there are ', validation_set, ' files (connected components)')
 
 count_total_nodes = 0
+count_total_edges = 0
+count_total_error_edges = 0
+
+count_total_redi_nodes = 0
+count_total_redi_edges = 0
 count_nodes_with_explicit_source = 0
 count_nodes_with_implicit_label_source = 0
 count_nodes_with_implicit_comment_source = 0
-
+id_to_graph = {}
 for id in validation_set:
 	print ('\n***************\nGraph ID =', id,'\n')
 	dir = './gold/'
@@ -182,6 +187,7 @@ for id in validation_set:
 	g = load_graph(path_to_nodes, path_to_edges)
 	print ('loaded ', g.number_of_nodes(), ' nodes and ', g.number_of_edges(), ' edges')
 	count_total_nodes += g.number_of_nodes()
+	count_total_edges += g.number_of_edges()
 	# the num of erorrneous edges
 	count_error_edges = 0
 	for (s, t) in g.edges():
@@ -190,13 +196,14 @@ for id in validation_set:
 			and g.nodes[s]['annotation'] != g.nodes[t]['annotation']):
 			count_error_edges += 1
 	print ('there are in total ', count_error_edges, ' errorous edges ')
-
+	count_total_error_edges += count_error_edges
 
 	path_to_redi_graph_nodes = dir + str(id) +'_redirect_nodes.tsv'
 	path_to_redi_graph_edges = dir + str(id) +'_redirect_edges.hdt'
 	redi_graph = load_redi_graph(path_to_redi_graph_nodes, path_to_redi_graph_edges)
 	print ('loaded the redi graph with ', redi_graph.number_of_nodes(), 'nodes and ', redi_graph.number_of_edges(), ' edges')
-
+	count_total_redi_nodes += redi_graph.number_of_nodes()
+	count_total_redi_edges += redi_graph.number_of_edges()
 	print ('*'*20)
 
 	# load explicit source
@@ -220,7 +227,18 @@ for id in validation_set:
 		if c != 0:
 			count_nodes_with_implicit_comment_source += ct_comment[c]
 
+	# validating iUNA without encoding equivalence and redirect
+
+
+print ('In total, there are ', len(validation_set), 'files for validation\n')
 print ('There are in total ', count_total_nodes, ' nodes in the validation graphs')
-print (count_nodes_with_explicit_source, ' has explicit sources')
-print (count_nodes_with_implicit_label_source, ' has implicit label-like sources')
-print (count_nodes_with_implicit_comment_source, ' has implicit comment-like sources')
+print ('There are in total ', count_total_edges, ' edges in the validation graphs\n')
+print ('There are in total ', count_total_error_edges, ' error edges in the validation graphs\n')
+print ('\t {:10.2f} %'.format(100*count_total_error_edges/count_total_edges))
+print ('There are in total ', count_total_redi_nodes, ' nodes in the redirect graphs')
+print ('There are in total ', count_total_redi_edges, ' edges in the redirect graphs\n')
+
+
+print (count_nodes_with_explicit_source, ' has explicit sources: {:10.2f} %'.format(100*count_nodes_with_explicit_source/count_total_nodes))
+print (count_nodes_with_implicit_label_source, ' has implicit label-like sources: {:10.2f} %'.format(100*count_nodes_with_implicit_label_source/count_total_nodes))
+print (count_nodes_with_implicit_comment_source, ' has implicit comment-like sources: {:10.2f} %'.format(100*count_nodes_with_implicit_comment_source/count_total_nodes))
