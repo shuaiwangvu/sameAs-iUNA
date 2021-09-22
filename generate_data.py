@@ -25,26 +25,24 @@ import requests
 from requests.exceptions import Timeout
 
 
-
-
 PATH_META = "/home/jraad/ssd/data/identity/metalink/metalink-2/metalink-2.hdt"
 hdt_metalink = HDTDocument(PATH_META)
 
 
 hdt_source = HDTDocument("typeA.hdt")
-hdt_label = HDTDocument("label_May.hdt")
-hdt_comment = HDTDocument("comment_May.hdt")
+hdt_label = HDTDocument("typeB_Sep20_metalink_only.hdt")
+hdt_comment = HDTDocument("typeC_Sep20_metalink_only.hdt")
 
 
 PATH_LOD = "/scratch/wbeek/data/LOD-a-lot/data.hdt"
 hdt_lod_a_lot = HDTDocument(PATH_LOD)
 
-#
+
 gs = [4170, 5723,6617,6927,9411,9756,11116,12745,14872,18688,25604,33122,37544,
 39036, 42616,96073,97757,99932,236350,240577,337339,395175,712342,1133953,
 1140988,4635725,9994282,14514123]
 
-# gs = [6617]
+# gs = [18688, 4170, 11116]
 
 single = [9411, 9756, 18688, 25604, 96073, 97757, 99932, 337339,
 712342, 1133953, 1140988, 9994282]
@@ -199,18 +197,18 @@ def export_implicit_comment_source (file_name, graph):
 	print ('count C ', count_C)
 
 
-standard_timeout =  (0.01, 0.05)
-retry_timeout = (0.5, 2.5)
-final_try_timeout = (5, 25)
-
-
 # standard_timeout =  (0.01, 0.05)
-# retry_timeout = (0.05, 0.5)
-# final_try_timeout = (0.5, 1)
+# retry_timeout = (0.5, 2.5)
+# final_try_timeout = (5, 25)
+
+
+standard_timeout =  (0.01, 0.05)
+retry_timeout = (0.05, 0.1)
+final_try_timeout = (0.1, 0.1)
 
 
 NOTFOUND = 1
-NOREDIRECT = 2
+FOUNDWITHOUTREDIRECT = 2
 ERROR = 3
 TIMEOUT = 4
 REDIRECT = 5
@@ -228,7 +226,7 @@ def find_redirects (iri, timeout = standard_timeout):
 
 		if response.history:
 			if response.url == iri:
-				return NOREDIRECT, None
+				return FOUNDWITHOUTREDIRECT, None
 			else:
 				# print("Request was redirected", iri)
 				for resp in response.history:
@@ -242,7 +240,7 @@ def find_redirects (iri, timeout = standard_timeout):
 				return REDIRECT, collect_urls
 		else:
 			# print("Request was not redirected", iri)
-			return NOREDIRECT, None
+			return FOUNDWITHOUTREDIRECT, None
 	except Timeout:
 		# print('The request timed out', iri)
 		return TIMEOUT, None
@@ -276,9 +274,9 @@ def obtain_redirect_graph(graph):
 			# print ('testing ',e)
 			if result == NOTFOUND:
 				redi_graph.nodes[e]['remark'] = 'not_found'
-			elif result == NOREDIRECT:
-				redi_graph.nodes[e]['remark'] = 'not_redirect'
-				# print ('mark ',e, ' notredirected')
+			elif result == FOUNDWITHOUTREDIRECT:
+				redi_graph.nodes[e]['remark'] = 'found_without_redirect'
+				# print ('mark ',e, ' found and not redirected')
 			elif result == ERROR:
 				# print ('why not showing error?')
 				redi_graph.nodes[e]['remark'] = 'error'
@@ -287,6 +285,13 @@ def obtain_redirect_graph(graph):
 				redi_graph.nodes[e]['remark'] = 'timeout'
 			elif result == REDIRECT:
 				redi_graph.nodes[e]['remark'] = 'redirected'
+				if via_entities[0] != e:
+					# the resolved IRI is in a different encoding
+					# print ('working on ', e)
+					# print ('error at the first! ')
+					# print ('via_entities', via_entities)
+					# redi_graph.add_node(t, remark = 'unknown')
+					redi_graph.add_edge(e, via_entities[0])
 				if len (via_entities) > 1:
 					for i, s in enumerate(via_entities[:-1]):
 						t = via_entities[i+1]
@@ -295,21 +300,34 @@ def obtain_redirect_graph(graph):
 						else:
 							redi_graph.nodes[s]['remark'] = 'redirected'
 
-						if t not in redi_graph.nodes():
-							redi_graph.add_node(t, remark = 'unknown')
+						# if t not in redi_graph.nodes():
+						redi_graph.add_node(t, remark = 'unknown')
 
 						redi_graph.add_edge(s, t)
 
-					if via_entities[-1] not in end_of_redirect_entities and via_entities[-1] not in timeout_entities:
-						end_of_redirect_entities.add(via_entities[-1])
+					# if via_entities[-1] not in end_of_redirect_entities and via_entities[-1] not in timeout_entities:
+					end_of_redirect_entities.add(via_entities[-1])
 				else:
 					print ('error: ', via_entities)
+
+				# print ('\n')
+				# for v in via_entities:
+				# 	print ('after update ',v,' with mark ', redi_graph.nodes[v]['remark'], ' with outdegree', redi_graph.out_degree(v))
 			else:
 				print ('error')
 
 		print ('TIMEOUT: there are ', len (timeout_entities), ' timeout entities')
 		print ('End Of Redirect: there are ', len (end_of_redirect_entities), ' end of redirect entities')
 		entities_to_test = timeout_entities.union(end_of_redirect_entities)
+
+		for e in redi_graph.nodes():
+
+			if redi_graph.nodes[e]['remark'] == 'redirected' and redi_graph.out_degree(e) == 0:
+				print ('ERROR:')
+				print (e, ' was redirected but has out-degree 0')
+				print (e, ' was redirected is with in-degree ', redi_graph.in_degree(e))
+				if e in graph.nodes():
+					print ('it is in the original graph!')
 
 
 	for m in end_of_redirect_entities:
@@ -321,38 +339,58 @@ def obtain_redirect_graph(graph):
 			update_against.add(n)
 
 	# count_redirect_until_timeout = 0
+
 	for n in redi_graph.nodes():
+
 		if redi_graph.nodes[n]['remark'] == 'redirected':
+			# print ('updating node : ', n)
 			for m in update_against:
 				if nx.has_path(redi_graph, n, m):
-					if redi_graph.nodes[m]['remark'] == 'timeout':
+					if redi_graph.nodes[m]['remark'] == 'timeout' or redi_graph.nodes[m]['remark'] == 'redirect_until_timeout':
 						redi_graph.nodes[n]['remark'] = 'redirect_until_timeout'
-					elif redi_graph.nodes[m]['remark'] == 'not_found':
+						# print ('\tupdating against m = ', redi_graph.nodes[m]['remark'])
+					elif redi_graph.nodes[m]['remark'] == 'not_found'  or redi_graph.nodes[m]['remark'] == 'redirect_until_not_found':
 						redi_graph.nodes[n]['remark'] = 'redirect_until_not_found'
-					elif redi_graph.nodes[m]['remark'] == 'error':
+						# print ('\tupdating against m = ', redi_graph.nodes[m]['remark'])
+					elif redi_graph.nodes[m]['remark'] == 'error' or redi_graph.nodes[m]['remark'] == 'redirect_until_error':
 						redi_graph.nodes[n]['remark'] = 'redirect_until_error'
-					elif redi_graph.nodes[m]['remark'] == 'not_redirect':
-						redi_graph.nodes[n]['remark'] = 'redirect_until_landed'
+						# print ('\tupdating against m = ', redi_graph.nodes[m]['remark'])
+					elif redi_graph.nodes[m]['remark'] == 'found_without_redirect' or redi_graph.nodes[m]['remark'] == 'redirect_until_found':
+						redi_graph.nodes[n]['remark'] = 'redirect_until_found'
+						# print ('\tupdating against m = ', redi_graph.nodes[m]['remark'])
 					else:
+						# pass
 						print('Error? reaching m = ', redi_graph.nodes[m]['remark'])
 
+			if redi_graph.nodes[n]['remark'] == 'redirected': # redirected until redirected
+
+				print ('\n\nredirected but not to anywhere?')
+				print ('entitiy: ', n)
+				print ('outdegree: ', redi_graph.out_degree(n))
+				print ('indegree: ', redi_graph.in_degree(n))
+				result, via_entities = find_redirects(n, timeout = timeout_parameters )
+				print ('result ', result)
+				print ('via_entities = ', via_entities)
+				redi_graph.nodes[n]['remark'] = 'redirect_until_timeout'
+
+
 	count_not_found = 0
-	count_not_redirected = 0
+	count_found_without_redirect = 0
 	count_error = 0
 	count_timeout = 0
 	count_redirected = 0
 	count_redirect_until_timeout = 0
 	count_redirect_until_not_found = 0
 	count_redirect_until_error = 0
-	count_redirect_until_landed = 0
+	count_redirect_until_found = 0
 	count_other = 0
 
 	for n in redi_graph.nodes():
 		if n in graph.nodes():
 			if redi_graph.nodes[n]['remark'] == 'not_found':
 				count_not_found += 1
-			elif redi_graph.nodes[n]['remark'] == 'not_redirect':
-				count_not_redirected += 1
+			elif redi_graph.nodes[n]['remark'] == 'found_without_redirect':
+				count_found_without_redirect += 1
 			elif redi_graph.nodes[n]['remark'] == 'error':
 				count_error += 1
 			elif redi_graph.nodes[n]['remark'] == 'timeout':
@@ -363,24 +401,24 @@ def obtain_redirect_graph(graph):
 				count_redirect_until_not_found += 1
 			elif redi_graph.nodes[n]['remark'] == 'redirect_until_error':
 				count_redirect_until_error += 1
-			elif redi_graph.nodes[n]['remark'] == 'redirect_until_landed':
-				count_redirect_until_landed += 1
+			elif redi_graph.nodes[n]['remark'] == 'redirect_until_found':
+				count_redirect_until_found += 1
 			else:
 				print ('strange : ', redi_graph.nodes[n]['remark'])
 				count_other += 1
 
-	count_redirected = count_redirect_until_timeout + count_redirect_until_not_found + count_redirect_until_error + count_redirect_until_landed
+	count_redirected = count_redirect_until_timeout + count_redirect_until_not_found + count_redirect_until_error + count_redirect_until_found
 
 	print ('Regarding the original graph:')
 	print ('\tcount not found: ', count_not_found)
-	print ('\tcount not redirected: ', count_not_redirected)
+	print ('\tcount found (not redirected): ', count_found_without_redirect)
 	print ('\tcount error: ', count_error)
 	print ('\tcount timeout: ', count_timeout)
 	print ('*****')
 	print ('\tcount redirect until timeout: ', count_redirect_until_timeout)
 	print ('\tcount redirect until not found: ', count_redirect_until_not_found)
 	print ('\tcount redirect until error: ', count_redirect_until_error)
-	print ('\tcount redirect until landed: ', count_redirect_until_landed)
+	print ('\tcount redirect until found: ', count_redirect_until_found)
 	print ('\tTOTAL REDIRECTED: ', count_redirected)
 	print ('\tcount other (mistake): ', count_other)
 
@@ -436,7 +474,7 @@ def export_redirect_graph_nodes(file_name, graph):
 	for n in graph.nodes:
 		if graph.nodes[n]['remark'] == 'not_found':
 			writer.writerow([n, 'NotFound'])
-		elif graph.nodes[n]['remark'] == 'not_redirect':
+		elif graph.nodes[n]['remark'] == 'found_without_redirect':
 			writer.writerow([n, 'NotRedirect'])
 		elif graph.nodes[n]['remark'] == 'error':
 			writer.writerow([n, 'Error'])
@@ -448,7 +486,7 @@ def export_redirect_graph_nodes(file_name, graph):
 			writer.writerow([n, 'RedirectedUntilTimeout'])
 		elif graph.nodes[n]['remark'] == 'redirect_until_error':
 			writer.writerow([n, 'RedirectedUntilError'])
-		elif graph.nodes[n]['remark'] == 'redirect_until_landed':
+		elif graph.nodes[n]['remark'] == 'redirect_until_found':
 			writer.writerow([n, 'RedirectedUntilLanded'])
 		elif graph.nodes[n]['remark'] == 'redirect_until_not_found':
 			writer.writerow([n, 'RedirectedUntilNotFound'])
