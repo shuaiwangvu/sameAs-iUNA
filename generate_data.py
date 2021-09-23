@@ -18,12 +18,13 @@ import random
 from collections import Counter
 from hdt import HDTDocument, IdentifierPosition
 import glob
-from urllib.parse import urlparse
+from rfc3987 import  parse
+import urllib.parse
 import gzip
 from extend_metalink import *
 import requests
 from requests.exceptions import Timeout
-
+from SameAsEqGraph import get_simp_IRI, get_namespace, get_name
 
 PATH_META = "/home/jraad/ssd/data/identity/metalink/metalink-2/metalink-2.hdt"
 hdt_metalink = HDTDocument(PATH_META)
@@ -493,6 +494,73 @@ def export_redirect_graph_nodes(file_name, graph):
 		else:
 			print ('Error: ', graph.nodes[n]['remark'])
 
+
+def obtain_ee_graph(graph):
+	# def get_encoding_equality_graph(self):
+	print ('\n\n <<< Getting encoding equality graph >>>')
+	#step 1: make an authority map to node
+	authority_map = {}
+	variance_map = {}
+
+	for n in graph.nodes:
+		# print ('\n\niri = ', n)
+		rule='IRI'
+		d = parse(n, rule) # ’IRI_reference’
+
+		# print ('authority = ',d['authority'])
+		if d['authority'] in authority_map.keys():
+			authority_map[d['authority']].append(n)
+		else:
+			authority_map[d['authority']] = []
+		# print ('authority map for ', d['authority'], ' :')
+		# print(authority_map[d['authority']])
+	# step 2: construct a dictionary of each node against
+		# first, do the decoding and add to the list
+
+		uq = urllib.parse.unquote(n)
+		# print ('uq = ', uq)
+		variance_map[n] = set()
+		if d != n:
+			variance_map[n].add(uq)
+		# second, get an ecoding of the current iri
+		prefix, sign, name  = get_name(n)
+		quote_name = urllib.parse.quote(name)
+		new_iri = prefix + sign + quote_name
+		# print ('new_iri = ', new_iri)
+		if new_iri != n:
+			variance_map[n].add(new_iri)
+
+		# print ('prefix', prefix)
+		# print ('sign', sign)
+		# print ('name', name)
+		# print ('quote_name', quote_name)
+		# print ('new iri = ', new_iri)
+		#
+		# print ('its variance map = ',variance_map[n])
+
+	encoding_equality_graph = nx.Graph()
+	for iri_with_same_authority in authority_map.values():
+		for i in iri_with_same_authority:
+			for j in iri_with_same_authority:
+				if i != j: # avoid reflexive edges
+					# test if i is the same as any of j's variances
+					if i in variance_map[j]:
+						encoding_equality_graph.add_edge(i, j)
+
+	print ('original graph has ', graph.number_of_nodes(), ' nodes')
+	print ('original graph has ', graph.number_of_edges(), ' edges')
+	print ('there are ', encoding_equality_graph.number_of_nodes() , ' nodes in the equivalence graph')
+	print ('there are ', encoding_equality_graph.number_of_edges() , ' edges in the equivalence graph')
+	# num_new_edges = 0
+	# for (s,t) in encoding_equality_graph.edges():
+	# 	if s in graph.nodes() and t in graph.nodes():
+	# 		print ('ee edge: ', s, t)
+	# 	else:
+	# 		num_new_edges += 1
+	# print ('num new edges', num_new_edges)
+	return encoding_equality_graph
+
+
 sum_num_entities = 0
 sum_num_edges = 0
 total_num_unknown = 0
@@ -521,43 +589,47 @@ for id in gs:
 	obtain_edges(g)
 	print ('There are ', g.number_of_nodes(), ' nodes')
 	print ('There are ', g.number_of_edges(), ' edges')
-	sum_num_edges += g.number_of_edges()
-	for (l,r) in g.edges():
-		if g.nodes[l]['annotation'] != 'unknown' and g.nodes[r]['annotation'] != 'unknown':
-			if g.nodes[l]['annotation']  == g.nodes[r]['annotation']:
-				sum_correct_edges += 1
-			elif g.nodes[l]['annotation']  != g.nodes[r]['annotation']:
-				sum_error_edges += 1
+	# sum_num_edges += g.number_of_edges()
+	# for (l,r) in g.edges():
+	# 	if g.nodes[l]['annotation'] != 'unknown' and g.nodes[r]['annotation'] != 'unknown':
+	# 		if g.nodes[l]['annotation']  == g.nodes[r]['annotation']:
+	# 			sum_correct_edges += 1
+	# 		elif g.nodes[l]['annotation']  != g.nodes[r]['annotation']:
+	# 			sum_error_edges += 1
 
 
-	# step 2: obtain metalink ID:
-	for (l, r) in g.edges():
-		meta_id = find_statement_id(l, r)
-		if meta_id != None:
-			g[l][r]['metalink_id'] = meta_id
-		else:
-			g[l][r]['metalink_id'] = None
+	# # step 2: obtain metalink ID:
+	# for (l, r) in g.edges():
+	# 	meta_id = find_statement_id(l, r)
+	# 	if meta_id != None:
+	# 		g[l][r]['metalink_id'] = meta_id
+	# 	else:
+	# 		g[l][r]['metalink_id'] = None
+	#
+	# #step 3: export the edges and the metalink ID
+	# edges_file_name = dir + str(id) +'_edges.tsv'
+	# export_graph_edges(edges_file_name, g)
+	#
+	# # step 4: export the sources: Type A B C
+	# explicit_file_path = dir + str(id) + '_explicit_source.nt'
+	# export_explicit_source(explicit_file_path, g)
+	#
+	# label_file_path = dir + str(id) + '_implicit_label_source.nt'
+	# export_implicit_label_source(label_file_path, g)
+	#
+	# comment_file_path = dir +  str(id) + '_implicit_comment_source.nt'
+	# export_implicit_comment_source(comment_file_path, g)
+	#
+	# # step 5: obtain redirect nodes
+	# redi_graph = obtain_redirect_graph(g)
+	# redirect_file_name = dir + str(id) +'_redirect_edges.nt'
+	# export_redirect_graph_edges(redirect_file_name, redi_graph)
+	# redirect_file_name = dir + str(id) +'_redirect_nodes.tsv'
+	# export_redirect_graph_nodes(redirect_file_name, redi_graph)
 
-	#step 3: export the edges and the metalink ID
-	edges_file_name = dir + str(id) +'_edges.tsv'
-	export_graph_edges(edges_file_name, g)
+	# step 6: obtain the encoding equivalence graph
+	ee_graph = obtain_ee_graph(g)
 
-	# step 4: export the sources: Type A B C
-	explicit_file_path = dir + str(id) + '_explicit_source.nt'
-	export_explicit_source(explicit_file_path, g)
-
-	label_file_path = dir + str(id) + '_implicit_label_source.nt'
-	export_implicit_label_source(label_file_path, g)
-
-	comment_file_path = dir +  str(id) + '_implicit_comment_source.nt'
-	export_implicit_comment_source(comment_file_path, g)
-
-	# step 4: obtain redirect nodes
-	redi_graph = obtain_redirect_graph(g)
-	redirect_file_name = dir + str(id) +'_redirect_edges.nt'
-	export_redirect_graph_edges(redirect_file_name, redi_graph)
-	redirect_file_name = dir + str(id) +'_redirect_nodes.tsv'
-	export_redirect_graph_nodes(redirect_file_name, redi_graph)
 
 print ('there are in total ', sum_num_entities, ' nodes')
 print ('\tamong them, ', total_num_unknown, ' are unkonwn')
