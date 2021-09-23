@@ -191,18 +191,18 @@ count_short = 0
 count_sameAs_statement = 0
 count_sameAs_statement_with_metalinkID = 0
 
-log_file = open( which + "_laundromat_metalink_Sep21.nt.log", 'w')
+log_file = open( which + "_laundromat_metalink_Sep23.nt.log", 'w')
 log_file_writer = csv.writer(log_file, delimiter=' ')
 log_file_writer.writerow(['top_dir', 'sameAs_statement_processed', 'with_metalink_id', 'time_taken'])
 
-file_no_metalink  = open( which + "_without_metalink_Sep21.tsv", 'w')
+file_no_metalink  = open( which + "_without_metalink_Sep23.tsv", 'w')
 no_metalink_writer = csv.writer(file_no_metalink, delimiter='\t')
 no_metalink_writer.writerow(['FILE'])
 
 start = time.time()
 ct_decoding_method = Counter()
 
-with open( which + "_laundromat_metalink_Sep21.nt", 'w') as output:
+with open( which + "_laundromat_metalink_Sep23.nt", 'w') as output:
 	writer = csv.writer(output, delimiter=' ')
 
 	for t in top_dir:
@@ -241,8 +241,9 @@ with open( which + "_laundromat_metalink_Sep21.nt", 'w') as output:
 			f = gzip.open( gzfile, 'rb') # latin-1 ,
 									# encoding= 'utf-8'
 									# changed the mode from rt to rb (text mode to binary mode)
-
-			while True:
+			count_processed = 0
+			count_processed_sameas = 0
+			while count_processed < 1000 or count_processed_sameas > 0: # if not found after 1000, jump to next file
 				bline = ''
 				line = ''
 				last = ''
@@ -257,6 +258,7 @@ with open( which + "_laundromat_metalink_Sep21.nt", 'w') as output:
 							object = None
 							statementID = None
 							count_sameAs_statement += 1
+							count_processed_sameas += 1
 							# print ('\n\nNo. ', count_sameAs_statement)
 							# print ('sameas statement = ', bline)
 

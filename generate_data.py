@@ -39,6 +39,9 @@ PATH_LOD = "/scratch/wbeek/data/LOD-a-lot/data.hdt"
 hdt_lod_a_lot = HDTDocument(PATH_LOD)
 
 
+PATH_edge_source = "sameas_laundromat_metalink_Sep.hdt"
+hdt_edge_source = HDTDocument(PATH_edge_source)
+
 gs = [4170, 5723,6617,6927,9411,9756,11116,12745,14872,18688,25604,33122,37544,
 39036, 42616,96073,97757,99932,236350,240577,337339,395175,712342,1133953,
 1140988,4635725,9994282,14514123]
@@ -561,6 +564,52 @@ def obtain_ee_graph(graph):
 	return encoding_equality_graph
 
 
+def export_ee_graph_edges(file_name, graph):
+	# count_line = 0
+	with open(file_name, 'w') as output:
+		for (l,r) in graph.edges():
+			line = '<' + l + '> '
+			line += '<' + my_encoding_equivalence + '> '
+			if r[0] == '"':
+				if "^^" in r:
+					line += '' + r + ' .\n'
+					# edited = splited[-2][1:-1] # keep that original one
+					# example "http://xmlns.com/foaf/0.1/"^^<http://www.w3.org/2001/XMLSchema#anyURI>
+				else: # else, add the following
+					line += '' + r + "^^<http://www.w3.org/2001/XMLSchema#string>" + ' .\n'
+					# edited = splited[-2][1:-1] + "^^<http://www.w3.org/2001/XMLSchema#string>"
+			else:
+				line +=  '<' + r +'>. \n'
+			output.write(str(line))
+			# count_line += 1
+	# print ('count line = ', count_line)
+
+def obtain_weight_graph(g):
+	# sameas_laundromat_metalink_Sep.hdt
+	count_has_weight = 0
+	for (l,r) in g.edges():
+		metalink_id = g.edges[l,r]['metalink_id']
+		if metalink_id != None:
+			_, cardinality = hdt_edge_source.search_triples(metalink_id, "", "")
+			g.edges[l,r]['weight'] = cardinality
+			if cardinality !=0:
+				count_has_weight += 1
+		else:
+			g.edges[l,r]['weight'] = None
+	print ('count_has_weight = ', count_has_weight)
+
+
+def export_weight_graph (file_name, graph):
+	file =  open(file_name, 'w', newline='')
+	writer = csv.writer(file, delimiter='\t')
+	writer.writerow([ "SUBJECT", "OBJECT", "WEIGHT"])
+	for (l, r) in graph.edges:
+		if graph.edges[l, r]['weight'] == None:
+			writer.writerow([l, r, 'None'])
+		else:
+			writer.writerow([l, r, graph.edges[l, r]['weight']])
+
+
 sum_num_entities = 0
 sum_num_edges = 0
 total_num_unknown = 0
@@ -589,23 +638,23 @@ for id in gs:
 	obtain_edges(g)
 	print ('There are ', g.number_of_nodes(), ' nodes')
 	print ('There are ', g.number_of_edges(), ' edges')
-	# sum_num_edges += g.number_of_edges()
-	# for (l,r) in g.edges():
-	# 	if g.nodes[l]['annotation'] != 'unknown' and g.nodes[r]['annotation'] != 'unknown':
-	# 		if g.nodes[l]['annotation']  == g.nodes[r]['annotation']:
-	# 			sum_correct_edges += 1
-	# 		elif g.nodes[l]['annotation']  != g.nodes[r]['annotation']:
-	# 			sum_error_edges += 1
+	sum_num_edges += g.number_of_edges()
+	for (l,r) in g.edges():
+		if g.nodes[l]['annotation'] != 'unknown' and g.nodes[r]['annotation'] != 'unknown':
+			if g.nodes[l]['annotation']  == g.nodes[r]['annotation']:
+				sum_correct_edges += 1
+			elif g.nodes[l]['annotation']  != g.nodes[r]['annotation']:
+				sum_error_edges += 1
 
 
-	# # step 2: obtain metalink ID:
-	# for (l, r) in g.edges():
-	# 	meta_id = find_statement_id(l, r)
-	# 	if meta_id != None:
-	# 		g[l][r]['metalink_id'] = meta_id
-	# 	else:
-	# 		g[l][r]['metalink_id'] = None
-	#
+	# step 2: obtain metalink ID:
+	for (l, r) in g.edges():
+		meta_id = find_statement_id(l, r)
+		if meta_id != None:
+			g[l][r]['metalink_id'] = meta_id
+		else:
+			g[l][r]['metalink_id'] = None
+
 	# #step 3: export the edges and the metalink ID
 	# edges_file_name = dir + str(id) +'_edges.tsv'
 	# export_graph_edges(edges_file_name, g)
@@ -628,8 +677,14 @@ for id in gs:
 	# export_redirect_graph_nodes(redirect_file_name, redi_graph)
 
 	# step 6: obtain the encoding equivalence graph
-	ee_graph = obtain_ee_graph(g)
+	# ee_graph = obtain_ee_graph(g)
+	# ee_file_path = dir + str(id) + '_encoding_equivalent.nt'
+	# export_ee_graph_edges (ee_file_path, ee_graph)
 
+	# get the weights from sameas_laundromat_metalink_Sep.hdt
+	obtain_weight_graph(g)
+	weight_file_path = dir + str(id) + '_weight.tsv'
+	export_weight_graph(weight_file_path, g)
 
 print ('there are in total ', sum_num_entities, ' nodes')
 print ('\tamong them, ', total_num_unknown, ' are unkonwn')
@@ -639,6 +694,14 @@ print ('\tamong them,', sum_error_edges, ' are errorenous ->{:10.2f}'.format(sum
 
 
 
+# The following is to generate the script to translate nt to hdt
+# for id in gs:
+# 	file_nt = dir + str(id) + '_encoding_equivalent.nt'
+# 	print ('rdf2hdt ', file_nt, ' ', file_nt[:-2]+'hdt')
+# 
+# for id in gs:
+# 	file_nt = dir + str(id) + '_encoding_equivalent.nt'
+# 	print ('rdf2hdt ', file_nt, ' ', file_nt[:-2]+'hdt')
 
 
 # The following is to generate the script to translate nt to hdt
