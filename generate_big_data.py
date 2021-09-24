@@ -40,18 +40,34 @@ def export_graph_csv (file_name, entities):
 	file =  open(file_name, 'w', newline='')
 	writer = csv.writer(file, delimiter='\t')
 	writer.writerow(['Entity', 'Annotation', 'Comment'])
+	count_real_entities = 0
 	for e in entities:
-		writer.writerow([e, 'unknown', 'unknown'])
+		if e[0] == '"':
+			# writer.writerow([e, 'unknown', 'unknown'])
+			pass
+			# print ('here:', e)
+		elif e[0] == '<':
+			writer.writerow([e[1:-1], 'unknown', 'unknown'])
+			count_real_entities += 1
+		else:
+			pass
+			# writer.writerow([e, 'unknown', 'unknown'])
+			# print ('there:', e)
+	print ('# real entities ', count_real_entities)
+	return count_real_entities
 
-def export_index_and_size (file_name, index_to_size):
+def export_index_and_size (file_name, index_to_size, index_to_num_real_entities = None):
 	file =  open(file_name, 'w', newline='')
 	writer = csv.writer(file, delimiter='\t')
-	writer.writerow(['Index', 'Size'])
-	for index in index_to_size.keys():
-		if index[0] =='<':
-			writer.writerow([index[1:-1], index_to_size[index]])
-		else:
+
+	if index_to_num_real_entities == None:
+		writer.writerow(['Index', 'Size'])
+		for index in index_to_size.keys():
 			writer.writerow([index, index_to_size[index]])
+	else:
+		writer.writerow(['Index', 'Size', 'Entities_without_literals'])
+		for index in index_to_size.keys():
+			writer.writerow([index, index_to_size[index], index_to_num_real_entities[index]])
 
 
 # count = 0
@@ -59,6 +75,7 @@ with open(path) as csv_file:
 	csv_reader = csv.reader(csv_file, delimiter=' ')
 	index_to_size = {}
 	index_to_size_1000 = {}
+	index_to_size_1000_real = {}
 	entities = []
 	for row in csv_reader:
 		# if count > 10000000: # total lines :44676381
@@ -72,7 +89,8 @@ with open(path) as csv_file:
 			index_to_size_1000 [index] = size
 			entities = row[1:]
 			path_to_file = './big_connected_components/' +str(index)+'.tsv'
-			export_graph_csv(path_to_file, entities)
+			count_real_entities = export_graph_csv(path_to_file, entities)
+			index_to_size_1000_real [index] = count_real_entities
 		# print ('index = ', index)
 		# print ('size = ', size)
 	# sort the dictionary by values
@@ -84,4 +102,4 @@ with open(path) as csv_file:
 	# 	print (index, ' has ', sorted_index_to_size[index],' entities')
 
 	export_index_and_size('sameas_index_to_size.tsv', sorted_index_to_size)
-	export_index_and_size('sameas_index_to_size_1000.tsv', sorted_index_to_size_1000)
+	export_index_and_size('sameas_index_to_size_1000.tsv', sorted_index_to_size_1000, index_to_size_1000_real)
