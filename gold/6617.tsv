@@ -252,20 +252,20 @@ http://bg.dbpedia.org/resource/Списък_на_графовете_и_марк�
 http://rdf.freebase.com/ns/m.0zcc1	Bandon,_Oregon	TBA
 http://br.dbpedia.org/resource/Burgondia	Burgundy	TBA
 http://ceb.dbpedia.org/resource/Bourgogne_(pagklaro)	Burgundy	TBA
-http://dbpedia.org/resource/Bourgogne_(disambiguation)	Burgundy	disambiguation
-http://dbpedia.org/resource/Burgundy_(disambiguation)	Burgundy	disambiguation
-http://de.dbpedia.org/resource/Burgund_(Begriffsklärung)	Burgundy	TBA
+http://dbpedia.org/resource/Bourgogne_(disambiguation)	Burgundy_disambiguation	disambiguation
+http://dbpedia.org/resource/Burgundy_(disambiguation)	Burgundy_disambiguation	disambiguation
+http://de.dbpedia.org/resource/Burgund_(Begriffsklärung)	Burgundy_disambiguation	disambiguation
 http://eo.dbpedia.org/resource/Burgonjo_(apartigilo)	Burgundy	TBA
-http://es.dbpedia.org/resource/Borgoña_(desambiguación)	Burgundy	TBA
+http://es.dbpedia.org/resource/Borgoña_(desambiguación)	Burgundy_disambiguation	disambiguation
 http://et.dbpedia.org/resource/Burgundia_(täpsustus)	Burgundy	TBA
-http://fr.dbpedia.org/resource/Bourgogne_(homonymie)	Burgundy	TBA
+http://fr.dbpedia.org/resource/Bourgogne_(homonymie)	Burgundy_disambiguation	disambiguation
 http://fy.dbpedia.org/resource/Boergonje	Burgundy	TBA
 http://he.dbpedia.org/resource/בורגונדי	Burgundy	TBA
 http://hr.dbpedia.org/resource/Burgundija_(razdvojba)	Burgundy	TBA
-http://it.dbpedia.org/resource/Borgogna_(disambigua)	Burgundy	disambiguation
+http://it.dbpedia.org/resource/Borgogna_(disambigua)	Burgundy_disambiguation	disambiguation
 http://ja.dbpedia.org/resource/バーガンディ	Burgundy	TBA
 http://la.dbpedia.org/resource/Burgundia	Burgundy	TBA
-http://lt.dbpedia.org/resource/Burgundija_(reikšmės)	Burgundy	TBA
+http://lt.dbpedia.org/resource/Burgundija_(reikšmės)	unknown	unknown
 http://nds.dbpedia.org/resource/Burgund	Burgundy	TBA
 http://nl.dbpedia.org/resource/Bourgondië	Burgundy	TBA
 http://oc.dbpedia.org/resource/Bourgogne	Burgundy	TBA

@@ -147,7 +147,7 @@ all_typed_only =total_collect_typed_disambiguation.difference(total_collect_anno
 print('in total ',len (all_typed_only), ' typed only')
 
 all_annotated_only =total_collect_annotated_disambiguation.difference(total_collect_typed_disambiguation)
-print('in total ',len (all_annotated_only), ' typed only')
+print('in total ',len (all_annotated_only), ' annotated only')
 
 all_mutual =total_collect_annotated_disambiguation.intersection(total_collect_typed_disambiguation)
 print ('mutual: ', len (all_mutual))
