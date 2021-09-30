@@ -23,6 +23,9 @@ import gzip
 import requests
 from requests.exceptions import Timeout
 
+
+rdf_type = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+
 def get_namespace_prefix (e):
 	prefix, name, sign = get_name(e)
 	return prefix
@@ -139,10 +142,6 @@ for id in gs:
 		if c == 'disambiguation' or a == 'unknown':
 			total_collect_annotated_disambiguation_or_unknown.add(e)
 
-		use_template = "http://dbpedia.org/property/wikiPageUsesTemplate"
-		dbr_disambig = "http://dbpedia.org/resource/Template:Disambig" #105043
-		dbr_disambiguation = "http://dbpedia.org/resource/Template:Disambiguation" # 54271
-
 
 		triples, cardinality = hdt_lod_a_lot.search_triples(e, use_template, dbr_disambig)
 		if cardinality > 0:
@@ -191,6 +190,8 @@ total_typed_disambiguation = len(total_collect_typed_disambiguation)
 print ('there are in total ', total_annotated_disambiguation, ' disambiguation entities (by annotation)')
 print ('there are in total ', total_typed_disambiguation, ' disambiguation entities (by type)')
 
+print ('typed dis', len (total_collect_typed_disambiguation))
+
 all_typed_only = total_collect_typed_disambiguation.difference(total_collect_annotated_disambiguation)
 print('in total ',len (all_typed_only), ' typed only')
 
@@ -203,10 +204,10 @@ print ('*'*30)
 
 # total_collect_annotated_disambiguation_or_unknown
 
-
+print ('typed dis', len (total_collect_typed_disambiguation))
 all_typed_only = total_collect_typed_disambiguation.difference(total_collect_annotated_disambiguation_or_unknown)
 print('in total ',len (all_typed_only), ' typed only')
-print (all_typed_only)
+# print (all_typed_only)
 
 all_annotated_only = total_collect_annotated_disambiguation_or_unknown.difference(total_collect_typed_disambiguation)
 print('in total ',len (all_annotated_only), ' annotated only (or unknown)')
@@ -214,6 +215,20 @@ print('in total ',len (all_annotated_only), ' annotated only (or unknown)')
 all_mutual =total_collect_annotated_disambiguation_or_unknown.intersection(total_collect_typed_disambiguation)
 print ('mutual: ', len (all_mutual))
 print ('*'*30)
+
+
+print ('multilingual: ', len(pairs_dis))
+
+count_type = Counter()
+for n in total_collect_annotated_disambiguation:
+	# find out the type of this node
+	triples, cardinality = hdt_lod_a_lot.search_triples(n, rdf_type, "")
+	for (_,_, t) in triples:
+		count_type[t] += 1
+
+print ('count type of these disambiguation nodes')
+for t in count_type:
+	print (t, ' has ', count_type[t])
 
 
 # ct_type = Counter()
