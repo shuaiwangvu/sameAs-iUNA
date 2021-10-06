@@ -184,7 +184,15 @@ count_total_correct_edges = 0
 count_total_redi_nodes = 0
 count_total_redi_nodes_new = 0
 count_total_redi_edges = 0
+
 count_total_redi_edges_existing = 0
+count_total_redi_edges_existing_correct = 0
+count_total_redi_edges_existing_error = 0
+
+count_total_redi_edges_not_existing = 0
+count_total_redi_edges_not_existing_correct = 0
+count_total_redi_edges_not_existing_error = 0
+
 count_total_pairs_redi = 0
 count_total_pairs_redi_correct = 0
 count_total_pairs_redi_error = 0
@@ -192,9 +200,17 @@ count_total_pairs_redi_error = 0
 count_nodes_with_explicit_source = 0
 count_nodes_with_implicit_label_source = 0
 count_nodes_with_implicit_comment_source = 0
-# ******
+# ****** Encoding equivalence *******
 count_total_ee_edges = 0
 count_total_ee_edges_existing = 0
+count_total_ee_edges_existing_correct = 0
+count_total_ee_edges_existing_error = 0
+count_total_ee_edges_not_existing = 0
+count_total_ee_edges_not_existing_correct = 0
+count_total_ee_edges_not_existing_error = 0
+count_total_pairs_ee = 0
+count_total_pairs_ee_correct = 0
+count_total_pairs_ee_error = 0
 
 id_to_graph = {}
 for id in validation_set:
@@ -233,8 +249,24 @@ for id in validation_set:
 		if n not in g.nodes():
 			count_total_redi_nodes_new += 1
 	for e in redi_graph.edges():
+		(n,m) = e
 		if e in g.edges():
 			count_total_redi_edges_existing += 1
+
+			if g.nodes[n]['annotation'] != 'unknown' and g.nodes[m]['annotation'] != 'unknown':
+				if g.nodes[n]['annotation'] == g.nodes[m]['annotation']:
+					count_total_redi_edges_existing_correct += 1
+				if  g.nodes[n]['annotation'] != g.nodes[m]['annotation']:
+					count_total_redi_edges_existing_error += 1
+		elif e not in  g.edges() and n in g.nodes() and m in g.nodes():
+			count_total_redi_edges_not_existing += 1
+			if g.nodes[n]['annotation'] != 'unknown' and g.nodes[m]['annotation'] != 'unknown':
+				if g.nodes[n]['annotation'] == g.nodes[m]['annotation']:
+					count_total_redi_edges_not_existing_correct += 1
+				if  g.nodes[n]['annotation'] != g.nodes[m]['annotation']:
+					count_total_redi_edges_not_existing_error += 1
+
+
 
 	# convert it to a undirected graph
 	redi_graph_undirected = nx.Graph(redi_graph)
@@ -293,8 +325,56 @@ for id in validation_set:
 	for e in ee_graph.edges():
 		# graph
 		if e in g.edges():
+			(n,m) = e
 			count_total_ee_edges_existing += 1
+			if g.nodes[n]['annotation'] != 'unknown' and g.nodes[m]['annotation'] != 'unknown':
+				if g.nodes[n]['annotation'] == g.nodes[m]['annotation']:
+					count_total_ee_edges_existing_correct += 1
+				if  g.nodes[n]['annotation'] != g.nodes[m]['annotation']:
+					count_total_ee_edges_existing_error += 1
 
+		elif e not in g.edges():
+			(n,m) = e
+			count_total_ee_edges_not_existing += 1
+			if g.nodes[n]['annotation'] != 'unknown' and g.nodes[m]['annotation'] != 'unknown':
+				if g.nodes[n]['annotation'] == g.nodes[m]['annotation']:
+					count_total_ee_edges_not_existing_correct += 1
+				if  g.nodes[n]['annotation'] != g.nodes[m]['annotation']:
+					count_total_ee_edges_not_existing_error += 1
+	# convert it to a undirected graph
+	ee_graph_undirected = nx.Graph(ee_graph)
+	ee_nodes = g.nodes()
+	ee_connect_pairs = []
+	for i, n in enumerate(list(ee_nodes)[:-1]):
+		for m in list(ee_nodes)[i+1:]:
+			if n in ee_graph_undirected.nodes() and m in ee_graph_undirected.nodes():
+				if (n,m) not in ee_graph_undirected.edges() and (n,m) not in g.edges():
+					if nx.has_path(ee_graph_undirected, n, m):
+						ee_connect_pairs.append((n,m))
+
+	print ('# pairs that encoding to the same entity ', len (ee_connect_pairs))
+	ee_correct = 0
+	ee_error = 0
+	for (n,m) in ee_connect_pairs:
+		if g.nodes[n]['annotation'] != 'unknown' and g.nodes[m]['annotation'] != 'unknown':
+			if g.nodes[n]['annotation'] == g.nodes[m]['annotation']:
+				ee_correct += 1
+			if  g.nodes[n]['annotation'] != g.nodes[m]['annotation']:
+				ee_error += 1
+
+	print ('pair correct = ', ee_correct)
+	print ('pair error = ', ee_error)
+
+	count_total_pairs_ee += len (ee_connect_pairs)
+	count_total_pairs_ee_correct += ee_correct
+	count_total_pairs_ee_error += ee_error
+
+# count_total_ee_edges_existing = 0
+# count_total_ee_edges_existing_correct = 0
+# count_total_ee_edges_existing_error = 0
+# count_total_ee_edges_not_existing = 0
+# count_total_ee_edges_not_existing_correct = 0
+# count_total_ee_edges_not_existing_error = 0
 
 print ('In total, there are ', len(validation_set), 'files for validation\n')
 print ('There are in total ', count_total_nodes, ' nodes in the validation graphs')
@@ -308,13 +388,25 @@ print ('********** Redirection **********')
 print ('There are in total ', count_total_redi_nodes, ' nodes in the redirect graphs')
 print ('\tAmong them, ', count_total_redi_nodes_new, ' are new nodes not in the original graph')
 print ('There are in total ', count_total_redi_edges, ' edges in the redirect graphs\n')
-print ('\tAmong them, there are ', count_total_redi_edges_existing, ' edges in the original graph')
+print ('\tAmong them, there are ', count_total_redi_edges_existing, ' about nodes in the original graph')
+print ('\t\t correct ', count_total_redi_edges_existing_correct, ' and error ', count_total_redi_edges_existing_error)
+print ('\tAmong them, there are ', count_total_redi_edges_not_existing, ' edges in the original graph')
+print ('\t\t correct ', count_total_redi_edges_not_existing_correct,
+' and error ', count_total_redi_edges_not_existing_error)
+# count_total_redi_edges_not_existing = 0
+# count_total_redi_edges_not_existing_correct = 0
+# count_total_redi_edges_not_existing_error = 0
 print ('\t# pairs redirects to the same nodes ', count_total_pairs_redi, ' pairs')
-print ('\t\t, correct ', count_total_pairs_redi_correct, ' and error ', count_total_pairs_redi_error)
+print ('\t\t correct ', count_total_pairs_redi_correct, ' and error ', count_total_pairs_redi_error)
 print ('********** Encoding Equivalence **********')
 print ('There are in total ', count_total_ee_edges, ' edges in the graph of encoding equivalence')
 print ('\tAmong them, there are ', count_total_ee_edges_existing, ' edges in the original graph')
-print ('\tAnd, a total of ')
+print ('\t\t correct ', count_total_ee_edges_existing_correct, ' error ', count_total_ee_edges_existing_error)
+print ('\tAmong them, there are ', count_total_ee_edges_not_existing, ' edges NOT in the original graph')
+print ('\t\t correct ', count_total_ee_edges_not_existing_correct, ' error ', count_total_ee_edges_not_existing_error)
+print ('\t# pairs encodes to the same nodes ', count_total_pairs_ee, ' pairs')
+print ('\t\t correct ', count_total_pairs_ee_correct, ' and error ', count_total_pairs_ee_error)
+
 print ('*********** Sources *************')
 print (count_nodes_with_explicit_source, ' has explicit sources: {:10.2f} %'.format(100*count_nodes_with_explicit_source/count_total_nodes))
 print (count_nodes_with_implicit_label_source, ' has implicit label-like sources: {:10.2f} %'.format(100*count_nodes_with_implicit_label_source/count_total_nodes))
