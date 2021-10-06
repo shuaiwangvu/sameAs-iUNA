@@ -166,18 +166,36 @@ def load_implicit_comment_source (path_to_implicit_comment_source, graph):
 	# 	print (c, ' - ', ct[c])
 	return ct
 
+def load_encoding_equivalence (path_ee, graph):
+	ee_g = nx.Graph()
+	hdt_ee = HDTDocument(path_ee)
+	(triples, cardi) = hdt_ee.search_triples("", "", "")
+	for (s,_,t) in triples:
+		ee_g.add_edge(s, t)
+	return ee_g
 
 print ('in the validation dataset, there are ', validation_set, ' files (connected components)')
 
 count_total_nodes = 0
 count_total_edges = 0
 count_total_error_edges = 0
-
+count_total_correct_edges = 0
+# ****** redirecting *****
 count_total_redi_nodes = 0
+count_total_redi_nodes_new = 0
 count_total_redi_edges = 0
+count_total_redi_edges_existing = 0
+count_total_pairs_redi = 0
+count_total_pairs_redi_correct = 0
+count_total_pairs_redi_error = 0
+# ***** source *******
 count_nodes_with_explicit_source = 0
 count_nodes_with_implicit_label_source = 0
 count_nodes_with_implicit_comment_source = 0
+# ******
+count_total_ee_edges = 0
+count_total_ee_edges_existing = 0
+
 id_to_graph = {}
 for id in validation_set:
 	print ('\n***************\nGraph ID =', id,'\n')
@@ -190,21 +208,61 @@ for id in validation_set:
 	count_total_edges += g.number_of_edges()
 	# the num of erorrneous edges
 	count_error_edges = 0
+	count_correct_edges = 0
 	for (s, t) in g.edges():
 		if (g.nodes[s]['annotation'] != 'unknown'
 			and g.nodes[t]['annotation'] != 'unknown'
 			and g.nodes[s]['annotation'] != g.nodes[t]['annotation']):
 			count_error_edges += 1
+		if (g.nodes[s]['annotation'] != 'unknown'
+			and g.nodes[t]['annotation'] != 'unknown'
+			and g.nodes[s]['annotation'] == g.nodes[t]['annotation']):
+			count_correct_edges += 1
 	print ('there are in total ', count_error_edges, ' errorous edges ')
 	count_total_error_edges += count_error_edges
+	count_total_correct_edges += count_correct_edges
 
+	# redirection
 	path_to_redi_graph_nodes = dir + str(id) +'_redirect_nodes.tsv'
 	path_to_redi_graph_edges = dir + str(id) +'_redirect_edges.hdt'
 	redi_graph = load_redi_graph(path_to_redi_graph_nodes, path_to_redi_graph_edges)
 	print ('loaded the redi graph with ', redi_graph.number_of_nodes(), 'nodes and ', redi_graph.number_of_edges(), ' edges')
 	count_total_redi_nodes += redi_graph.number_of_nodes()
 	count_total_redi_edges += redi_graph.number_of_edges()
-	print ('*'*20)
+	for n in redi_graph.nodes():
+		if n not in g.nodes():
+			count_total_redi_nodes_new += 1
+	for e in redi_graph.edges():
+		if e in g.edges():
+			count_total_redi_edges_existing += 1
+
+	# convert it to a undirected graph
+	redi_graph_undirected = nx.Graph(redi_graph)
+	redi_nodes = g.nodes()
+	redi_connect_pairs = []
+	for i, n in enumerate(list(redi_nodes)[:-1]):
+		for m in list(redi_nodes)[i+1:]:
+			if n in redi_graph_undirected.nodes() and m in redi_graph_undirected.nodes():
+				if (n,m) not in redi_graph_undirected.edges() and (n,m) not in g.edges():
+					if nx.has_path(redi_graph_undirected, n, m):
+						redi_connect_pairs.append((n,m))
+
+	print ('# pairs that redirect to the same entity ', len (redi_connect_pairs))
+	pair_correct = 0
+	pair_error = 0
+	for (n,m) in redi_connect_pairs:
+		if g.nodes[n]['annotation'] != 'unknown' and g.nodes[m]['annotation'] != 'unknown':
+			if g.nodes[n]['annotation'] == g.nodes[m]['annotation']:
+				pair_correct += 1
+			if  g.nodes[n]['annotation'] != g.nodes[m]['annotation']:
+				pair_error += 1
+
+	print ('pair correct = ', pair_correct)
+	print ('pair error = ', pair_error)
+
+	count_total_pairs_redi += len (redi_connect_pairs)
+	count_total_pairs_redi_correct += pair_correct
+	count_total_pairs_redi_error += pair_error
 
 	# load explicit source
 	path_to_explicit_source = dir + str(id) + '_explicit_source.hdt'
@@ -228,17 +286,36 @@ for id in validation_set:
 			count_nodes_with_implicit_comment_source += ct_comment[c]
 
 	# validating iUNA without encoding equivalence and redirect
+	# load grpah of encoding equivalence
+	path_ee = dir + str(id) + '_encoding_equivalent.hdt'
+	ee_graph = load_encoding_equivalence(path_ee, g)
+	count_total_ee_edges += ee_graph.number_of_edges()
+	for e in ee_graph.edges():
+		# graph
+		if e in g.edges():
+			count_total_ee_edges_existing += 1
 
 
 print ('In total, there are ', len(validation_set), 'files for validation\n')
 print ('There are in total ', count_total_nodes, ' nodes in the validation graphs')
 print ('There are in total ', count_total_edges, ' edges in the validation graphs\n')
 print ('There are in total ', count_total_error_edges, ' error edges in the validation graphs\n')
+print ('There are in total ', count_total_correct_edges, ' correct edges in the validation graphs\n')
+print ('so the error rate is between: ')
 print ('\t {:10.2f} %'.format(100*count_total_error_edges/count_total_edges))
+print ('\t {:10.2f} %'.format(100*count_total_correct_edges/count_total_edges))
+print ('********** Redirection **********')
 print ('There are in total ', count_total_redi_nodes, ' nodes in the redirect graphs')
+print ('\tAmong them, ', count_total_redi_nodes_new, ' are new nodes not in the original graph')
 print ('There are in total ', count_total_redi_edges, ' edges in the redirect graphs\n')
-
-
+print ('\tAmong them, there are ', count_total_redi_edges_existing, ' edges in the original graph')
+print ('\t# pairs redirects to the same nodes ', count_total_pairs_redi, ' pairs')
+print ('\t\t, correct ', count_total_pairs_redi_correct, ' and error ', count_total_pairs_redi_error)
+print ('********** Encoding Equivalence **********')
+print ('There are in total ', count_total_ee_edges, ' edges in the graph of encoding equivalence')
+print ('\tAmong them, there are ', count_total_ee_edges_existing, ' edges in the original graph')
+print ('\tAnd, a total of ')
+print ('*********** Sources *************')
 print (count_nodes_with_explicit_source, ' has explicit sources: {:10.2f} %'.format(100*count_nodes_with_explicit_source/count_total_nodes))
 print (count_nodes_with_implicit_label_source, ' has implicit label-like sources: {:10.2f} %'.format(100*count_nodes_with_implicit_label_source/count_total_nodes))
 print (count_nodes_with_implicit_comment_source, ' has implicit comment-like sources: {:10.2f} %'.format(100*count_nodes_with_implicit_comment_source/count_total_nodes))
