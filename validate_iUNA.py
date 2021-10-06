@@ -211,13 +211,24 @@ count_total_ee_edges_not_existing_error = 0
 count_total_pairs_ee = 0
 count_total_pairs_ee_correct = 0
 count_total_pairs_ee_error = 0
+# ****** Validating iUNA *******
+list_same_prefix_same_anno = []
+list_same_prefix_diff_anno = []
 
-list_same_condition_same_anno = []
-list_same_condition_diff_anno = []
-list_same_condition_same_anno_with_redirect = []
-list_same_condition_diff_anno_with_redirect = []
-list_same_condition_same_anno_with_ee = []
-list_same_condition_diff_anno_with_ee = []
+list_same_labelsource_same_anno = []
+list_same_labelsource_diff_anno = []
+
+list_same_commentsource_same_anno = []
+list_same_commentsource_diff_anno = []
+
+list_same_explicitsource_same_anno = []
+list_same_explicitsource_diff_anno = []
+
+
+# list_same_condition_same_anno_with_redirect = []
+# list_same_condition_diff_anno_with_redirect = []
+# list_same_condition_same_anno_with_ee = []
+# list_same_condition_diff_anno_with_ee = []
 
 
 id_to_graph = {}
@@ -387,60 +398,179 @@ for id in validation_set:
 	# next, validate the iUNA
 
 	# Step 1: for every prefix, find all combinations
-	# prefix_to_entities = {}
-	# for n in g.nodes():
-	# 	p = get_prefix(n)
-	# 	if p not in prefix_to_entities.keys():
-	# 		prefix_to_entities[p] = [n]
-	# 	else:
-	# 		prefix_to_entities[p].append(n)
-	# samples = set()
-	# for p in prefix_to_entities.keys():
-	# 	if len (prefix_to_entities[p]) > 1:
-	# 		# for each prefix, we assemble n^2 / 3
-	# 		sample_for_this_prefix = set()
-	# 		sample_size = len (prefix_to_entities[p]) * len (prefix_to_entities[p]) / 3
-	# 		while len (sample_for_this_prefix) < sample_size:
-	# 			s = random.choice(prefix_to_entities[p])
-	# 			t = random.choice(prefix_to_entities[p])
-	# 			if s != t and (s, t) not in samples and (t, s) not in samples:
-	# 				sample_for_this_prefix.add((s,t))
-	#
-	# 		samples = samples.union(sample_for_this_prefix)
+	prefix_to_entities = {}
+	for n in g.nodes():
+		p = get_prefix(n)
+		if p not in prefix_to_entities.keys():
+			prefix_to_entities[p] = [n]
+		else:
+			prefix_to_entities[p].append(n)
+	samples = set()
+	for p in prefix_to_entities.keys():
+		if len (prefix_to_entities[p]) > 1:
+			# for each prefix, we assemble n^2 / 3
+			sample_for_this_prefix = set()
+			sample_size = len (prefix_to_entities[p]) * len (prefix_to_entities[p]) / 3
+			while len (sample_for_this_prefix) < sample_size:
+				s = random.choice(prefix_to_entities[p])
+				t = random.choice(prefix_to_entities[p])
+				if s != t and (s, t) not in samples and (t, s) not in samples:
+					sample_for_this_prefix.add((s,t))
 
-	# Step 2: for every (label) source
-	# labelsource_to_entities = {}
-	# for n in g.nodes():
-	# 	# p = g.nodes[n]['implicit_label_source']
-	# 	p = g.nodes[n]['implicit_comment_source'] # the sources
-	# 	# pre = get_prefix(n)
-	# 	for l in p:
-	# 		if l not in labelsource_to_entities.keys():
-	# 			labelsource_to_entities[l] = [n]
-	# 		else:
-	# 			labelsource_to_entities[l].append(n)
-	# samples = []
-	# for p in labelsource_to_entities.keys():
-	# 	if len (labelsource_to_entities[p]) > 1:
-	# 		print ('sampling from ', labelsource_to_entities[p])
-	# 		# for each prefix, we assemble n^2 / 3
-	# 		sample_for_this_labelsource = []
-	# 		sample_size = int(len (labelsource_to_entities[p]) * len (labelsource_to_entities[p]) / 3)
-	# 		print ('amount expected: ',sample_size)
-	# 		print ('', flush=True)
-	# 		while len (sample_for_this_labelsource) < sample_size:
-	# 			# print ('in the loop', flush=True)
-	# 			s = random.choice(labelsource_to_entities[p])
-	# 			t = random.choice(labelsource_to_entities[p])
-	# 			# print ('s = ',s)
-	# 			# print ('t = ',t)
-	# 			if s != t and (s, t) not in sample_for_this_labelsource and (t, s) not in sample_for_this_labelsource:
-	# 				sample_for_this_labelsource.append((s,t))
-	# 				# print ('\t loaded')
-	#
-	# 		samples = samples + sample_for_this_labelsource
+			samples = samples.union(sample_for_this_prefix)
+
+	count_same_condition_same_anno = 0
+	count_same_condition_diff_anno = 0
+
+	for (s,t) in samples:
+		if g.nodes[s]['annotation'] != 'unknown' and  g.nodes[t]['annotation'] != 'unknown':
+			if  g.nodes[s]['annotation'] ==  g.nodes[t]['annotation']:
+				count_same_condition_same_anno += 1
+			elif g.nodes[s]['annotation'] !=  g.nodes[t]['annotation']:
+				count_same_condition_diff_anno += 1
+	if len(samples) != 0:
+		list_same_prefix_same_anno.append(count_same_condition_same_anno / len(samples))
+		list_same_prefix_diff_anno.append(count_same_condition_diff_anno / len(samples))
 
 
+
+	# Step 2-a: for every (label) source
+	labelsource_to_entities = {}
+	for n in g.nodes():
+		p = g.nodes[n]['implicit_label_source']
+		# p = g.nodes[n]['implicit_comment_source'] # the sources
+		# pre = get_prefix(n)
+		for l in p:
+			if l not in labelsource_to_entities.keys():
+				labelsource_to_entities[l] = [n]
+			else:
+				labelsource_to_entities[l].append(n)
+	samples = []
+	for p in labelsource_to_entities.keys():
+		if len (labelsource_to_entities[p]) > 1:
+			# print ('sampling from ', labelsource_to_entities[p])
+			# for each prefix, we assemble n^2 / 3
+			sample_for_this_labelsource = []
+			sample_size = int(len (labelsource_to_entities[p]) * len (labelsource_to_entities[p]) / 3)
+			# print ('amount expected: ',sample_size)
+			# print ('', flush=True)
+			while len (sample_for_this_labelsource) < sample_size:
+				# print ('in the loop', flush=True)
+				s = random.choice(labelsource_to_entities[p])
+				t = random.choice(labelsource_to_entities[p])
+				# print ('s = ',s)
+				# print ('t = ',t)
+				if s != t and (s, t) not in sample_for_this_labelsource and (t, s) not in sample_for_this_labelsource:
+					sample_for_this_labelsource.append((s,t))
+					# print ('\t loaded')
+
+			samples = samples + sample_for_this_labelsource
+
+	count_same_condition_same_anno = 0
+	count_same_condition_diff_anno = 0
+
+	for (s,t) in samples:
+		if g.nodes[s]['annotation'] != 'unknown' and  g.nodes[t]['annotation'] != 'unknown':
+			if  g.nodes[s]['annotation'] ==  g.nodes[t]['annotation']:
+				count_same_condition_same_anno += 1
+			elif g.nodes[s]['annotation'] !=  g.nodes[t]['annotation']:
+				count_same_condition_diff_anno += 1
+	if len(samples) != 0:
+		list_same_labelsource_same_anno.append(count_same_condition_same_anno / len(samples))
+		list_same_labelsource_diff_anno.append(count_same_condition_diff_anno / len(samples))
+	print ('number of samples for labelsources ', len(samples))
+
+	# Step 2-b: for every (comment) source
+	commentsource_to_entities = {}
+	for n in g.nodes():
+		# p = g.nodes[n]['implicit_label_source']
+		p = g.nodes[n]['implicit_comment_source'] # the sources
+		# pre = get_prefix(n)
+		for l in p:
+			if l not in commentsource_to_entities.keys():
+				commentsource_to_entities[l] = [n]
+			else:
+				commentsource_to_entities[l].append(n)
+	samples = []
+	for p in commentsource_to_entities.keys():
+		if len (commentsource_to_entities[p]) > 1:
+			# print ('sampling from ', labelsource_to_entities[p])
+			# for each prefix, we assemble n^2 / 3
+			sample_for_this_commentsource = []
+			sample_size = int(len (commentsource_to_entities[p]) * len (commentsource_to_entities[p]) / 3)
+			# print ('amount expected: ',sample_size)
+			# print ('', flush=True)
+			while len (sample_for_this_commentsource) < sample_size:
+				# print ('in the loop', flush=True)
+				s = random.choice(commentsource_to_entities[p])
+				t = random.choice(commentsource_to_entities[p])
+				# print ('s = ',s)
+				# print ('t = ',t)
+				if s != t and (s, t) not in sample_for_this_commentsource and (t, s) not in sample_for_this_commentsource:
+					sample_for_this_commentsource.append((s,t))
+					# print ('\t loaded')
+
+			samples = samples + sample_for_this_commentsource
+
+	count_same_condition_same_anno = 0
+	count_same_condition_diff_anno = 0
+
+	for (s,t) in samples:
+		if g.nodes[s]['annotation'] != 'unknown' and  g.nodes[t]['annotation'] != 'unknown':
+			if  g.nodes[s]['annotation'] ==  g.nodes[t]['annotation']:
+				count_same_condition_same_anno += 1
+			elif g.nodes[s]['annotation'] !=  g.nodes[t]['annotation']:
+				count_same_condition_diff_anno += 1
+	if len(samples) != 0:
+		list_same_commentsource_same_anno.append(count_same_condition_same_anno / len(samples))
+		list_same_commentsource_diff_anno.append(count_same_condition_diff_anno / len(samples))
+	print ('number of samples for commentsources ', len(samples))
+
+	# Step 2-c: for every (explicit) source
+	explicitsource_to_entities = {}
+	for n in g.nodes():
+		# p = g.nodes[n]['implicit_label_source']
+		p = g.nodes[n]['explicit_source'] # the sources
+		# pre = get_prefix(n)
+		for l in p:
+			if l not in explicitsource_to_entities.keys():
+				explicitsource_to_entities[l] = [n]
+			else:
+				explicitsource_to_entities[l].append(n)
+	samples = []
+	for p in explicitsource_to_entities.keys():
+		if len (explicitsource_to_entities[p]) > 1:
+			# print ('sampling from ', labelsource_to_entities[p])
+			# for each prefix, we assemble n^2 / 3
+			sample_for_this_explicitsource = []
+			sample_size = int(len (explicitsource_to_entities[p]) * len (explicitsource_to_entities[p]) / 3)
+			# print ('amount expected: ',sample_size)
+			# print ('', flush=True)
+			while len (sample_for_this_explicitsource) < sample_size:
+				# print ('in the loop', flush=True)
+				s = random.choice(explicitsource_to_entities[p])
+				t = random.choice(explicitsource_to_entities[p])
+				# print ('s = ',s)
+				# print ('t = ',t)
+				if s != t and (s, t) not in sample_for_this_explicitsource and (t, s) not in sample_for_this_explicitsource:
+					sample_for_this_explicitsource.append((s,t))
+					# print ('\t loaded')
+
+			samples = samples + sample_for_this_explicitsource
+
+	count_same_condition_same_anno = 0
+	count_same_condition_diff_anno = 0
+
+	for (s,t) in samples:
+		if g.nodes[s]['annotation'] != 'unknown' and  g.nodes[t]['annotation'] != 'unknown':
+			if  g.nodes[s]['annotation'] ==  g.nodes[t]['annotation']:
+				count_same_condition_same_anno += 1
+			elif g.nodes[s]['annotation'] !=  g.nodes[t]['annotation']:
+				count_same_condition_diff_anno += 1
+	if len(samples) != 0:
+		list_same_explicitsource_same_anno.append(count_same_condition_same_anno / len(samples))
+		list_same_explicitsource_diff_anno.append(count_same_condition_diff_anno / len(samples))
+	print ('number of samples for explicitsources ', len(samples))
 
 	# Step 3: for every (label) source and prefix
 	# labelsource_to_entities = {}
@@ -476,105 +606,105 @@ for id in validation_set:
 	# 		samples = samples + sample_for_this_labelsource
 
 	# Step 4: for every (label) source and redirect
-	labelsource_to_entities = {}
-	for n in g.nodes():
-		# p = g.nodes[n]['implicit_label_source']
-		p = g.nodes[n]['implicit_comment_source'] # the sources
-		pre = get_prefix(n)
-		for l in p:
-			k = l
-			if k not in labelsource_to_entities.keys():
-				labelsource_to_entities[k] = [n]
-			else:
-				labelsource_to_entities[k].append(n)
-	samples = []
-	# in_use_redirect_graph
-	for p in labelsource_to_entities.keys():
-		if len (labelsource_to_entities[p]) > 1:
-			# print ('sampling from ', labelsource_to_entities[p])
-			# for each prefix, we assemble n^2 / 3
-			sample_for_this_labelsource = []
-			sample_size = int(len (labelsource_to_entities[p]) * len (labelsource_to_entities[p]) / 3)
-			# print ('amount expected: ',sample_size)
-			# print ('', flush=True)
-			while len (sample_for_this_labelsource) < sample_size:
-				# print ('in the loop', flush=True)
-				s = random.choice(labelsource_to_entities[p])
-				t = random.choice(labelsource_to_entities[p])
-				# print ('s = ',s)
-				# print ('t = ',t)
-				if s != t and (s, t) not in sample_for_this_labelsource and (t, s) not in sample_for_this_labelsource:
-					sample_for_this_labelsource.append((s,t))
-					# print ('\t loaded')
-
-			samples = samples + sample_for_this_labelsource
-
-
-	# then test if these pairs follow iUNA
-	count_same_condition_same_anno = 0
-	count_same_condition_diff_anno = 0
-
-
-	for (s,t) in samples:
-		if g.nodes[s]['annotation'] != 'unknown' and  g.nodes[t]['annotation'] != 'unknown':
-			if  g.nodes[s]['annotation'] ==  g.nodes[t]['annotation']:
-				count_same_condition_same_anno += 1
-			elif g.nodes[s]['annotation'] !=  g.nodes[t]['annotation']:
-				count_same_condition_diff_anno += 1
-
-	print ('# total sample = ', len (samples))
-
-
-	if len(samples) != 0:
-		list_same_condition_same_anno.append(count_same_condition_same_anno / len(samples))
-		list_same_condition_diff_anno.append(count_same_condition_diff_anno / len(samples))
+	# labelsource_to_entities = {}
+	# for n in g.nodes():
+	# 	# p = g.nodes[n]['implicit_label_source']
+	# 	p = g.nodes[n]['implicit_comment_source'] # the sources
+	# 	pre = get_prefix(n)
+	# 	for l in p:
+	# 		k = l
+	# 		if k not in labelsource_to_entities.keys():
+	# 			labelsource_to_entities[k] = [n]
+	# 		else:
+	# 			labelsource_to_entities[k].append(n)
+	# samples = []
+	# # in_use_redirect_graph
+	# for p in labelsource_to_entities.keys():
+	# 	if len (labelsource_to_entities[p]) > 1:
+	# 		# print ('sampling from ', labelsource_to_entities[p])
+	# 		# for each prefix, we assemble n^2 / 3
+	# 		sample_for_this_labelsource = []
+	# 		sample_size = int(len (labelsource_to_entities[p]) * len (labelsource_to_entities[p]) / 3)
+	# 		# print ('amount expected: ',sample_size)
+	# 		# print ('', flush=True)
+	# 		while len (sample_for_this_labelsource) < sample_size:
+	# 			# print ('in the loop', flush=True)
+	# 			s = random.choice(labelsource_to_entities[p])
+	# 			t = random.choice(labelsource_to_entities[p])
+	# 			# print ('s = ',s)
+	# 			# print ('t = ',t)
+	# 			if s != t and (s, t) not in sample_for_this_labelsource and (t, s) not in sample_for_this_labelsource:
+	# 				sample_for_this_labelsource.append((s,t))
+	# 				# print ('\t loaded')
+	#
+	# 		samples = samples + sample_for_this_labelsource
+	#
+	#
+	# # then test if these pairs follow iUNA
+	# count_same_condition_same_anno = 0
+	# count_same_condition_diff_anno = 0
+	#
+	#
+	# for (s,t) in samples:
+	# 	if g.nodes[s]['annotation'] != 'unknown' and  g.nodes[t]['annotation'] != 'unknown':
+	# 		if  g.nodes[s]['annotation'] ==  g.nodes[t]['annotation']:
+	# 			count_same_condition_same_anno += 1
+	# 		elif g.nodes[s]['annotation'] !=  g.nodes[t]['annotation']:
+	# 			count_same_condition_diff_anno += 1
+	#
+	# print ('# total sample = ', len (samples))
+	#
+	#
+	# if len(samples) != 0:
+	# 	list_same_condition_same_anno.append(count_same_condition_same_anno / len(samples))
+	# 	list_same_condition_diff_anno.append(count_same_condition_diff_anno / len(samples))
 
 	# remove the ones captured by redirect and do the calculation again.
-	count_captured_by_redirect = 0
-	new_samples_except_redirect = []
-	for (n,m) in samples:
-		if (n,m) not in in_use_redirect_graph.edges() and (m,n) not in in_use_redirect_graph.edges():
-			new_samples_except_redirect.append((n,m))
-		else:
-			count_captured_by_redirect += 1
-	print ('# caputed by redirect = ', count_captured_by_redirect)
-
-	count_same_condition_same_anno = 0
-	count_same_condition_diff_anno = 0
-
-	for (s,t) in new_samples_except_redirect:
-		if g.nodes[s]['annotation'] != 'unknown' and  g.nodes[t]['annotation'] != 'unknown':
-			if  g.nodes[s]['annotation'] ==  g.nodes[t]['annotation']:
-				count_same_condition_same_anno += 1
-			elif g.nodes[s]['annotation'] !=  g.nodes[t]['annotation']:
-				count_same_condition_diff_anno += 1
-
-	if len(samples) != 0:
-		list_same_condition_same_anno_with_redirect.append(count_same_condition_same_anno / len(samples))
-		list_same_condition_diff_anno_with_redirect.append(count_same_condition_diff_anno / len(samples))
-
-	count_captured_by_ee = 0
-	new_samples_except_ee = []
-	for (n,m) in samples:
-		if (n,m) not in in_use_ee_graph.edges() and (m,n) not in in_use_ee_graph.edges():
-			new_samples_except_ee.append((n,m))
-		else:
-			count_captured_by_ee += 1
-	print ('# caputed by ee = ', count_captured_by_ee)
-
-	count_same_condition_same_anno = 0
-	count_same_condition_diff_anno = 0
-
-	for (s,t) in new_samples_except_ee:
-		if g.nodes[s]['annotation'] != 'unknown' and  g.nodes[t]['annotation'] != 'unknown':
-			if  g.nodes[s]['annotation'] ==  g.nodes[t]['annotation']:
-				count_same_condition_same_anno += 1
-			elif g.nodes[s]['annotation'] !=  g.nodes[t]['annotation']:
-				count_same_condition_diff_anno += 1
-
-	if len(samples) != 0:
-		list_same_condition_same_anno_with_ee.append(count_same_condition_same_anno / len(samples))
-		list_same_condition_diff_anno_with_ee.append(count_same_condition_diff_anno / len(samples))
+	# count_captured_by_redirect = 0
+	# new_samples_except_redirect = []
+	# for (n,m) in samples:
+	# 	if (n,m) not in in_use_redirect_graph.edges() and (m,n) not in in_use_redirect_graph.edges():
+	# 		new_samples_except_redirect.append((n,m))
+	# 	else:
+	# 		count_captured_by_redirect += 1
+	# print ('# caputed by redirect = ', count_captured_by_redirect)
+	#
+	# count_same_condition_same_anno = 0
+	# count_same_condition_diff_anno = 0
+	#
+	# for (s,t) in new_samples_except_redirect:
+	# 	if g.nodes[s]['annotation'] != 'unknown' and  g.nodes[t]['annotation'] != 'unknown':
+	# 		if  g.nodes[s]['annotation'] ==  g.nodes[t]['annotation']:
+	# 			count_same_condition_same_anno += 1
+	# 		elif g.nodes[s]['annotation'] !=  g.nodes[t]['annotation']:
+	# 			count_same_condition_diff_anno += 1
+	#
+	# if len(samples) != 0:
+	# 	list_same_condition_same_anno_with_redirect.append(count_same_condition_same_anno / len(samples))
+	# 	list_same_condition_diff_anno_with_redirect.append(count_same_condition_diff_anno / len(samples))
+	#
+	# count_captured_by_ee = 0
+	# new_samples_except_ee = []
+	# for (n,m) in samples:
+	# 	if (n,m) not in in_use_ee_graph.edges() and (m,n) not in in_use_ee_graph.edges():
+	# 		new_samples_except_ee.append((n,m))
+	# 	else:
+	# 		count_captured_by_ee += 1
+	# print ('# caputed by ee = ', count_captured_by_ee)
+	#
+	# count_same_condition_same_anno = 0
+	# count_same_condition_diff_anno = 0
+	#
+	# for (s,t) in new_samples_except_ee:
+	# 	if g.nodes[s]['annotation'] != 'unknown' and  g.nodes[t]['annotation'] != 'unknown':
+	# 		if  g.nodes[s]['annotation'] ==  g.nodes[t]['annotation']:
+	# 			count_same_condition_same_anno += 1
+	# 		elif g.nodes[s]['annotation'] !=  g.nodes[t]['annotation']:
+	# 			count_same_condition_diff_anno += 1
+	#
+	# if len(samples) != 0:
+	# 	list_same_condition_same_anno_with_ee.append(count_same_condition_same_anno / len(samples))
+	# 	list_same_condition_diff_anno_with_ee.append(count_same_condition_diff_anno / len(samples))
 
 
 # count_total_ee_edges_existing = 0
@@ -621,20 +751,36 @@ print (count_nodes_with_implicit_label_source, ' has implicit label-like sources
 print (count_nodes_with_implicit_comment_source, ' has implicit comment-like sources: {:10.2f} %'.format(100*count_nodes_with_implicit_comment_source/count_total_nodes))
 
 print ('************ iUNA prefix only ****')
-avg_same_condition_same_anno = np.sum(list_same_condition_same_anno) / len(validation_set)
-avg_same_condition_diff_anno = np.sum(list_same_condition_diff_anno) / len(validation_set)
-avg_same_condition_same_anno_with_redirect = np.sum(list_same_condition_same_anno_with_redirect) / len(validation_set)
-avg_same_condition_diff_anno_with_redirect = np.sum(list_same_condition_diff_anno_with_redirect) / len(validation_set)
-avg_same_condition_same_anno_with_ee = np.sum(list_same_condition_same_anno_with_ee) / len(validation_set)
-avg_same_condition_diff_anno_with_ee = np.sum(list_same_condition_diff_anno_with_ee) / len(validation_set)
+avg_same_prefix_same_anno = np.sum(list_same_prefix_same_anno) / len(validation_set)
+avg_same_prefix_diff_anno = np.sum(list_same_prefix_diff_anno) / len(validation_set)
+print ('[prefix] avg (same anno) =  {:10.2f} %'.format( avg_same_prefix_same_anno *100))
+print ('[prefix] avg (diff anno) =  {:10.2f} %'.format( avg_same_prefix_diff_anno *100))
+
+avg_same_labelsource_same_anno = np.sum(list_same_labelsource_same_anno) / len(validation_set)
+avg_same_labelsource_diff_anno = np.sum(list_same_labelsource_diff_anno) / len(validation_set)
+print ('[label] avg (same anno)  =  {:10.2f} %'.format( avg_same_labelsource_same_anno *100))
+print ('[label] avg (diff anno) =  {:10.2f} %'.format( avg_same_labelsource_diff_anno *100))
+
+
+avg_same_commentsource_same_anno = np.sum(list_same_commentsource_same_anno) / len(validation_set)
+avg_same_commentsource_diff_anno = np.sum(list_same_commentsource_diff_anno) / len(validation_set)
+print ('[comment] avg (same anno) =  {:10.2f} %'.format( avg_same_commentsource_same_anno *100))
+print ('[comment] avg (diff anno) =  {:10.2f} %'.format( avg_same_commentsource_diff_anno *100))
+
+avg_same_explicitsource_same_anno = np.sum(list_same_explicitsource_same_anno) / len(validation_set)
+avg_same_explicitsource_diff_anno = np.sum(list_same_explicitsource_diff_anno) / len(validation_set)
+print ('[explicit] avg (same anno) =  {:10.2f} %'.format( avg_same_explicitsource_same_anno *100))
+print ('[explicit] avg (diff anno) =  {:10.2f} %'.format( avg_same_explicitsource_diff_anno *100))
+
+# avg_same_condition_same_anno_with_ee = np.sum(list_same_condition_same_anno_with_ee) / len(validation_set)
+# avg_same_condition_diff_anno_with_ee = np.sum(list_same_condition_diff_anno_with_ee) / len(validation_set)
 # avg_diff_prefix_same_anno /= len(validation_set)
 # avg_diff_prefix_diff_anno /= len(validation_set)
-print ('[bare] avg =  {:10.2f} %'.format( avg_same_condition_same_anno *100))
-print ('[bare] avg =  {:10.2f} %'.format( avg_same_condition_diff_anno *100))
-print ('[with redirect] avg =  {:10.2f} %'.format( avg_same_condition_same_anno_with_redirect *100))
-print ('[with redirect] avg =  {:10.2f} %'.format( avg_same_condition_diff_anno_with_redirect *100))
-print ('[with ee] avg =  {:10.2f} %'.format( avg_same_condition_same_anno_with_ee *100))
-print ('[with ee] avg =  {:10.2f} %'.format( avg_same_condition_diff_anno_with_ee *100))
+
+# print ('[with redirect] avg =  {:10.2f} %'.format( avg_same_condition_same_anno_with_redirect *100))
+# print ('[with redirect] avg =  {:10.2f} %'.format( avg_same_condition_diff_anno_with_redirect *100))
+# print ('[with ee] avg =  {:10.2f} %'.format( avg_same_condition_same_anno_with_ee *100))
+# print ('[with ee] avg =  {:10.2f} %'.format( avg_same_condition_diff_anno_with_ee *100))
 # print ('avg_diff_prefix_same_anno =  {:10.2f} %'.format(avg_diff_prefix_same_anno *100))
 # print ('avg_diff_prefix_diff_anno =  {:10.2f} %'.format(avg_diff_prefix_diff_anno *100))
 # ratio_following_iUNA = avg_same_prefix_diff_anno + avg_diff_prefix_same_anno
