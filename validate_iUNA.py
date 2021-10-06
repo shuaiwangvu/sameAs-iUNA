@@ -21,7 +21,7 @@ import gzip
 from extend_metalink import *
 import requests
 from requests.exceptions import Timeout
-
+from SameAsEqGraph import get_prefix, get_name
 
 
 # there are in total 28 entities. 14 each
@@ -88,7 +88,7 @@ def load_graph (nodes_filename, edges_filename):
 		a = row["Annotation"]
 		c = row["Comment"]
 		g.add_node(s, annotation = a, comment = c)
-
+		g.nodes[s]['prefix'] = get_prefix(s)
 	edges_file = open(edges_filename, 'r')
 	reader = csv.DictReader(edges_file, delimiter='\t',)
 	for row in reader:
@@ -212,6 +212,14 @@ count_total_pairs_ee = 0
 count_total_pairs_ee_correct = 0
 count_total_pairs_ee_error = 0
 
+list_same_condition_same_anno = []
+list_same_condition_diff_anno = []
+list_same_condition_same_anno_with_redirect = []
+list_same_condition_diff_anno_with_redirect = []
+list_same_condition_same_anno_with_ee = []
+list_same_condition_diff_anno_with_ee = []
+
+
 id_to_graph = {}
 for id in validation_set:
 	print ('\n***************\nGraph ID =', id,'\n')
@@ -239,6 +247,7 @@ for id in validation_set:
 	count_total_correct_edges += count_correct_edges
 
 	# redirection
+	in_use_redirect_graph = nx.Graph()
 	path_to_redi_graph_nodes = dir + str(id) +'_redirect_nodes.tsv'
 	path_to_redi_graph_edges = dir + str(id) +'_redirect_edges.hdt'
 	redi_graph = load_redi_graph(path_to_redi_graph_nodes, path_to_redi_graph_edges)
@@ -252,21 +261,21 @@ for id in validation_set:
 		(n,m) = e
 		if e in g.edges():
 			count_total_redi_edges_existing += 1
-
+			in_use_redirect_graph.add_edge(n,m)
 			if g.nodes[n]['annotation'] != 'unknown' and g.nodes[m]['annotation'] != 'unknown':
 				if g.nodes[n]['annotation'] == g.nodes[m]['annotation']:
 					count_total_redi_edges_existing_correct += 1
 				if  g.nodes[n]['annotation'] != g.nodes[m]['annotation']:
 					count_total_redi_edges_existing_error += 1
-		elif e not in  g.edges() and n in g.nodes() and m in g.nodes():
+
+		elif e not in g.edges() and n in g.nodes() and m in g.nodes():
+			in_use_redirect_graph.add_edge(n,m)
 			count_total_redi_edges_not_existing += 1
 			if g.nodes[n]['annotation'] != 'unknown' and g.nodes[m]['annotation'] != 'unknown':
 				if g.nodes[n]['annotation'] == g.nodes[m]['annotation']:
 					count_total_redi_edges_not_existing_correct += 1
 				if  g.nodes[n]['annotation'] != g.nodes[m]['annotation']:
 					count_total_redi_edges_not_existing_error += 1
-
-
 
 	# convert it to a undirected graph
 	redi_graph_undirected = nx.Graph(redi_graph)
@@ -278,6 +287,7 @@ for id in validation_set:
 				if (n,m) not in redi_graph_undirected.edges() and (n,m) not in g.edges():
 					if nx.has_path(redi_graph_undirected, n, m):
 						redi_connect_pairs.append((n,m))
+						in_use_redirect_graph.add_edge(n, m)
 
 	print ('# pairs that redirect to the same entity ', len (redi_connect_pairs))
 	pair_correct = 0
@@ -295,6 +305,63 @@ for id in validation_set:
 	count_total_pairs_redi += len (redi_connect_pairs)
 	count_total_pairs_redi_correct += pair_correct
 	count_total_pairs_redi_error += pair_error
+
+
+	# validating iUNA without encoding equivalence and redirect
+	# load grpah of encoding equivalence
+	in_use_ee_graph = nx.Graph()
+	path_ee = dir + str(id) + '_encoding_equivalent.hdt'
+	ee_graph = load_encoding_equivalence(path_ee, g)
+	count_total_ee_edges += ee_graph.number_of_edges()
+	for e in ee_graph.edges():
+		# graph
+		if e in g.edges():
+			(n,m) = e
+			count_total_ee_edges_existing += 1
+			in_use_ee_graph.add_edge(n,m)
+			if g.nodes[n]['annotation'] != 'unknown' and g.nodes[m]['annotation'] != 'unknown':
+				if g.nodes[n]['annotation'] == g.nodes[m]['annotation']:
+					count_total_ee_edges_existing_correct += 1
+				if  g.nodes[n]['annotation'] != g.nodes[m]['annotation']:
+					count_total_ee_edges_existing_error += 1
+
+		elif e not in g.edges():
+			(n,m) = e
+			in_use_ee_graph.add_edge(n,m)
+			count_total_ee_edges_not_existing += 1
+			if g.nodes[n]['annotation'] != 'unknown' and g.nodes[m]['annotation'] != 'unknown':
+				if g.nodes[n]['annotation'] == g.nodes[m]['annotation']:
+					count_total_ee_edges_not_existing_correct += 1
+				if  g.nodes[n]['annotation'] != g.nodes[m]['annotation']:
+					count_total_ee_edges_not_existing_error += 1
+	# convert it to a undirected graph
+	ee_graph_undirected = nx.Graph(ee_graph)
+	ee_nodes = g.nodes()
+	ee_connect_pairs = []
+	for i, n in enumerate(list(ee_nodes)[:-1]):
+		for m in list(ee_nodes)[i+1:]:
+			if n in ee_graph_undirected.nodes() and m in ee_graph_undirected.nodes():
+				if (n,m) not in ee_graph_undirected.edges() and (n,m) not in g.edges():
+					if nx.has_path(ee_graph_undirected, n, m):
+						ee_connect_pairs.append((n,m))
+						in_use_ee_graph.add_edge(n,m)
+
+	print ('# pairs that encoding to the same entity ', len (ee_connect_pairs))
+	ee_correct = 0
+	ee_error = 0
+	for (n,m) in ee_connect_pairs:
+		if g.nodes[n]['annotation'] != 'unknown' and g.nodes[m]['annotation'] != 'unknown':
+			if g.nodes[n]['annotation'] == g.nodes[m]['annotation']:
+				ee_correct += 1
+			if  g.nodes[n]['annotation'] != g.nodes[m]['annotation']:
+				ee_error += 1
+
+	print ('pair correct = ', ee_correct)
+	print ('pair error = ', ee_error)
+
+	count_total_pairs_ee += len (ee_connect_pairs)
+	count_total_pairs_ee_correct += ee_correct
+	count_total_pairs_ee_error += ee_error
 
 	# load explicit source
 	path_to_explicit_source = dir + str(id) + '_explicit_source.hdt'
@@ -317,57 +384,198 @@ for id in validation_set:
 		if c != 0:
 			count_nodes_with_implicit_comment_source += ct_comment[c]
 
-	# validating iUNA without encoding equivalence and redirect
-	# load grpah of encoding equivalence
-	path_ee = dir + str(id) + '_encoding_equivalent.hdt'
-	ee_graph = load_encoding_equivalence(path_ee, g)
-	count_total_ee_edges += ee_graph.number_of_edges()
-	for e in ee_graph.edges():
-		# graph
-		if e in g.edges():
-			(n,m) = e
-			count_total_ee_edges_existing += 1
-			if g.nodes[n]['annotation'] != 'unknown' and g.nodes[m]['annotation'] != 'unknown':
-				if g.nodes[n]['annotation'] == g.nodes[m]['annotation']:
-					count_total_ee_edges_existing_correct += 1
-				if  g.nodes[n]['annotation'] != g.nodes[m]['annotation']:
-					count_total_ee_edges_existing_error += 1
+	# next, validate the iUNA
 
-		elif e not in g.edges():
-			(n,m) = e
-			count_total_ee_edges_not_existing += 1
-			if g.nodes[n]['annotation'] != 'unknown' and g.nodes[m]['annotation'] != 'unknown':
-				if g.nodes[n]['annotation'] == g.nodes[m]['annotation']:
-					count_total_ee_edges_not_existing_correct += 1
-				if  g.nodes[n]['annotation'] != g.nodes[m]['annotation']:
-					count_total_ee_edges_not_existing_error += 1
-	# convert it to a undirected graph
-	ee_graph_undirected = nx.Graph(ee_graph)
-	ee_nodes = g.nodes()
-	ee_connect_pairs = []
-	for i, n in enumerate(list(ee_nodes)[:-1]):
-		for m in list(ee_nodes)[i+1:]:
-			if n in ee_graph_undirected.nodes() and m in ee_graph_undirected.nodes():
-				if (n,m) not in ee_graph_undirected.edges() and (n,m) not in g.edges():
-					if nx.has_path(ee_graph_undirected, n, m):
-						ee_connect_pairs.append((n,m))
+	# Step 1: for every prefix, find all combinations
+	# prefix_to_entities = {}
+	# for n in g.nodes():
+	# 	p = get_prefix(n)
+	# 	if p not in prefix_to_entities.keys():
+	# 		prefix_to_entities[p] = [n]
+	# 	else:
+	# 		prefix_to_entities[p].append(n)
+	# samples = set()
+	# for p in prefix_to_entities.keys():
+	# 	if len (prefix_to_entities[p]) > 1:
+	# 		# for each prefix, we assemble n^2 / 3
+	# 		sample_for_this_prefix = set()
+	# 		sample_size = len (prefix_to_entities[p]) * len (prefix_to_entities[p]) / 3
+	# 		while len (sample_for_this_prefix) < sample_size:
+	# 			s = random.choice(prefix_to_entities[p])
+	# 			t = random.choice(prefix_to_entities[p])
+	# 			if s != t and (s, t) not in samples and (t, s) not in samples:
+	# 				sample_for_this_prefix.add((s,t))
+	#
+	# 		samples = samples.union(sample_for_this_prefix)
 
-	print ('# pairs that encoding to the same entity ', len (ee_connect_pairs))
-	ee_correct = 0
-	ee_error = 0
-	for (n,m) in ee_connect_pairs:
-		if g.nodes[n]['annotation'] != 'unknown' and g.nodes[m]['annotation'] != 'unknown':
-			if g.nodes[n]['annotation'] == g.nodes[m]['annotation']:
-				ee_correct += 1
-			if  g.nodes[n]['annotation'] != g.nodes[m]['annotation']:
-				ee_error += 1
+	# Step 2: for every (label) source
+	# labelsource_to_entities = {}
+	# for n in g.nodes():
+	# 	# p = g.nodes[n]['implicit_label_source']
+	# 	p = g.nodes[n]['implicit_comment_source'] # the sources
+	# 	# pre = get_prefix(n)
+	# 	for l in p:
+	# 		if l not in labelsource_to_entities.keys():
+	# 			labelsource_to_entities[l] = [n]
+	# 		else:
+	# 			labelsource_to_entities[l].append(n)
+	# samples = []
+	# for p in labelsource_to_entities.keys():
+	# 	if len (labelsource_to_entities[p]) > 1:
+	# 		print ('sampling from ', labelsource_to_entities[p])
+	# 		# for each prefix, we assemble n^2 / 3
+	# 		sample_for_this_labelsource = []
+	# 		sample_size = int(len (labelsource_to_entities[p]) * len (labelsource_to_entities[p]) / 3)
+	# 		print ('amount expected: ',sample_size)
+	# 		print ('', flush=True)
+	# 		while len (sample_for_this_labelsource) < sample_size:
+	# 			# print ('in the loop', flush=True)
+	# 			s = random.choice(labelsource_to_entities[p])
+	# 			t = random.choice(labelsource_to_entities[p])
+	# 			# print ('s = ',s)
+	# 			# print ('t = ',t)
+	# 			if s != t and (s, t) not in sample_for_this_labelsource and (t, s) not in sample_for_this_labelsource:
+	# 				sample_for_this_labelsource.append((s,t))
+	# 				# print ('\t loaded')
+	#
+	# 		samples = samples + sample_for_this_labelsource
 
-	print ('pair correct = ', ee_correct)
-	print ('pair error = ', ee_error)
 
-	count_total_pairs_ee += len (ee_connect_pairs)
-	count_total_pairs_ee_correct += ee_correct
-	count_total_pairs_ee_error += ee_error
+
+	# Step 3: for every (label) source and prefix
+	# labelsource_to_entities = {}
+	# for n in g.nodes():
+	# 	# p = g.nodes[n]['implicit_label_source']
+	# 	p = g.nodes[n]['implicit_comment_source'] # the sources
+	# 	pre = get_prefix(n)
+	# 	for l in p:
+	# 		k = l + 'KBwithprefix' + pre
+	# 		if k not in labelsource_to_entities.keys():
+	# 			labelsource_to_entities[k] = [n]
+	# 		else:
+	# 			labelsource_to_entities[k].append(n)
+	# samples = []
+	# for p in labelsource_to_entities.keys():
+	# 	if len (labelsource_to_entities[p]) > 1:
+	# 		# print ('sampling from ', labelsource_to_entities[p])
+	# 		# for each prefix, we assemble n^2 / 3
+	# 		sample_for_this_labelsource = []
+	# 		sample_size = int(len (labelsource_to_entities[p]) * len (labelsource_to_entities[p]) / 3)
+	# 		# print ('amount expected: ',sample_size)
+	# 		print ('', flush=True)
+	# 		while len (sample_for_this_labelsource) < sample_size:
+	# 			# print ('in the loop', flush=True)
+	# 			s = random.choice(labelsource_to_entities[p])
+	# 			t = random.choice(labelsource_to_entities[p])
+	# 			# print ('s = ',s)
+	# 			# print ('t = ',t)
+	# 			if s != t and (s, t) not in sample_for_this_labelsource and (t, s) not in sample_for_this_labelsource:
+	# 				sample_for_this_labelsource.append((s,t))
+	# 				# print ('\t loaded')
+	#
+	# 		samples = samples + sample_for_this_labelsource
+
+	# Step 4: for every (label) source and redirect
+	labelsource_to_entities = {}
+	for n in g.nodes():
+		# p = g.nodes[n]['implicit_label_source']
+		p = g.nodes[n]['implicit_comment_source'] # the sources
+		pre = get_prefix(n)
+		for l in p:
+			k = l
+			if k not in labelsource_to_entities.keys():
+				labelsource_to_entities[k] = [n]
+			else:
+				labelsource_to_entities[k].append(n)
+	samples = []
+	# in_use_redirect_graph
+	for p in labelsource_to_entities.keys():
+		if len (labelsource_to_entities[p]) > 1:
+			# print ('sampling from ', labelsource_to_entities[p])
+			# for each prefix, we assemble n^2 / 3
+			sample_for_this_labelsource = []
+			sample_size = int(len (labelsource_to_entities[p]) * len (labelsource_to_entities[p]) / 3)
+			# print ('amount expected: ',sample_size)
+			# print ('', flush=True)
+			while len (sample_for_this_labelsource) < sample_size:
+				# print ('in the loop', flush=True)
+				s = random.choice(labelsource_to_entities[p])
+				t = random.choice(labelsource_to_entities[p])
+				# print ('s = ',s)
+				# print ('t = ',t)
+				if s != t and (s, t) not in sample_for_this_labelsource and (t, s) not in sample_for_this_labelsource:
+					sample_for_this_labelsource.append((s,t))
+					# print ('\t loaded')
+
+			samples = samples + sample_for_this_labelsource
+
+
+	# then test if these pairs follow iUNA
+	count_same_condition_same_anno = 0
+	count_same_condition_diff_anno = 0
+
+
+	for (s,t) in samples:
+		if g.nodes[s]['annotation'] != 'unknown' and  g.nodes[t]['annotation'] != 'unknown':
+			if  g.nodes[s]['annotation'] ==  g.nodes[t]['annotation']:
+				count_same_condition_same_anno += 1
+			elif g.nodes[s]['annotation'] !=  g.nodes[t]['annotation']:
+				count_same_condition_diff_anno += 1
+
+	print ('# total sample = ', len (samples))
+
+
+	if len(samples) != 0:
+		list_same_condition_same_anno.append(count_same_condition_same_anno / len(samples))
+		list_same_condition_diff_anno.append(count_same_condition_diff_anno / len(samples))
+
+	# remove the ones captured by redirect and do the calculation again.
+	count_captured_by_redirect = 0
+	new_samples_except_redirect = []
+	for (n,m) in samples:
+		if (n,m) not in in_use_redirect_graph.edges() and (m,n) not in in_use_redirect_graph.edges():
+			new_samples_except_redirect.append((n,m))
+		else:
+			count_captured_by_redirect += 1
+	print ('# caputed by redirect = ', count_captured_by_redirect)
+
+	count_same_condition_same_anno = 0
+	count_same_condition_diff_anno = 0
+
+	for (s,t) in new_samples_except_redirect:
+		if g.nodes[s]['annotation'] != 'unknown' and  g.nodes[t]['annotation'] != 'unknown':
+			if  g.nodes[s]['annotation'] ==  g.nodes[t]['annotation']:
+				count_same_condition_same_anno += 1
+			elif g.nodes[s]['annotation'] !=  g.nodes[t]['annotation']:
+				count_same_condition_diff_anno += 1
+
+	if len(samples) != 0:
+		list_same_condition_same_anno_with_redirect.append(count_same_condition_same_anno / len(samples))
+		list_same_condition_diff_anno_with_redirect.append(count_same_condition_diff_anno / len(samples))
+
+	count_captured_by_ee = 0
+	new_samples_except_ee = []
+	for (n,m) in samples:
+		if (n,m) not in in_use_ee_graph.edges() and (m,n) not in in_use_ee_graph.edges():
+			new_samples_except_ee.append((n,m))
+		else:
+			count_captured_by_ee += 1
+	print ('# caputed by ee = ', count_captured_by_ee)
+
+	count_same_condition_same_anno = 0
+	count_same_condition_diff_anno = 0
+
+	for (s,t) in new_samples_except_ee:
+		if g.nodes[s]['annotation'] != 'unknown' and  g.nodes[t]['annotation'] != 'unknown':
+			if  g.nodes[s]['annotation'] ==  g.nodes[t]['annotation']:
+				count_same_condition_same_anno += 1
+			elif g.nodes[s]['annotation'] !=  g.nodes[t]['annotation']:
+				count_same_condition_diff_anno += 1
+
+	if len(samples) != 0:
+		list_same_condition_same_anno_with_ee.append(count_same_condition_same_anno / len(samples))
+		list_same_condition_diff_anno_with_ee.append(count_same_condition_diff_anno / len(samples))
+
 
 # count_total_ee_edges_existing = 0
 # count_total_ee_edges_existing_correct = 0
@@ -411,3 +619,26 @@ print ('*********** Sources *************')
 print (count_nodes_with_explicit_source, ' has explicit sources: {:10.2f} %'.format(100*count_nodes_with_explicit_source/count_total_nodes))
 print (count_nodes_with_implicit_label_source, ' has implicit label-like sources: {:10.2f} %'.format(100*count_nodes_with_implicit_label_source/count_total_nodes))
 print (count_nodes_with_implicit_comment_source, ' has implicit comment-like sources: {:10.2f} %'.format(100*count_nodes_with_implicit_comment_source/count_total_nodes))
+
+print ('************ iUNA prefix only ****')
+avg_same_condition_same_anno = np.sum(list_same_condition_same_anno) / len(validation_set)
+avg_same_condition_diff_anno = np.sum(list_same_condition_diff_anno) / len(validation_set)
+avg_same_condition_same_anno_with_redirect = np.sum(list_same_condition_same_anno_with_redirect) / len(validation_set)
+avg_same_condition_diff_anno_with_redirect = np.sum(list_same_condition_diff_anno_with_redirect) / len(validation_set)
+avg_same_condition_same_anno_with_ee = np.sum(list_same_condition_same_anno_with_ee) / len(validation_set)
+avg_same_condition_diff_anno_with_ee = np.sum(list_same_condition_diff_anno_with_ee) / len(validation_set)
+# avg_diff_prefix_same_anno /= len(validation_set)
+# avg_diff_prefix_diff_anno /= len(validation_set)
+print ('[bare] avg =  {:10.2f} %'.format( avg_same_condition_same_anno *100))
+print ('[bare] avg =  {:10.2f} %'.format( avg_same_condition_diff_anno *100))
+print ('[with redirect] avg =  {:10.2f} %'.format( avg_same_condition_same_anno_with_redirect *100))
+print ('[with redirect] avg =  {:10.2f} %'.format( avg_same_condition_diff_anno_with_redirect *100))
+print ('[with ee] avg =  {:10.2f} %'.format( avg_same_condition_same_anno_with_ee *100))
+print ('[with ee] avg =  {:10.2f} %'.format( avg_same_condition_diff_anno_with_ee *100))
+# print ('avg_diff_prefix_same_anno =  {:10.2f} %'.format(avg_diff_prefix_same_anno *100))
+# print ('avg_diff_prefix_diff_anno =  {:10.2f} %'.format(avg_diff_prefix_diff_anno *100))
+# ratio_following_iUNA = avg_same_prefix_diff_anno + avg_diff_prefix_same_anno
+# ratio_contradicts_iUNA =  avg_same_prefix_same_anno + avg_diff_prefix_diff_anno
+# print ('-----In summary -------')
+# print ('following iUNA = {:10.2f} %'.format( ratio_following_iUNA *100))
+# print ('contradicts iUNA = {:10.2f} %'.format( ratio_contradicts_iUNA *100))

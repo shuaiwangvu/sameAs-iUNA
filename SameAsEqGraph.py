@@ -30,7 +30,7 @@ def get_simp_IRI(e):
 
 	return short_IRI
 
-def get_namespace (e):
+def get_prefix (e):
 	prefix, name, sign = get_name(e)
 	return prefix
 
