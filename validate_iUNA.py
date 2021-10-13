@@ -232,7 +232,7 @@ list_same_explicitsource_diff_anno = []
 
 
 id_to_graph = {}
-for id in validation_set:
+for id in gs:
 	print ('\n***************\nGraph ID =', id,'\n')
 	dir = './gold/'
 	path_to_nodes = dir + str(id) +'.tsv'
@@ -335,7 +335,8 @@ for id in validation_set:
 					count_total_ee_edges_existing_correct += 1
 				if  g.nodes[n]['annotation'] != g.nodes[m]['annotation']:
 					count_total_ee_edges_existing_error += 1
-
+					print (n, ' has annotation ', g.nodes[n]['annotation'])
+					print (m, ' has annotation ', g.nodes[m]['annotation'])
 		elif e not in g.edges():
 			(n,m) = e
 			in_use_ee_graph.add_edge(n,m)
