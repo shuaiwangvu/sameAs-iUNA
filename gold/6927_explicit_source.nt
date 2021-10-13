@@ -1,0 +1,4 @@
+<http://sws.geonames.org/2945356/> <http://www.w3.org/2000/01/rdf-schema#isDefinedBy> "http://sws.geonames.org/2945356/about.rdf"^^<http://www.w3.org/2001/XMLSchema#string> .
+<http://sws.geonames.org/2945358/> <http://www.w3.org/2000/01/rdf-schema#isDefinedBy> "http://sws.geonames.org/2945358/about.rdf"^^<http://www.w3.org/2001/XMLSchema#string> .
+<http://sws.geonames.org/6547703/> <http://www.w3.org/2000/01/rdf-schema#isDefinedBy> "http://sws.geonames.org/6547703/about.rdf"^^<http://www.w3.org/2001/XMLSchema#string> .
+<http://sws.geonames.org/2862926/> <http://www.w3.org/2000/01/rdf-schema#isDefinedBy> "http://sws.geonames.org/2862926/about.rdf"^^<http://www.w3.org/2001/XMLSchema#string> .
