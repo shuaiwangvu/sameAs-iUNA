@@ -455,7 +455,7 @@ http://www4.wiwiss.fu-berlin.de/flickrwrappr/photos/Province_of_Brandenburg	Bran
 http://mpii.de/yago/resource/Province_of_Brandenburg	Brandenburg	TBA
 http://dbpedia.org/resource/Province_of_brandenburg	Brandenburg	TBA
 http://dbpedia.org/resource/Provinz_Brandenburg	Brandenburg	TBA
-http://de.dbpedia.org/resource/Brandenburg_(Begriffskl%C3%A4rung)	Brandenburg	TBA
+http://de.dbpedia.org/resource/Brandenburg_(Begriffskl%C3%A4rung)	Brandenburg_disambiguation	disambiguation
 http://diq.dbpedia.org/resource/Saksonya_C%C3%AAr%C3%AAne	Natchez	TBA
 http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/DE4	Brandenburg	TBA
 http://nuts.geovocab.org/id/DE4	Brandenburg	TBA
@@ -464,7 +464,7 @@ http://nuts.geovocab.org/id/DE9	Natchez	TBA
 http://el.dbpedia.org/resource/%CE%92%CF%81%CE%B1%CE%B4%CE%B5%CE%BC%CE%B2%CE%BF%CF%8D%CF%81%CE%B3%CE%BF	Brandenburg	TBA
 http://el.dbpedia.org/resource/%CE%9A%CE%AC%CF%84%CF%89_%CE%A3%CE%B1%CE%BE%CF%89%CE%BD%CE%AF%CE%B1	Natchez	TBA
 http://es.dbpedia.org/resource/%C3%81rea_metropolitana_de_Berl%C3%ADn	Brandenburg	TBA
-http://es.dbpedia.org/resource/Brandeburgo_(desambiguaci%C3%B3n)	Brandenburg	TBA
+http://es.dbpedia.org/resource/Brandeburgo_(desambiguaci%C3%B3n)	Brandenburg_disambiguation	disambiguation
 http://estatwrap.ontologycentral.com/dic/geo#DE4	Brandenburg	TBA
 http://nuts.psi.enakting.org/id/DE4	Brandenburg	TBA
 http://estatwrap.ontologycentral.com/dic/geo#DE9	Natchez	TBA
@@ -475,7 +475,7 @@ http://eurostat.linked-statistics.org/dic/geo#DE9	Natchez	TBA
 http://lodlaundromat.org/54e6f8a7a1366165215663ff7ae430cd#DE9	Natchez	TBA
 http://fa.dbpedia.org/resource/%D8%A8%D8%B1%D8%A7%D9%86%D8%AF%D9%86%D8%A8%D9%88%D8%B1%DA%AF	Brandenburg	TBA
 http://fa.dbpedia.org/resource/%D8%A8%D8%B1%D8%A7%D9%86%D8%AF%D9%86%D8%A8%D9%88%D8%B1%DA%AF_(%D8%A7%D8%A8%D9%87%D8%A7%D9%85%E2%80%8C%D8%B2%D8%AF%D8%A7%DB%8C%DB%8C)	Brandenburg	TBA
-http://fa.dbpedia.org/resource/%D8%A8%D8%B1%D9%86%D8%AF%D9%86%D8%A8%D9%88%D8%B1%DA%AF_%D8%A2%D9%86_%D8%AF%D8%B1_%D9%87%D8%A7%D9%88%D9%84	Brandenburg	TBA
+http://fa.dbpedia.org/resource/%D8%A8%D8%B1%D9%86%D8%AF%D9%86%D8%A8%D9%88%D8%B1%DA%AF_%D8%A2%D9%86_%D8%AF%D8%B1_%D9%87%D8%A7%D9%88%D9%84	unknown	TBA
 http://fa.dbpedia.org/resource/%D9%86%DB%8C%D8%AF%D8%B1%D8%B2%D8%A7%DA%A9%D8%B3%D9%86	Natchez	TBA
 http://fi.dbpedia.org/resource/Berliinin%E2%80%93Brandenburgin_metropolialue	Brandenburg	TBA
 http://fr.dbpedia.org/resource/R%C3%A9gion_m%C3%A9tropolitaine_de_Berlin-Brandebourg	Brandenburg	TBA

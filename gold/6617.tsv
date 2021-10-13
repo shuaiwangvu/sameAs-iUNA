@@ -510,7 +510,7 @@ http://yago-knowledge.org/resource/Second_Kingdom_of_Burgundy	Burgundy	TBA
 http://dbpedia.org/resource/Seven_bridges_middle_school	Chappaqua,_New_York	TBA
 http://dbpedia.org/resource/The_Bay_Of_Biscay	Biskaya	TBA
 http://dbpedia.org/resource/UN/LOCODE:USBDY	Bandon,_Oregon	TBA
-http://de.dbpedia.org/resource/Burgund_(Begriffskl%C3%A4rung)	Burgundy	TBA
+http://de.dbpedia.org/resource/Burgund_(Begriffskl%C3%A4rung)	Burgundy_disambiguation	disambiguation
 http://de.dbpedia.org/resource/K%C3%B6nigreich_Burgund	Burgundy	TBA
 http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR26	Burgundy	TBA
 http://nuts.geovocab.org/id/FR26	Burgundy	TBA
@@ -518,7 +518,7 @@ http://el.dbpedia.org/resource/%CE%92%CE%B9%CF%83%CE%BA%CE%B1%CF%8A%CE%BA%CF%8C%
 http://el.dbpedia.org/resource/%CE%92%CE%BF%CF%85%CF%81%CE%B3%CE%BF%CF%85%CE%BD%CE%B4%CE%AF%CE%B1	Burgundy	TBA
 http://es.dbpedia.org/resource/Bandon_(Oreg%C3%B3n)	Bandon,_Oregon	TBA
 http://es.dbpedia.org/resource/Borgo%C3%B1a	Burgundy	TBA
-http://es.dbpedia.org/resource/Borgo%C3%B1a_(desambiguaci%C3%B3n)	Burgundy	TBA
+http://es.dbpedia.org/resource/Borgo%C3%B1a_(desambiguaci%C3%B3n)	Burgundy_disambiguation	disambiguation
 http://es.dbpedia.org/resource/Mar_Cant%C3%A1brico	Cantabrian_sea	TBA
 http://es.dbpedia.org/resource/Reino_de_Arl%C3%A9s	Burgundy	TBA
 http://es.dbpedia.org/resource/Reino_de_Borgo%C3%B1a	Burgundy	TBA
@@ -535,7 +535,7 @@ http://he.dbpedia.org/resource/%D7%91%D7%95%D7%A8%D7%92%D7%95%D7%9F	Burgundy	TBA
 http://he.dbpedia.org/resource/%D7%91%D7%95%D7%A8%D7%92%D7%95%D7%A0%D7%93%D7%99	Burgundy	TBA
 http://he.dbpedia.org/resource/%D7%9E%D7%A4%D7%A8%D7%A5_%D7%91%D7%99%D7%A1%D7%A7%D7%90%D7%99%D7%94	Biskaya	TBA
 http://hi.dbpedia.org/resource/%E0%A4%AC%E0%A4%B0%E0%A4%97%E0%A4%82%E0%A4%A1%E0%A5%80	Burgundy	TBA
-http://hu.dbpedia.org/resource/Burgund_kir%C3%A1lyok_list%C3%A1ja	Burgundy	TBA
+http://hu.dbpedia.org/resource/Burgund_kir%C3%A1lyok_list%C3%A1ja	list_of_Kings_of_Burgundy	TBA
 http://hu.dbpedia.org/resource/Burgundiai_Kir%C3%A1lys%C3%A1g	Burgundy	TBA
 http://hu.dbpedia.org/resource/Vizcayai-%C3%B6b%C3%B6l	Biskaya	TBA
 http://hy.dbpedia.org/resource/%D4%B2%D5%B8%D6%82%D6%80%D5%A3%D5%B8%D6%82%D5%B6%D5%A4%D5%AB%D5%A1	Burgundy	TBA
@@ -543,7 +543,7 @@ http://is.dbpedia.org/resource/Biskajafl%C3%B3i	Biskaya	TBA
 http://ja.dbpedia.org/resource/%E3%82%A2%E3%83%AB%E3%83%AB%E7%8E%8B%E5%9B%BD	Burgundy	TBA
 http://ja.dbpedia.org/resource/%E3%83%90%E3%83%BC%E3%82%AC%E3%83%B3%E3%83%87%E3%82%A3	Burgundy	TBA
 http://ja.dbpedia.org/resource/%E3%83%93%E3%82%B9%E3%82%B1%E3%83%BC%E6%B9%BE	Biskaya	TBA
-http://ja.dbpedia.org/resource/%E3%83%96%E3%83%AB%E3%82%B0%E3%83%B3%E3%83%88%E7%8E%8B%E3%81%AE%E4%B8%80%E8%A6%A7	Burgundy	TBA
+http://ja.dbpedia.org/resource/%E3%83%96%E3%83%AB%E3%82%B0%E3%83%B3%E3%83%88%E7%8E%8B%E3%81%AE%E4%B8%80%E8%A6%A7	list_of_Kings_of_Burgundy	TBA
 http://ja.dbpedia.org/resource/%E3%83%96%E3%83%AB%E3%82%B0%E3%83%B3%E3%83%88%E7%8E%8B%E5%9B%BD	Burgundy	TBA
 http://ja.dbpedia.org/resource/%E3%83%96%E3%83%AB%E3%82%B4%E3%83%BC%E3%83%8B%E3%83%A5%E5%9C%B0%E5%9F%9F%E5%9C%8F	Burgundy	TBA
 http://ka.dbpedia.org/resource/%E1%83%91%E1%83%98%E1%83%A1%E1%83%99%E1%83%90%E1%83%98%E1%83%98%E1%83%A1_%E1%83%A7%E1%83%A3%E1%83%A0%E1%83%94	Biskaya	TBA
@@ -578,7 +578,7 @@ http://pnb.dbpedia.org/resource/%D8%A8%D8%B1%DA%AF%D9%86%DA%88%DB%8C	Burgundy	TB
 http://pnb.dbpedia.org/resource/%D8%AE%D9%84%DB%8C%D8%AC_%D8%A8%D8%B3%DA%A9%DB%92	Biskaya	TBA
 http://rdfdata.eionet.europa.eu/ramon/nuts/FR26	Burgundy	TBA
 http://pt.dbpedia.org/resource/Burg%C3%BAndia	Burgundy	TBA
-http://pt.dbpedia.org/resource/Lista_de_governantes_da_Proven%C3%A7a	Burgundy	TBA
+http://pt.dbpedia.org/resource/Lista_de_governantes_da_Proven%C3%A7a	List_of_rulers_of_Provence	TBA
 http://www.wikidata.org/entity/Q15490664	Burgundy	TBA
 http://ru.dbpedia.org/resource/%D0%91%D0%B8%D1%81%D0%BA%D0%B0%D0%B9%D1%81%D0%BA%D0%B8%D0%B9_%D0%B7%D0%B0%D0%BB%D0%B8%D0%B2	Biskaya	TBA
 http://ru.dbpedia.org/resource/%D0%91%D1%83%D1%80%D0%B3%D1%83%D0%BD%D0%B4%D0%B8%D1%8F	Burgundy	TBA
