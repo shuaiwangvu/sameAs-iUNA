@@ -13,3 +13,10 @@ hdt_weight = HDTDocument(file_name)
 (triples, cardinality) = hdt_weight.search_triples("", type, metalink_file)
 
 print ('There are ', cardinality, 'knowledge bases with sameAs triples')
+
+count = 0
+for t, _, _ in triples:
+	count += 1
+	print (t)
+	if count > 10:
+		break
