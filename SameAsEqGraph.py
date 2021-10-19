@@ -2,8 +2,8 @@
 import networkx as nx
 import pandas as pd
 import tldextract
-
-
+import csv
+from hdt import HDTDocument, IdentifierPosition
 
 def get_simp_IRI(e):
 	# simplify this uri by introducing the namespace abbreviation
@@ -54,3 +54,81 @@ def get_name (e):
 		sign = '/'
 
 	return prefix, sign, name
+
+
+
+def load_graph (nodes_filename, edges_filename):
+	g = nx.Graph()
+	nodes_file = open(nodes_filename, 'r')
+	reader = csv.DictReader(nodes_file, delimiter='\t',)
+	for row in reader:
+		s = row["Entity"]
+		a = row["Annotation"]
+		c = row["Comment"]
+		g.add_node(s, annotation = a, comment = c)
+		g.nodes[s]['prefix'] = get_prefix(s)
+	edges_file = open(edges_filename, 'r')
+	reader = csv.DictReader(edges_file, delimiter='\t',)
+	for row in reader:
+		s = row["SUBJECT"]
+		t = row["OBJECT"]
+		id = row["METALINK_ID"]
+		g.add_edge(s, t, metalink_id = id)
+	nodes_file.close()
+	edges_file.close()
+	return g
+
+
+
+def load_explicit (path_to_explicit_source, graph):
+	hdt_explicit = HDTDocument(path_to_explicit_source)
+	for e in graph.nodes:
+		graph.nodes[e]['explicit_source'] = []
+	for e in graph.nodes:
+		(triples, cardi) = hdt_explicit.search_triples(e, "", "")
+		for (e, _, s) in triples:
+			graph.nodes[e]['explicit_source'].append(s)
+
+
+def load_implicit_label_source (path_to_implicit_label_source, graph):
+	hdt_implicit_label = HDTDocument(path_to_implicit_label_source)
+	for e in graph.nodes:
+		graph.nodes[e]['implicit_label_source'] = []
+	for e in graph.nodes:
+		(triples, cardi) = hdt_implicit_label.search_triples(e, "", "")
+		for (e, _, s) in triples:
+			graph.nodes[e]['implicit_label_source'].append(s)
+
+
+def load_implicit_comment_source (path_to_implicit_comment_source, graph):
+	hdt_implicit_comment = HDTDocument(path_to_implicit_comment_source)
+	for e in graph.nodes:
+		graph.nodes[e]['implicit_comment_source'] = []
+	for e in graph.nodes:
+		(triples, cardi) = hdt_implicit_comment.search_triples(e, "", "")
+		for (e, _, s) in triples:
+			graph.nodes[e]['implicit_comment_source'].append(s)
+
+def load_encoding_equivalence (path_ee):
+	ee_g = nx.Graph()
+	hdt_ee = HDTDocument(path_ee)
+	(triples, cardi) = hdt_ee.search_triples("", "", "")
+	for (s,_,t) in triples:
+		ee_g.add_edge(s, t)
+	return ee_g
+
+def load_redi_graph(path_to_redi_graph_nodes, path_to_redi_graph_edges):
+	redi_g = nx.DiGraph()
+	nodes_file = open(path_to_redi_graph_nodes, 'r')
+	reader = csv.DictReader(nodes_file, delimiter='\t',)
+	for row in reader:
+		s = row["Entity"]
+		r = row["Remark"]
+		redi_g.add_node(s, remark = r)
+
+	hdt_redi_edges = HDTDocument(path_to_redi_graph_edges)
+	(triples, cardi) = hdt_redi_edges.search_triples("", "", "")
+	for (s,_,t) in triples:
+		redi_g.add_edge(s,t)
+	nodes_file.close()
+	return redi_g
