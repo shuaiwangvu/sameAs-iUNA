@@ -18,7 +18,7 @@ from networkx.algorithms.connectivity import is_locally_k_edge_connected
 from SameAsEqGraph import *
 from extend_metalink import *
 import csv
-
+import random
 
 UNKNOWN = 0
 REMOVE = 1
@@ -81,8 +81,8 @@ class GraphSolver():
 		self.redirect_graph = load_redi_graph(path_to_redi_graph_nodes, path_to_redi_graph_edges)
 		print ('[redirect] number of nodes', self.redirect_graph.number_of_nodes())
 		print ('[redirect] number of edges', self.redirect_graph.number_of_edges())
-		for e in self.redirect_graph.edges():
-			print ('redi edge : ', e)
+		# for e in self.redirect_graph.edges():
+		# 	print ('redi edge : ', e)
 
 		path_ee = dir + str(id) + '_encoding_equivalent.hdt'
 		self.encoding_equality_graph = load_encoding_equivalence(path_ee)
@@ -253,7 +253,7 @@ class GraphSolver():
 				return True
 
 
-	def get_pairs_from_iUNA(self, method, count_num_generated = 0):
+	def get_pairs_from_iUNA(self, method, num_to_generate = 0):
 		pairs = []
 		if method == 'existing_edges':
 			for e in self.input_graph.edges():
@@ -262,8 +262,15 @@ class GraphSolver():
 					pairs.append((left, right))
 			print ('paris generated : ', len (pairs))
 			return pairs
-		else:
-			return []
+		elif method == 'generated_pairs':
+			count = 0
+			while count < num_to_generate:
+				[left, right] = random.choices(list(self.input_graph.nodes()), k=2)
+				if self.violates_iUNA(left, right) and left != right:
+					pairs.append((left, right))
+					count += 1
+			print ('paris generated : ', len (pairs))
+			return pairs
 
 	def solve_SMT (self): # get partition
 
@@ -274,15 +281,16 @@ class GraphSolver():
 
 		# encode the existing graph with weight 1
 		o = Optimize()
-		timeout = 1000 * 60 * 2 # depending on the size of the graph
+		timeout = 1000 * 60 * 1 # depending on the size of the graph
 		o.set("timeout", timeout)
+		print('timeout = ',timeout/1000, 'seconds')
 		print('timeout = ',timeout/1000/60, 'mins')
 		encode = {}
 		soft_clauses = {}
 
 		# STEP 1: the input graph (nodes, edges and their weights)
 		print ('STEP 1: the input graph (nodes, edges and their weights)')
-		default_weight = 1
+		default_weight = 10
 		max_clusters = 10
 		weights_occ = False
 		count_weighted_edges = 0
@@ -316,16 +324,30 @@ class GraphSolver():
 		# STEP 2: the attacking edges
 		print ('STEP 2: the attacking edges')
 
-		# count_num_generated = 0
-		weight_iUNA_uneq_edge = 10
+		max_pairs_to_generate = int(self.input_graph.number_of_edges()/20)
+		weight_iUNA_uneq_edge = 5
 
-		uneq_pairs = self.get_pairs_from_iUNA(method = 'existing_edges')
+		# uneq_pairs = self.get_pairs_from_iUNA(method = 'existing_edges')
+		uneq_pairs = self.get_pairs_from_iUNA(method = 'generated_pairs', num_to_generate = max_pairs_to_generate)
 		self.attacking_edges = uneq_pairs
-		# uneq_pairs = self.get_pairs_from_iUNA(method = 'generated_edges', count_num_generated)
+
+		# how many of these attacks are correct attacks ?
+		count_correct_attack = 0
+		count_mistaken_attack = 0
 		for (left,right) in uneq_pairs:
-		# 	print ('\n\nleft = ', left, ' annotation ', self.input_graph.nodes[left]['annotation'])
-		# 	print ('right = ', right, ' annotation ', self.input_graph.nodes[right]['annotation'])
-		# 	print (self.input_graph.nodes[left]['annotation'], self.input_graph.nodes[right]['annotation'])
+			if self.input_graph.nodes[left]['annotation'] != 'unknown' and self.input_graph.nodes[right]['annotation'] != 'unknown':
+				if self.input_graph.nodes[left]['annotation'] != self.input_graph.nodes[right]['annotation']:
+					count_correct_attack += 1
+				else:
+					count_mistaken_attack += 1
+
+		print ('count  correct ', count_correct_attack, ' -> ', count_correct_attack/len(uneq_pairs))
+		print ('count mistaken ', count_mistaken_attack, ' -> ', count_mistaken_attack/len(uneq_pairs))
+
+		for (left,right) in uneq_pairs:
+			# print ('\n\n[attacking]left = ', left, ' annotation ', self.input_graph.nodes[left]['annotation'])
+			# print ('[attacking]right = ', right, ' annotation ', self.input_graph.nodes[right]['annotation'])
+			# print ('[attacking] ', self.input_graph.nodes[left]['annotation'], ' v.s. ', self.input_graph.nodes[right]['annotation'])
 		# 	if (left, right) in self.encoding_equality_graph.edges() or (right, left) in self.encoding_equality_graph.edges():
 		# 		print ('encoding equivalent')
 		# 	if (left, right) in self.redirect_graph.edges() or (right, left) in self.redirect_graph.edges():
@@ -343,18 +365,11 @@ class GraphSolver():
 			else:
 				soft_clauses[clause] = weight_iUNA_uneq_edge
 
-		# finally, add them to the solver.
-		for clause in soft_clauses.keys():
-			# if  soft_clauses[clause] > 1 or  soft_clauses[clause] < 0:
-			# 	print ('clause = ', clause)
-			# 	print ('weight = ', soft_clauses[clause])
-			o.add_soft(clause, soft_clauses[clause])
-
 
 
 		# STEP 3: the confirming edges
 		# add confirming edges: encoding equivalence
-		weight_encoding_equivalence = 5
+		weight_encoding_equivalence = 10
 		for (left, right) in self.encoding_equality_graph.edges():
 			clause = (encode[left] == encode[right])
 			if clause in soft_clauses.keys():
@@ -366,8 +381,8 @@ class GraphSolver():
 		# add confirming edges: redirect
 		redi_undirected = self.redirect_graph.copy()
 		redi_undirected = redi_undirected.to_undirected()
-		print ('num of edges in undirected graph', len (redi_undirected.edges()))
-		weight_redirect = 5
+		# print ('[Redirect] num of edges in undirected graph', len (redi_undirected.edges()))
+		weight_redirect = 10
 		number_redi_confirming_edges = 0
 		for (left, right) in self.input_graph.edges():
 			if left in redi_undirected.nodes() and right in redi_undirected.nodes():
@@ -384,6 +399,15 @@ class GraphSolver():
 			else:
 				pass # at least one of them is not in the redirect graph. so no need for checking
 		print ('number of confirming edges added from the redirecting graph ', number_redi_confirming_edges)
+
+
+		# finally, add them to the solver.
+		for clause in soft_clauses.keys():
+			# if  soft_clauses[clause] > 1 or  soft_clauses[clause] < 0:
+			# 	print ('clause = ', clause)
+			# 	print ('weight = ', soft_clauses[clause])
+			o.add_soft(clause, soft_clauses[clause])
+
 
 
 		# Finally, get the identified_edges
@@ -440,6 +464,7 @@ class GraphSolver():
 		# 	if (len (c) == 1):
 		# 		print ('component: ', c)
 		comps  = nx.connected_components(self.result_graph)
+		print ('# removed = ', len(self.removed_edges))
 		print ('size list = ',[len(c) for c in sorted(comps, key=len, reverse=True)])
 
 		# Finally, compute the partitions
@@ -447,6 +472,7 @@ class GraphSolver():
 
 	def evaluate_partitioning_result(self):
 		if len (self.error_edges) == 0 :
+			print ('total removed edges = ', len(self.removed_edges))
 			return None
 		else:
 			print ('num of edges removed: ', len(self.removed_edges))
@@ -477,6 +503,7 @@ class GraphSolver():
 				evaluation_result['recall'] = count_correctly_removed / len (self.error_edges)
 				return evaluation_result
 			else:
+				print ('no edge removed')
 				return None
 
 
@@ -488,10 +515,10 @@ avg_precision = 0
 avg_recall = 0
 count_valid_result = 0
 count_invalid_result = 0
-graph_ids = [11116, 240577, 395175]
-# graph_ids = gs
+hard_graph_ids = [39036, 6927, 11116]
+graph_ids = validate_single
 
-for graph_id in validate_multiple:
+for graph_id in graph_ids:
 	print ('\n\n\ngraph id = ', str(graph_id))
 	dir = './gold/'
 	gs = GraphSolver(dir, graph_id)
@@ -509,18 +536,20 @@ for graph_id in validate_multiple:
 	# gs.show_input_graph()
 	# gs.solve(method = 'smt', weights_occ = True)
 	# gs.show_result_graph()
-if count_valid_result !=0:
+
+if count_valid_result > 0:
 	avg_precision /= count_valid_result
 	avg_recall /= count_valid_result
+else:
+	print ('No valid result')
+
 
 	print ('There are ', len (graph_ids), ' graphs in evaluation')
-	print ('There are ', count_valid_result, ' graphs with valid results')
 	print ('The average precision: ', avg_precision)
 	print ('The average recall: ', avg_recall)
 	print ('Count valid results ', count_valid_result)
 	print ('Count invalid results ', count_invalid_result)
-else:
-	print ('No valid result')
+
 
 # --
 # gs.get_encoding_equality_graph()
