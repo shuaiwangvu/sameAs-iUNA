@@ -4,6 +4,11 @@ import pandas as pd
 import tldextract
 import csv
 from hdt import HDTDocument, IdentifierPosition
+from rfc3987 import  parse
+
+
+def get_authority (e):
+	return parse(e)['authority']
 
 def get_simp_IRI(e):
 	# simplify this uri by introducing the namespace abbreviation
@@ -73,7 +78,10 @@ def load_graph (nodes_filename, edges_filename):
 		s = row["SUBJECT"]
 		t = row["OBJECT"]
 		id = row["METALINK_ID"]
-		g.add_edge(s, t, metalink_id = id)
+		if s!=t:
+			g.add_edge(s, t, metalink_id = id)
+		else:
+			print ('FOUND reflexive EDGES!')
 	nodes_file.close()
 	edges_file.close()
 	return g
