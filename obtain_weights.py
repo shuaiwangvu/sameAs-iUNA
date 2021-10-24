@@ -3,7 +3,7 @@
 #
 
 import networkx as nx
-from SameAsEqGraph import get_simp_IRI, get_namespace, get_name
+from SameAsEqGraph import *
 from pyvis.network import Network
 import community
 import collections
@@ -30,7 +30,7 @@ hdt_lod_a_lot = HDTDocument(PATH_LOD)
 PATH_META = "/home/jraad/ssd/data/identity/metalink/metalink-2/metalink-2.hdt"
 hdt_metalink = HDTDocument(PATH_META)
 
-PATH_SAMEAS_SOURCE = "./sameas_laundromat_metalink_Sep.hdt"
+PATH_SAMEAS_SOURCE = "./sameas_laundromat_metalink_Oct18.hdt"
 hdt_source = HDTDocument(PATH_SAMEAS_SOURCE)
 #
 # my_has_label_in_file = "https://krr.triply.cc/krr/metalink/def/hasLabelInFile" # a relation
@@ -53,6 +53,19 @@ hdt_source = HDTDocument(PATH_SAMEAS_SOURCE)
 # rdf_predicate = "http://www.w3.org/1999/02/22-rdf-syntax-ns#predicate"
 #
 # rdf_type = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+
+
+# there are in total 28 entities. 14 each
+validate_single = [96073, 712342, 9994282, 18688, 1140988, 25604]
+validate_multiple = [6617, 4170, 42616, 39036, 33122, 6927, 11116, 12745]
+validation_set = validate_single + validate_multiple
+
+evaluation_single = [9411, 9756, 97757, 99932, 337339, 1133953]
+evaluation_multiple = [5723, 14872, 37544, 236350, 240577, 395175, 4635725, 14514123]
+evaluation_set = evaluation_single + evaluation_multiple
+
+
+gs = validation_set + evaluation_set
 
 
 
@@ -140,7 +153,12 @@ def read_file (file_name):
 		pairs.append((s,o))
 	return pairs
 
-for id in graph_ids:
+count_missing_id = 0
+count_total_edges = 0
+count_weight_distribution = Counter ()
+
+
+for id in gs:
 	print ('\n\n This is graph ', id)
 	count_no_metalink_id = 0
 	count_reflexive = 0
@@ -164,9 +182,10 @@ for id in graph_ids:
 		print ('There are ', g.number_of_edges(), ' edges')
 
 		for (s,t) in g.edges():
-			# count_total_edges += 1
+			count_total_edges += 1
 			if s == t :
 				count_reflexive += 1
+				print ('Reflexive edges!!!!!!\n\n\n\n')
 			else:
 				id = find_statement_id(s,t)
 				if id == None:
@@ -193,5 +212,19 @@ for id in graph_ids:
 					writer.write(str(line))
 		print ('# not found metalink id = ', count_no_metalink_id)
 		print ('count reflexive = ', count_reflexive)
-	for c in ct.keys():
-		print (c, ' has weight ', ct[c])
+
+	count_missing_id += count_no_metalink_id
+
+	for w in ct.keys():
+		count_weight_distribution[w] += ct[w]
+		print (ct[w], ' has weight ', w)
+
+print ('total edges: ', count_total_edges)
+print ('edges without id ', count_missing_id, ' -> ', count_missing_id/count_total_edges)
+print ('edges without weight ', count_weight_distribution[0], ' -> ', count_weight_distribution[0]/count_total_edges )
+print ('weight distibution ', count_weight_distribution)
+
+# for id in graph_ids:
+# 	dir = './gold/'
+# 	weight_filename = dir + str(id) +'_sum_weight.nt'
+# 	print (weight_filename)
