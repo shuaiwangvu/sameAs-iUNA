@@ -289,7 +289,7 @@ class GraphSolver():
 
 		# encode the existing graph with weight 1
 		o = Optimize()
-		timeout = 1000 * 60 * 2 # depending on the size of the graph
+		timeout = 1000 * 60 * 10 # depending on the size of the graph
 		o.set("timeout", timeout)
 		print('timeout = ',timeout/1000, 'seconds')
 		print('timeout = ',timeout/1000/60, 'mins')
@@ -298,7 +298,7 @@ class GraphSolver():
 
 		# STEP 1: the input graph (nodes, edges and their weights)
 		print ('STEP 1: the input graph (nodes, edges and their weights)')
-		default_weight = 10
+		default_weight = 35
 		reduced_weight_disambiguation = 1
 		max_clusters = 8 + int(len(self.input_graph.nodes())/150)
 		weights_occ = True
@@ -313,8 +313,18 @@ class GraphSolver():
 
 		count_ignored = 0
 		print ('total # edges ', len (self.input_graph.edges()))
+
+		# method 2: minimum_spanning_tree
+		# T = nx.minimum_spanning_tree(self.input_graph)
+		# # print(sorted(T.edges(data=True)))
+		# print('minimum spanning tree has num of edges: ', len(T.edges()))
+
+		# method 3: minimum spaninng forest
+		t = nx.Graph(self.input_graph)
+		to_remove = []
 		for (left, right) in self.input_graph.edges():
 			ignore = False
+			#Method 1: ignore the edges between multilingual DBpedia entities.
 			if 'dbpedia.org' in left and 'dbpedia.org' in right and 'http://dbpedia.org/resource/' not in left and 'http://dbpedia.org/resource/' not in right:
 				# if there is a common dbpedia.org neighbor, then we ignore this.
 				if get_authority(left) != get_authority(right):
@@ -322,44 +332,70 @@ class GraphSolver():
 					right_neigh = self.input_graph.neighbors(right)
 
 					if len(set(left_neigh).difference(set(right_neigh))) > 0:
-						if (random.random() <= 0.90):
-							ignore = True
-							count_ignored += 1
-						# print ('ignore left = ', left, ' right  = ', right)
-						# print ('authority left = ', get_authority(left))
-						# print ('authority right = ', get_authority(right))
-						# break
+						to_remove.append((left, right))
+		t.remove_edges_from(to_remove)
+		ms_edges = list(nx.minimum_spanning_edges(t, data= False))
+		print ('the num of remaining edges in the minimum spanning forest is ', len(ms_edges))
+
+		for (left, right) in self.input_graph.edges():
+			ignore = False
+			#Method 1: ignore the edges between multilingual DBpedia entities.
+			# if 'dbpedia.org' in left and 'dbpedia.org' in right and 'http://dbpedia.org/resource/' not in left and 'http://dbpedia.org/resource/' not in right:
+			# 	# if there is a common dbpedia.org neighbor, then we ignore this.
+			# 	if get_authority(left) != get_authority(right):
+			# 		left_neigh = self.input_graph.neighbors(left)
+			# 		right_neigh = self.input_graph.neighbors(right)
+			#
+			# 		if len(set(left_neigh).difference(set(right_neigh))) > 0:
+			# 			if (random.random() <= 0.90):
+			# 				ignore = True
+			# 				count_ignored += 1
+			# Method 2: minimum spanning tree
+			# if (left, right) not in T.edges():
+			# 	ignore = True
+			# 	count_ignored += 1
+
+			#Method 3: minimum spanning forest
+			if (left, right) not in ms_edges:
+				if (random.random() <= 0.90):
+					ignore = True
+					count_ignored += 1
 
 			if ignore == False:
 				clause = (encode[left] == encode[right])
-				if weights_occ == False:
-					if left in self.dis_entities or right in self.dis_entities:
-						soft_clauses[clause] = default_weight - reduced_weight_disambiguation
-						# soft_clauses[clause] = default_weight
-						# print ('weight = ', soft_clauses[clause])
-					else:
-						soft_clauses[clause] = default_weight
 
+				if left in self.dis_entities or right in self.dis_entities:
+					soft_clauses[clause] = default_weight - reduced_weight_disambiguation
+					# soft_clauses[clause] = default_weight
+					# print ('weight = ', soft_clauses[clause])
 				else:
+					soft_clauses[clause] = default_weight
+
+				if weights_occ == True:
 					# otherwise, use the weights from the
 					w = self.input_graph.edges[left, right]['weight']
 					# print ('!!!!!!! I have weight',w)
 					if w != None:
-						if w == 0:
-							soft_clauses[clause] = default_weight
-						else:
-							soft_clauses[clause] = default_weight + w
-							count_weighted_edges += 1
+						soft_clauses[clause] = default_weight - 3 + (w * 2)
+						# if w == 0:
+						# 	soft_clauses[clause] = default_weight
+						# else:
+						# 	soft_clauses[clause] = default_weight + (w * 2)
+						# 	count_weighted_edges += 1
 					else:
 						print ('weighting error?!')
+				else:
+					soft_clauses[clause] = default_weight
+
 		print ('count_weighted_edges = ', count_weighted_edges)
 		print ('count_ignored edges between DBpedia multilingual entities', count_ignored)
 
 		# STEP 2: the attacking edges
 		print ('STEP 2: the attacking edges')
 
-		max_pairs_to_generate = int(self.input_graph.number_of_edges()/10)
-		weight_iUNA_uneq_edge = 5
+		# max_pairs_to_generate = int(self.input_graph.number_of_edges()/10)
+		max_pairs_to_generate = int(self.input_graph.number_of_nodes() * 1.5)
+		weight_iUNA_uneq_edge = 5 # weight of attacking edges
 
 		# uneq_pairs = self.get_pairs_from_iUNA(method = 'existing_edges')
 		uneq_pairs = self.get_pairs_from_iUNA(method = 'generated_pairs', num_to_generate = max_pairs_to_generate)
@@ -576,7 +612,7 @@ count_invalid_result = 0
 hard_graph_ids = [39036, 6927, 11116]
 # graph_ids = hard_graph_ids
 graph_ids = validate_multiple
-
+# hard_graph_ids
 start = time.time()
 for graph_id in graph_ids:
 	print ('\n\n\ngraph id = ', str(graph_id))
@@ -603,11 +639,13 @@ if count_valid_result > 0:
 	avg_recall /= count_valid_result
 	print ('*'*20)
 	print ('There are ', len (graph_ids), ' graphs in evaluation')
-	print ('The average precision: ', avg_precision)
-	print ('The average recall: ', avg_recall)
 	print ('Count valid results ', count_valid_result)
 	print ('Count invalid results ', count_invalid_result)
+	print ('The average precision: ', avg_precision)
+	print ('The average recall: ', avg_recall)
 	print ('Overall num edges removed ', num_edges_removed)
+
+
 else:
 	print ('No valid result')
 
