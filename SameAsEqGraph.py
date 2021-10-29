@@ -140,3 +140,15 @@ def load_redi_graph(path_to_redi_graph_nodes, path_to_redi_graph_edges):
 		redi_g.add_edge(s,t)
 	nodes_file.close()
 	return redi_g
+
+
+def load_disambiguation_entities(nodes, path_to_disambiguation_entities):
+	# sameas_disambiguation_entities.hdt
+	hdt = HDTDocument(path_to_disambiguation_entities)
+	entities = set()
+	for n in nodes:
+		(triples, cardi) = hdt.search_triples(n, "", "")
+		if cardi > 0:
+			entities.add(n)
+
+	return list(entities)

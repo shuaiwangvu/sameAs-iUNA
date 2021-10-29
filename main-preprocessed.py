@@ -19,7 +19,7 @@ from SameAsEqGraph import *
 from extend_metalink import *
 import csv
 import random
-
+import time
 UNKNOWN = 0
 REMOVE = 1
 KEEP = 2
@@ -27,6 +27,7 @@ KEEP = 2
 hdt_source = None
 hdt_label = None
 hdt_comment = None
+hdt_disambiguation = None
 
 NOTFOUND = 1
 NOREDIRECT = 2
@@ -98,6 +99,11 @@ class GraphSolver():
 		path_to_implicit_comment_source = dir + str(graph_id) + "_implicit_comment_source.hdt"
 		load_implicit_comment_source(path_to_implicit_comment_source, self.input_graph)
 
+		# disambiguation entities
+		# load_disambiguation_entities
+		path_to_disambiguation_entities = "sameas_disambiguation_entities.hdt"
+		self.dis_entities = load_disambiguation_entities(self.input_graph.nodes(), path_to_disambiguation_entities)
+		print ('there are ', len (self.dis_entities), ' entities about disambiguation (in this graph)')
 		# weight graph
 		# no need for this one since we have the original graph anyway
 
@@ -291,7 +297,8 @@ class GraphSolver():
 		# STEP 1: the input graph (nodes, edges and their weights)
 		print ('STEP 1: the input graph (nodes, edges and their weights)')
 		default_weight = 10
-		max_clusters = 10
+		reduced_weight_disambiguation = 1
+		max_clusters = 8 + int(len(self.input_graph.nodes())/150)
 		weights_occ = False
 		count_weighted_edges = 0
 
@@ -313,8 +320,9 @@ class GraphSolver():
 					right_neigh = self.input_graph.neighbors(right)
 
 					if len(set(left_neigh).difference(set(right_neigh))) > 0:
-						ignore = True
-						count_ignored += 1
+						if (random.random() <= 0.90):
+							ignore = True
+							count_ignored += 1
 						# print ('ignore left = ', left, ' right  = ', right)
 						# print ('authority left = ', get_authority(left))
 						# print ('authority right = ', get_authority(right))
@@ -323,11 +331,17 @@ class GraphSolver():
 			if ignore == False:
 				clause = (encode[left] == encode[right])
 				if weights_occ == False:
-					soft_clauses[clause] = default_weight
+					if left in self.dis_entities or right in self.dis_entities:
+						soft_clauses[clause] = default_weight - reduced_weight_disambiguation
+						# soft_clauses[clause] = default_weight
+						# print ('weight = ', soft_clauses[clause])
+					else:
+						soft_clauses[clause] = default_weight
+
 				else:
 					# otherwise, use the weights from the
 					w = self.input_graph.edges[left, right]['weight']
-					# print ('I have weight',w)
+					# print ('!!!!!!! I have weight',w)
 					if w != None:
 						if w == 0:
 							soft_clauses[clause] = default_weight
@@ -336,13 +350,13 @@ class GraphSolver():
 							count_weighted_edges += 1
 					else:
 						print ('weighting error?!')
-		print ('count_weighted_edges = ', count_weighted_edges)
+		# print ('count_weighted_edges = ', count_weighted_edges)
 		print ('count_ignored edges between DBpedia multilingual entities', count_ignored)
 
 		# STEP 2: the attacking edges
 		print ('STEP 2: the attacking edges')
 
-		max_pairs_to_generate = int(self.input_graph.number_of_edges()/20)
+		max_pairs_to_generate = int(self.input_graph.number_of_edges()/10)
 		weight_iUNA_uneq_edge = 5
 
 		# uneq_pairs = self.get_pairs_from_iUNA(method = 'existing_edges')
@@ -418,6 +432,25 @@ class GraphSolver():
 				pass # at least one of them is not in the redirect graph. so no need for checking
 		print ('number of confirming edges added from the redirecting graph ', number_redi_confirming_edges)
 
+
+		# reduce the weight of those invlolving disambiguation entities
+		# sameas_disambiguation_entities.hdt
+		# count_dis_edges = 0
+		# weight_disambiguation = 3
+		# for e in self.input_graph.edges():
+		#
+		# 	(l, r) = e
+		# 	if l in self.dis_entities or r in self.dis_entities:
+		# 		print ('edge = ', e)
+		# 		clause = (encode[left] == encode[right])
+		# 		if clause in soft_clauses.keys():
+		# 			print ('before reducing the weight, ', soft_clauses[clause])
+		# 			soft_clauses[clause] -= weight_disambiguation
+		# 			count_dis_edges += 1
+		# 		if soft_clauses[clause] < 1:
+		# 			print ('the weight is negative now: ', l, ' -> ',r, ' with weight ', soft_clauses[clause])
+		# 			soft_clauses[clause] = 1
+		# print ('count disambiguation edges: ', count_dis_edges)
 
 		# finally, add them to the solver.
 		for clause in soft_clauses.keys():
@@ -514,6 +547,8 @@ class GraphSolver():
 			print ('\t # unknown = ', count_removed_unknown)
 
 			evaluation_result = {}
+			evaluation_result ['num_edges_removed'] = len(self.removed_edges)
+
 			if self.removed_edges != []:
 				print ('precision = ', count_correctly_removed/len (self.removed_edges))
 				evaluation_result['precision'] = count_correctly_removed / len (self.removed_edges)
@@ -531,13 +566,16 @@ class GraphSolver():
 
 avg_precision = 0
 avg_recall = 0
+num_edges_removed = 0
+
 count_valid_result = 0
 count_invalid_result = 0
+
 hard_graph_ids = [39036, 6927, 11116]
 # graph_ids = hard_graph_ids
 graph_ids = validate_multiple
 
-
+start = time.time()
 for graph_id in graph_ids:
 	print ('\n\n\ngraph id = ', str(graph_id))
 	dir = './gold/'
@@ -551,6 +589,7 @@ for graph_id in graph_ids:
 		count_valid_result += 1
 		avg_precision += e_result['precision']
 		avg_recall += e_result['recall']
+		num_edges_removed += e_result['num_edges_removed']
 	else:
 		count_invalid_result += 1
 	# gs.show_input_graph()
@@ -560,15 +599,22 @@ for graph_id in graph_ids:
 if count_valid_result > 0:
 	avg_precision /= count_valid_result
 	avg_recall /= count_valid_result
-else:
-	print ('No valid result')
-
-
+	print ('*'*20)
 	print ('There are ', len (graph_ids), ' graphs in evaluation')
 	print ('The average precision: ', avg_precision)
 	print ('The average recall: ', avg_recall)
 	print ('Count valid results ', count_valid_result)
 	print ('Count invalid results ', count_invalid_result)
+	print ('Overall num edges removed ', num_edges_removed)
+else:
+	print ('No valid result')
+
+end = time.time()
+hours, rem = divmod(end-start, 3600)
+minutes, seconds = divmod(rem, 60)
+time_formated = "{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds)
+print ('time taken: ' + time_formated)
+
 
 
 # --
