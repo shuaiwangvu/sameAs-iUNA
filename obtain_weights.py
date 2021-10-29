@@ -138,7 +138,7 @@ def obtain_edges(g):
 
 
 # graph_ids = [11116, 240577, 395175, 14514123]
-graph_ids = [11116]
+# graph_ids = [11116]
 
 	# writer = csv.writer(output, delimiter=' ')
 
@@ -200,8 +200,7 @@ for id in gs:
 				else:
 					weight = find_weight(id)
 					# if weight == 0:
-					# 	pass
-						# print (s, ' -> ', t, ' has no weight')
+					# 	print (s, ' -> ', t, ' has no weight')
 					ct[weight] += 1
 					# export the weight
 					# print (XSD.integer)
