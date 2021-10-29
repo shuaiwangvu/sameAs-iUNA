@@ -401,6 +401,7 @@ class GraphSolver():
 		print ('number of confirming edges added from the redirecting graph ', number_redi_confirming_edges)
 
 
+
 		# finally, add them to the solver.
 		for clause in soft_clauses.keys():
 			# if  soft_clauses[clause] > 1 or  soft_clauses[clause] < 0:

@@ -87,6 +87,19 @@ def load_graph (nodes_filename, edges_filename):
 	return g
 
 
+def load_edge_weights (path_to_edge_weights, graph):
+	print ('loading weights... ')
+	edge_weights_file = open(path_to_edge_weights, 'r')
+	reader = csv.DictReader(edge_weights_file, delimiter='\t',)
+	for row in reader:
+		s = row["SUBJECT"]
+		t = row["OBJECT"]
+		w = row["WEIGHT"]
+		# print ('weight = ', w)
+		if (s, t) in graph.edges():
+			graph[s][t]['weight'] = int (w)
+		# else:
+		# 	print('this edge is not there')
 
 def load_explicit (path_to_explicit_source, graph):
 	hdt_explicit = HDTDocument(path_to_explicit_source)

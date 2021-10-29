@@ -104,8 +104,10 @@ class GraphSolver():
 		path_to_disambiguation_entities = "sameas_disambiguation_entities.hdt"
 		self.dis_entities = load_disambiguation_entities(self.input_graph.nodes(), path_to_disambiguation_entities)
 		print ('there are ', len (self.dis_entities), ' entities about disambiguation (in this graph)')
+
 		# weight graph
-		# no need for this one since we have the original graph anyway
+		path_to_edge_weights = dir + str(graph_id) + "_weight.tsv"
+		load_edge_weights (path_to_edge_weights, self.input_graph)
 
 
 		# solving: (weighted unique name constraints, from UNA)
@@ -299,7 +301,7 @@ class GraphSolver():
 		default_weight = 10
 		reduced_weight_disambiguation = 1
 		max_clusters = 8 + int(len(self.input_graph.nodes())/150)
-		weights_occ = False
+		weights_occ = True
 		count_weighted_edges = 0
 
 		encode_id = 1
@@ -346,11 +348,11 @@ class GraphSolver():
 						if w == 0:
 							soft_clauses[clause] = default_weight
 						else:
-							soft_clauses[clause] = w
+							soft_clauses[clause] = default_weight + w
 							count_weighted_edges += 1
 					else:
 						print ('weighting error?!')
-		# print ('count_weighted_edges = ', count_weighted_edges)
+		print ('count_weighted_edges = ', count_weighted_edges)
 		print ('count_ignored edges between DBpedia multilingual entities', count_ignored)
 
 		# STEP 2: the attacking edges
