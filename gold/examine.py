@@ -57,6 +57,8 @@ sum_num_entities = 0
 total_num_unknown = 0
 prefix_ct = Counter()
 prefix_ct_unknown = Counter()
+count_https = 0
+
 for id in gs:
 	# print ('reading ', id)
 	filename = str(id) +'.tsv'
@@ -66,6 +68,10 @@ for id in gs:
 	ct = Counter ()
 
 	for (e, a) in pairs:
+
+		if 'https' in e:
+			count_https += 1
+
 		ct[a] += 1
 		p = get_namespace_prefix(e)
 		prefix_ct[p] += 1
@@ -101,3 +107,6 @@ for p in prefix_ct_pct.keys():
 print ('there are ', len (gs), ' files (connected components)')
 print ('in total, you manually annotated ', sum_num_entities, ' entities')
 print ('there are ', total_num_unknown, ' entities annotated unknown giving {:10.2f}'.format(total_num_unknown/sum_num_entities*100))
+
+
+print ('https ', count_https)
