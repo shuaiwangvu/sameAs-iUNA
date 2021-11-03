@@ -23,7 +23,19 @@ import time
 # import copy
 from math import exp
 SMT_UNKNOWN = 0
+import numpy as np
 
+GENERAL = 0
+EFFECIENT = 1
+FINETUNNED = 2
+
+
+MODE = EFFECIENT
+
+WITHWEIGHT = False
+
+
+# ===================
 
 UNKNOWN = 0
 REMOVE = 1
@@ -43,7 +55,7 @@ REDIRECT = 5
 
 # there are in total 28 entities. 14 each
 validate_single = [96073, 712342, 9994282, 18688, 1140988, 25604]
-validate_multiple = [33122, 11116, 6617,  12745,4170, 42616, 6927, 39036]
+validate_multiple = [33122, 11116,   12745, 6617,4170, 42616, 6927, 39036]
 validation_set = validate_single + validate_multiple
 
 evaluation_single = [9411, 9756, 97757, 99932, 337339, 1133953]
@@ -64,7 +76,7 @@ class GraphSolver():
 	def __init__(self, dir, id):
 		# input graph
 		self.input_graph = nx.Graph()
-		self.gold_standard_partition = []
+
 
 		path_to_nodes = dir + str(id) +'.tsv'
 		path_to_edges = dir + str(id) +'_edges.tsv'
@@ -78,8 +90,6 @@ class GraphSolver():
 				if self.input_graph.nodes[s]['annotation'] != self.input_graph.nodes[t]['annotation']:
 					self.error_edges.append(e)
 		# print ('There are ', len (self.error_edges), ' error edges')
-		# for visulization
-		self.position = nx.spring_layout(self.input_graph)
 
 		# additional information
 		path_to_redi_graph_nodes = dir + str(id) +'_redirect_nodes.tsv'
@@ -99,6 +109,15 @@ class GraphSolver():
 		# for e in self.encoding_equality_graph.edges():
 		# 	print ('found encoding equivalence: ',e)
 
+		# for visulization
+		big = self.input_graph.copy()
+		big.add_nodes_from(self.redirect_graph.nodes())
+		big.add_edges_from(self.redirect_graph.edges())
+		big.add_nodes_from(self.encoding_equality_graph.nodes())
+		big.add_edges_from(self.encoding_equality_graph.edges())
+		self.position = nx.spring_layout(big)
+		self.map_color = {}
+
 		path_to_explicit_source = dir + str(graph_id) + "_explicit_source.hdt"
 		load_explicit(path_to_explicit_source, self.input_graph)
 		path_to_implicit_label_source = dir + str(graph_id) + "_implicit_label_source.hdt"
@@ -106,13 +125,12 @@ class GraphSolver():
 		path_to_implicit_comment_source = dir + str(graph_id) + "_implicit_comment_source.hdt"
 		load_implicit_comment_source(path_to_implicit_comment_source, self.input_graph)
 
-		# disambiguation entities
-		# load_disambiguation_entities
+		# load disambiguation entities
 		path_to_disambiguation_entities = "sameas_disambiguation_entities.hdt"
 		self.dis_entities = load_disambiguation_entities(self.input_graph.nodes(), path_to_disambiguation_entities)
 		# print ('there are ', len (self.dis_entities), ' entities about disambiguation (in this graph)')
 
-		# weight graph
+		# load the weight graph
 		path_to_edge_weights = dir + str(graph_id) + "_weight.tsv"
 		load_edge_weights (path_to_edge_weights, self.input_graph)
 
@@ -129,97 +147,172 @@ class GraphSolver():
 		self.result_graph = None
 
 		# the parameters
-		self.rate_for_remainging_other_edges = 0.2 # for the remaining edges
-		self.reduced_weight_disambiguation = 5
-		self.default_weight = 36
+		if MODE == GENERAL:
+			self.rate_for_remainging_other_edges = 1
+			self.default_weight = 3
+			self.reduced_weight_disambiguation = 0
+			self.weight_iUNA_uneq_edge = 1 #17 # weight of attacking edge
+			self.weight_encoding_equivalence = 1 #5
+			self.weight_redirect = 1 #5
+		elif MODE == EFFECIENT:
+			self.rate_for_remainging_other_edges = 0 # for the remaining edges
+			self.default_weight = 5
+			self.reduced_weight_disambiguation = 1
+			self.weight_iUNA_uneq_edge = 1 #17 # weight of attacking edge
+			self.weight_encoding_equivalence = 1 #5
+			self.weight_redirect = 1 #5
+		elif MODE == FINETUNNED:
+			self.rate_for_remainging_other_edges = 0.15 # for the remaining edges
+			self.default_weight = 36
+			self.reduced_weight_disambiguation = 0
+			self.weight_iUNA_uneq_edge = 17 # weight of attacking edge
+			self.weight_encoding_equivalence = 5
+			self.weight_redirect = 5
+		else:
+			print ('ERROR in MODE')
+
+
+
+
 		# self.max_clusters = 2 + int(len(self.input_graph.nodes())/150)
 		# attacking related
-		self.beta = 0.8 #
-		self.weight_iUNA_uneq_edge = 15 # weight of attacking edge
+		self.beta = 0.85 #
+
 		# additional information
-		self.weight_encoding_equivalence = 5
-		self.weight_redirect = 5
+
 		# parameters about weights on the edges
-		self.weights_occ = False
+		self.weights_occ = WITHWEIGHT
 		self.alpha = 2 # soft_clauses[clause] = default_weight + (w * alpha)
 
 
 	def show_input_graph(self):
+		plt.figure(figsize=(10,5))
 		g = self.input_graph
 		# sp = nx.spring_layout(g)
 		nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=25)
-		plt.title('Input')
+		plt.title('Input Graph')
 		plt.show()
 
-	def show_result_graph(self):
-		g = self.result_graph
-		# sp = nx.spring_layout(g)
-		nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=25)
-		plt.title('Result')
-		plt.show()
 
 	def show_redirect_graph(self):
 		print ('\n\n <<< Getting redirect graph >>>')
 		g = self.redirect_graph
-		# sp = nx.spring_layout(g)
-		# nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=35)
+		plt.figure(figsize=(10,5))
 
-		nx.draw_networkx(self.input_graph, pos=self.position, with_labels=False, node_size=25)
-		nx.draw_networkx_edges(g, pos=self.position, edge_color='red', connectionstyle='arc3,rad=0.2')
+		# sp = nx.spring_layout(g)
+		# nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=25)
+		# print ('there are ', len (g.edges()), ' edges in the redirect graph')
+		# edges = set(g.edges()).intersection(self.input_graph.edges)
+		# print ('drawing', len (edges), ' edges')
+		# nx.draw_networkx(self.input_graph, pos=self.position, with_labels=False, node_size=25)
+		nx.draw_networkx_nodes(self.input_graph, pos=self.position, node_size=25)
+		nx.draw_networkx_edges(self.input_graph, edgelist= self.input_graph.edges(), pos=self.position, node_size=25)
+		nx.draw_networkx_nodes(g, pos=self.position, node_size=25)
+		# nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=25)
+		nx.draw_networkx_edges(g, edgelist = g.edges(), pos=self.position, edge_color='red', connectionstyle='arc,rad=0.2')
 
 		plt.title('Redirect')
 		plt.show()
 
 	def show_encoding_equivalence_graph(self):
+		plt.figure(figsize=(10,5))
 		g = self.encoding_equality_graph
 		# print ('now plot a graph with ', len (g.edges()), ' equivalence edges')
 		# sp = nx.spring_layout(g)
-		# nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=35)
-
+		# nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=25)
+		# print ('there are ', len (g.edges()), ' edges in the ee graph')
+		# edges = set(g.edges()).intersection(self.input_graph.edges)
+		# print ('drawing', len (edges), ' edges')
 		nx.draw_networkx(self.input_graph, pos=self.position, with_labels=False, node_size=25)
+		nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=25)
 		nx.draw_networkx_edges(g, pos=self.position, edge_color='blue', connectionstyle='arc3,rad=0.2')
 
 		plt.title('Encoding Equivalence')
 		plt.show()
-
-	def show_namespace_graph(self):
-		g = self.namespace_graph
-		# sp = nx.spring_layout(g)
-		# nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=35)
-
-		nx.draw_networkx(self.input_graph, pos=self.position, with_labels=False, node_size=25)
-		nx.draw_networkx_edges(g, pos=self.position, edge_color='blue', connectionstyle='arc3,rad=0.2')
-
-		plt.title('Namesapce Attacking edges')
-		plt.show()
+	#
+	# def show_namespace_graph(self):
+	# 	g = self.namespace_graph
+	# 	# sp = nx.spring_layout(g)
+	# 	# nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=25)
+	#
+	# 	nx.draw_networkx(self.input_graph, pos=self.position, with_labels=False, node_size=25)
+	# 	nx.draw_networkx_edges(g, pos=self.position, edge_color='blue', connectionstyle='arc3,rad=0.2')
+	#
+	# 	plt.title('Namesapce Attacking edges')
+	# 	plt.show()
 
 	def show_gold_standard_graph (self):
-		g = self.gold_standard_graph
-		# counter = collections.Counter(values)
-		# print(counter)
-		# sp = nx.spring_layout(g)
-		edge_color = []
-		for (s,t) in self.gold_standard_graph.edges:
-			if self.gold_standard_graph.edges[s, t]['decision'] == UNKNOWN:
-				edge_color.append('yellow')
-			elif self.gold_standard_graph.edges[s, t]['decision'] == REMOVE:
-				edge_color.append('red')
+		plt.figure(figsize=(10,5))
+		g = self.input_graph
+		annotations = set()
+		for n in g.nodes:
+			if g.nodes[n]['annotation'] != 'unknown':
+				annotations.add(g.nodes[n]['annotation'])
+
+		for a in annotations:
+			color_r = random.randint(0,255)/255
+			color_g = random.randint(0,255)/255
+			color_b = random.randint(0,255)/255
+			rgb = [color_r,color_g,color_b]
+			self.map_color[a] = rgb
+		# print (map_color)
+		node_color = []
+		for n in g.nodes:
+			if g.nodes[n]['annotation'] == 'unknown':
+				node_color.append('yellow')
 			else:
-				edge_color.append('black')
-			# edge_color.append(self.gold_standard_graph.edges[s, t]['decision'])
+				node_color.append(self.map_color[g.nodes[n]['annotation']])
 
-		# print ('edge_color = ', edge_color)
+		remaining_edges = []
+		edge_colors = []
+		for (l, r) in g.edges():
+		# remaining_edges
+			if  g.nodes[l]['annotation'] == 'unknown' or g.nodes[r]['annotation'] == 'unknown' :
+				edge_colors = ['yellow']
+				# remaining_edges.append((l,r))
+			elif g.nodes[l]['annotation'] == g.nodes[r]['annotation']:
+				edge_colors = self.map_color[g.nodes[l]['annotation']]
+				remaining_edges.append((l,r))
+			else:
+				pass
 
-		nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=35, node_color=self.gold_standard_partition, edge_color=edge_color)
+		nx.draw_networkx_nodes(g, pos=self.position, node_size=25, node_color=node_color)
+		nx.draw_networkx_edges(g, pos=self.position, edgelist = remaining_edges, node_size=25)
 		# plt.axes('off')
 		plt.title('Gold standard')
 		plt.show()
 
+	def show_result_graph(self):
+		plt.figure(figsize=(10,5))
+		g = self.result_graph
+		# sp = nx.spring_layout(g)
+
+		node_to_color = {}
+		for cc in nx.connected_components(g):
+			# connected components
+			color_r = random.randint(0,255)/255
+			color_g = random.randint(0,255)/255
+			color_b = random.randint(0,255)/255
+			rgb = [color_r,color_g,color_b]
+			for n in cc:
+				node_to_color[n] = rgb
+
+		node_color = []
+		for n in g.nodes():
+			node_color.append(node_to_color[n])
+
+		# print (node_color)
+		# nx.draw_networkx(g, pos=self.position, with_labels=False, node_size=25)
+		nx.draw_networkx_nodes(g, pos=self.position, node_size=25, node_color=node_color)
+		nx.draw_networkx_edges(g, pos=self.position, edgelist = self.result_graph.edges())
+		plt.title('Solving Result')
+		plt.show()
 
 
 	def partition_leuven(self):
 		g = self.input_graph
-		self.result_graph = self.input_graph.copy()
+		self.result_graph = nx.Graph()
+		self.result_graph.add_nodes_from(self.input_graph.nodes())
 
 		partition = community.best_partition(g)
 
@@ -256,8 +349,9 @@ class GraphSolver():
 		prefix_right = get_prefix(right)
 
 		if len(set(source_left).difference(set(source_right))) > 0 and prefix_left == prefix_right:
-			if 'http://dbpedia.org/resource/' in left and 'http://dbpedia.org/resource/' in right:
-				return False
+			if MODE == FINETUNNED:
+				if 'http://dbpedia.org/resource/' in left and 'http://dbpedia.org/resource/' in right:
+					return False
 			# print ('testing left = ', left)
 			# print ('testing right = ', right)
 			# test also if it is in redirected
@@ -281,7 +375,7 @@ class GraphSolver():
 			# 	return True
 
 	def get_pairs_from_iUNA(self, method, graph, beta):
-		print ('graph.number_of_nodes = ', graph.number_of_nodes())
+		# print ('graph.number_of_nodes = ', graph.number_of_nodes())
 		# print ('exp(-1*graph.number_of_nodes()/2500) = ', exp(-1*graph.number_of_nodes()/2500))
 		pairs = set()
 		if method == 'existing_edges':
@@ -303,10 +397,10 @@ class GraphSolver():
 
 			for p in prefix_to_entities.keys():
 				j = len(prefix_to_entities[p])
-				if j > 1:
+				if j > 1 and len (pairs) < graph.number_of_nodes():
 					num_to_try = int(j*(j-1)/2 * self.beta)
 
-
+					tried = set()
 					# print ('j', j)
 					# print ('int(j*(j-1)/2 = ', int(j*(j-1)/2))
 					# print ('num_to_try = ', num_to_try)
@@ -315,8 +409,11 @@ class GraphSolver():
 					# print ('j = ', j, ' num try = ', num_to_try)
 					for i in range(num_to_try):
 						[left, right] = random.choices(prefix_to_entities[p], k=2)
-						if self.violates_iUNA(left, right) and left != right:
+						while (left, right) in tried:
+							[left, right] = random.choices(prefix_to_entities[p], k=2)
+						if self.violates_iUNA(left, right) and left != right and len (pairs) < 2*graph.number_of_nodes():
 							pairs.add((left, right))
+						tried.add((left, right))
 
 			print ('paris generated : ', len (pairs))
 			return list(pairs)
@@ -336,11 +433,24 @@ class GraphSolver():
 				collect_resulting_graphs.append(g)
 		graphs = list(filter(lambda x: x.number_of_nodes()>1, graphs))
 
-
-
 		count_round = 1
 		# print ('after round 1, there are still ', len(graphs), 'graphs. ')
 		print ('after round 1, there are ', len(collect_removed_edges), 'edges removed. ')
+		count_correct = 0
+		count_error = 0
+		for (left,right) in collect_removed_edges:
+			if self.input_graph.nodes[left]['annotation'] != 'unknown' and self.input_graph.nodes[right]['annotation'] != 'unknown':
+				if self.input_graph.nodes[left]['annotation'] != self.input_graph.nodes[right]['annotation']:
+					count_correct += 1
+				else:
+					count_error += 1
+			# else:
+			# 	print ('left : ', left)
+			# 	print ('right: ', right)
+		print ('correct = ', count_correct)
+		print ('error = ', count_error)
+		if len(collect_removed_edges) != 0:
+			print ('precision now = ', count_correct/len(collect_removed_edges))
 
 		condition = True
 		if len (removed_edges) == 0:
@@ -350,7 +460,7 @@ class GraphSolver():
 
 		while condition:
 			count_round += 1
-			print ('This is round ', count_round)
+			print ('\n\nThis is round ', count_round)
 			collect_graphs = []
 			removed_edges = []
 			for g in graphs:
@@ -411,7 +521,7 @@ class GraphSolver():
 
 		# encode the existing graph with weight 1
 		o = Optimize()
-		timeout = int(1000 * 60 * (graph.number_of_edges()/2000 + 0.2)) # depending on the size of the graph
+		timeout = int(1000 * 60 * (graph.number_of_nodes()/100 + 0.2)) # depending on the size of the graph
 		o.set("timeout", timeout)
 		# print('timeout = ',timeout/1000, 'seconds')
 		print('timeout = ',timeout/1000/60, 'mins')
@@ -445,74 +555,73 @@ class GraphSolver():
 		# method 3: minimum spaninng forest + ignore DBpedia multilingual equivalence
 		t = nx.Graph(graph)
 		to_remove = []
-		for (left, right) in graph.edges():
-			ignore = False
-			#Method 1: ignore the edges between multilingual DBpedia entities.
-			if 'dbpedia.org' in left and 'dbpedia.org' in right and 'http://dbpedia.org/resource/' not in left and 'http://dbpedia.org/resource/' not in right:
-				# if there is a common dbpedia.org neighbor, then we ignore this.
-				if get_authority(left) != get_authority(right):
-					left_neigh = graph.neighbors(left)
-					right_neigh = graph.neighbors(right)
+		ms_edges = []
+		if MODE == FINETUNNED:
+			for (left, right) in graph.edges():
+				ignore = False
+				if 'dbpedia.org' in left and 'dbpedia.org' in right and 'http://dbpedia.org/resource/' not in left and 'http://dbpedia.org/resource/' not in right:
+					# if there is a common dbpedia.org neighbor, then we ignore this.
+					if get_authority(left) != get_authority(right):
+						left_neigh = graph.neighbors(left)
+						right_neigh = graph.neighbors(right)
 
-					if len(set(left_neigh).difference(set(right_neigh))) > 0:
-						to_remove.append((left, right))
-		t.remove_edges_from(to_remove)
-		ms_edges = list(nx.minimum_spanning_edges(t, data= False))
-		# ms_edges = t.edges()
-		print ('the num of remaining edges in the minimum spanning forest is ', len(ms_edges))
+						if len(set(left_neigh).difference(set(right_neigh))) > 0:
+							to_remove.append((left, right))
+				t.remove_edges_from(to_remove)
+				ms_edges = list(nx.minimum_spanning_edges(t, data= False))
+			print ('the num of remaining edges in the minimum spanning forest is ', len(ms_edges))
+		elif MODE == EFFECIENT:
+			ms_edges = list(nx.minimum_spanning_edges(t, data= False))
+			print ('the num of remaining edges in the minimum spanning forest is ', len(ms_edges))
+
+		else:
+			ms_edges = t.edges()
+
+
 		total_edges_considered = 0
 		for (left, right) in graph.edges():
 			ignore = False
-			#Method 1: ignore the edges between multilingual DBpedia entities.
-			# if 'dbpedia.org' in left and 'dbpedia.org' in right and 'http://dbpedia.org/resource/' not in left and 'http://dbpedia.org/resource/' not in right:
-			# 	# if there is a common dbpedia.org neighbor, then we ignore this.
-			# 	if get_authority(left) != get_authority(right):
-			# 		left_neigh = self.input_graph.neighbors(left)
-			# 		right_neigh = self.input_graph.neighbors(right)
-			#
-			# 		if len(set(left_neigh).difference(set(right_neigh))) > 0:
-			# 			if (random.random() <= 0.90):
-			# 				ignore = True
-			# 				count_ignored += 1
-			# Method 2: minimum spanning tree
-			# if (left, right) not in T.edges():
-			# 	ignore = True
-			# 	count_ignored += 1
-
-			#Method 3: minimum spanning forest
-			if (left, right) in ms_edges:
+			if MODE == GENERAL:
 				ignore = False
-			elif random.random () > (self.rate_for_remainging_other_edges):
-				ignore = True
-				count_ignored += 1
-			# else:
-			# 	ignore = True
+			elif MODE == EFFECIENT:
+				if (left, right) in ms_edges:
+					ignore = False
+				else:
+					ignore = True
+					count_ignored += 1
+			elif MODE == FINETUNNED:
+				if (left, right) in ms_edges:
+					ignore = False
+				elif random.random () > (self.rate_for_remainging_other_edges):
+					ignore = True
+					count_ignored += 1
 
 			if ignore == False:
 				clause = (encode[left] == encode[right])
 				total_edges_considered += 1
-				if left in self.dis_entities or right in self.dis_entities:
-					soft_clauses[clause] = self.default_weight - self.reduced_weight_disambiguation
-					# soft_clauses[clause] = default_weight
-					# print ('weight = ', soft_clauses[clause])
-				else:
-					soft_clauses[clause] = self.default_weight
+				soft_clauses[clause] = self.default_weight
+
+				if MODE == FINETUNNED:
+					if left in self.dis_entities or right in self.dis_entities:
+						soft_clauses[clause] -= self.reduced_weight_disambiguation
 
 				if self.weights_occ == True:
 					# otherwise, use the weights from the
 					w = graph.edges[left, right]['weight']
 					# print ('!!!!!!! I have weight',w)
 					if w != None:
-						soft_clauses[clause] = self.default_weight + (w * self.alpha)
-
+						if w >= 2:
+							soft_clauses[clause] += 1
+						# else:
+						# 	soft_clauses[clause] = self.default_weight
 					else:
 						print ('weighting error?!')
-				else:
-					soft_clauses[clause] = self.default_weight
+				# else:
+				# 	soft_clauses[clause] = self.default_weight
 
 		# print ('count_weighted_edges = ', count_weighted_edges)
 		# print ('count_ignored edges between DBpedia multilingual entities', count_ignored)
-		print ('also includes some number of edges = ', total_edges_considered)
+		print ('total number of edges = ', total_edges_considered)
 		# STEP 2: the attacking edges
 		# print ('STEP 2: the attacking edges')
 
@@ -552,7 +661,7 @@ class GraphSolver():
 
 		# STEP 3: the confirming edges
 		# add confirming edges: encoding equivalence
-		weight_encoding_equivalence = 10
+		# weight_encoding_equivalence = 10
 		for (left, right) in self.encoding_equality_graph.edges():
 			if left in graph.nodes() and right in graph.nodes():
 				clause = (encode[left] == encode[right])
@@ -591,7 +700,6 @@ class GraphSolver():
 		for clause in soft_clauses.keys():
 			o.add_soft(clause, soft_clauses[clause])
 
-
 		# Decode the result: the identified_edges (to remove)
 
 		smt_result = o.check()
@@ -626,28 +734,7 @@ class GraphSolver():
 				else:
 					print ('error in decoding!')
 
-			# print('** Examining the attacking edges **')
-			# print ('out of ', len (uneq_pairs), ' attacking edges')
-			# print ('\t', len (successful_attacking_edges), ' are successful in attack')
-			# print ('\t', len (unsuccessful_attacking_edges), ' have failed in attack')
-
-		# comps  = nx.connected_components(result_graph)
-		# print ('components: ', comps)
-		# print ('# removed = ', len(removed_edges))
-		# print ('size list = ',[len(c) for c in sorted(comps, key=len, reverse=True)])
-		# resulting_graphs = []
-		# for c in comps:
-		# 	print('c = ', c)
-		# 	gc = self.input_graph.subgraph(list(c)).copy()
-		# 	resulting_graphs.append(gc)
-		# G.subgraph(nodes).copy()
 		resulting_graphs = [result_graph.subgraph(c) for c in nx.connected_components(result_graph)]
-		# for r in resulting_graphs:
-		# 	for n in r.nodes():
-		# 		print (r.nodes[n]['annotation'])
-
-		# Finally, compute the partitions
-		# self.partition = None
 
 		return (removed_edges, resulting_graphs)
 
@@ -701,16 +788,31 @@ num_edges_removed = 0
 count_valid_result = 0
 count_invalid_result = 0
 
-hard_graph_ids = [33122, 11116, 6927, 39036]
+hard_graph_ids = [39036, 33122, 11116, 6927]
 # graph_ids = hard_graph_ids
-graph_ids = validate_multiple
+graph_ids = evaluation_multiple
+# graph_ids = validate_multiple
 # hard_graph_ids
 start = time.time()
-for graph_id in graph_ids:
+for graph_id in [240577]: # graph_ids:
 	print ('\n\n\ngraph id = ', str(graph_id))
+
+
 	dir = './gold/'
 	gs = GraphSolver(dir, graph_id)
-	# gs.partition_leuven()
+	# gs.show_input_graph()
+	# gs.show_gold_standard_graph()
+	# gs.show_redirect_graph()
+	# gs.show_encoding_equivalence_graph()
+	gs.partition_leuven()
+	# gs.show_result_graph()
+	e_result = gs.evaluate_partitioning_result()
+	if e_result != None:
+		p = e_result['precision']
+		r = e_result['recall']
+		print ('leuven gives precision =', p)
+		print ('leuven gives  recall   =', r)
+
 	gs.solve_SMT()
 	e_result = gs.evaluate_partitioning_result()
 	if e_result != None:
@@ -722,7 +824,7 @@ for graph_id in graph_ids:
 		num_edges_removed += e_result['num_edges_removed']
 	else:
 		count_invalid_result += 1
-
+	gs.show_result_graph()
 
 if count_valid_result > 0:
 	avg_precision /= count_valid_result

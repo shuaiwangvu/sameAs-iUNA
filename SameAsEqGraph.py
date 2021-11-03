@@ -88,7 +88,7 @@ def load_graph (nodes_filename, edges_filename):
 
 
 def load_edge_weights (path_to_edge_weights, graph):
-	print ('loading weights... ')
+	# print ('loading weights... ')
 	edge_weights_file = open(path_to_edge_weights, 'r')
 	reader = csv.DictReader(edge_weights_file, delimiter='\t',)
 	for row in reader:
@@ -140,17 +140,20 @@ def load_encoding_equivalence (path_ee):
 
 def load_redi_graph(path_to_redi_graph_nodes, path_to_redi_graph_edges):
 	redi_g = nx.DiGraph()
-	nodes_file = open(path_to_redi_graph_nodes, 'r')
-	reader = csv.DictReader(nodes_file, delimiter='\t',)
-	for row in reader:
-		s = row["Entity"]
-		r = row["Remark"]
-		redi_g.add_node(s, remark = r)
+
 
 	hdt_redi_edges = HDTDocument(path_to_redi_graph_edges)
 	(triples, cardi) = hdt_redi_edges.search_triples("", "", "")
 	for (s,_,t) in triples:
 		redi_g.add_edge(s,t)
+
+	nodes_file = open(path_to_redi_graph_nodes, 'r')
+	reader = csv.DictReader(nodes_file, delimiter='\t',)
+	for row in reader:
+		s = row["Entity"]
+		r = row["Remark"]
+		if s in redi_g.nodes():
+			redi_g.add_node(s, remark = r)
 	nodes_file.close()
 	return redi_g
 
