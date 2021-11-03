@@ -1,7 +1,7 @@
 # this script converts the sources to its weights.
 
 import networkx as nx
-from SameAsEqGraph import get_simp_IRI, get_namespace, get_name
+from SameAsEqGraph import *
 from pyvis.network import Network
 import community
 import collections
@@ -13,10 +13,11 @@ from collections import Counter
 from rfc3987 import  parse
 import urllib.parse
 from hdt import HDTDocument, IdentifierPosition
-from z3 import *
+# from z3 import *
 from rdflib.namespace import XSD
 import csv
 from extend_metalink import *
+import time
 
 UNKNOWN = 0
 REMOVE = 1
@@ -26,13 +27,13 @@ hdt_source = None
 hdt_label = None
 hdt_comment = None
 
-PATH_LOD = "/scratch/wbeek/data/LOD-a-lot/data.hdt"
-hdt_lod = HDTDocument(PATH_LOD)
+# PATH_LOD = "/scratch/wbeek/data/LOD-a-lot/data.hdt"
+# hdt_lod = HDTDocument(PATH_LOD)
+#
+# PATH_META = "/home/jraad/ssd/data/identity/metalink/metalink-2/metalink-2.hdt"
+# hdt_metalink = HDTDocument(PATH_META)
 
-PATH_META = "/home/jraad/ssd/data/identity/metalink/metalink-2/metalink-2.hdt"
-hdt_metalink = HDTDocument(PATH_META)
-
-PATH_SAMEAS_SOURCE = "./sameas_laundromat_metalink_Sep.hdt"
+PATH_SAMEAS_SOURCE = "./sameas_laundromat_metalink_Oct18.hdt"
 hdt_source = HDTDocument(PATH_SAMEAS_SOURCE)
 #
 # my_has_label_in_file = "https://krr.triply.cc/krr/metalink/def/hasLabelInFile" # a relation
@@ -63,48 +64,48 @@ hdt_source = HDTDocument(PATH_SAMEAS_SOURCE)
 # for each sameAs link, compute its weight
 # this is the class where SameAsEqSolver is defined
 
-
-
-def find_statement_id(subject, object):
-
-	triples, cardinality = hdt_metalink.search_triples("", rdf_subject, subject)
-	collect_statement_id_regarding_subject = set()
-
-	for (s,p,o) in triples:
-		collect_statement_id_regarding_subject.add(str(s))
-
-	triples, cardinality = hdt_metalink.search_triples("", rdf_object, object)
-
-	collect_statement_id_regarding_object = set()
-
-	for (s,p,o) in triples:
-		collect_statement_id_regarding_object.add(str(s))
-
-	inter_section = collect_statement_id_regarding_object.intersection(collect_statement_id_regarding_subject)
-
-	# do it the reverse way: (object, predicate, subject)
-	triples, cardinality = hdt_metalink.search_triples("", rdf_object, subject)
-	collect_statement_id_regarding_subject = set()
-
-	for (s,p,o) in triples:
-		collect_statement_id_regarding_subject.add(str(s))
-
-	triples, cardinality = hdt_metalink.search_triples("", rdf_subject, object)
-
-	collect_statement_id_regarding_object = set()
-
-	for (s,p,o) in triples:
-		collect_statement_id_regarding_object.add(str(s))
-
-	inter_section2 = collect_statement_id_regarding_object.intersection(collect_statement_id_regarding_subject)
-
-	if len (inter_section) >= 1:
-		return list(inter_section)[0] #
-	elif len (inter_section2) >= 1:
-		# print ('\nfound one in reverse!: \n', subject, '\t', object)
-		return list(inter_section2)[0] #:
-	else:
-		return None
+# exist = "https://krr.triply.cc/krr/metalink/def/existsInFile"
+#
+# def find_statement_id(subject, object):
+#
+# 	triples, cardinality = hdt_source.search_triples("", exist, "")
+# 	collect_statement_id_regarding_subject = set()
+#
+# 	for (s,p,o) in triples:
+# 		collect_statement_id_regarding_subject.add(str(s))
+#
+# 	triples, cardinality = hdt_metalink.search_triples("", rdf_object, object)
+#
+# 	collect_statement_id_regarding_object = set()
+#
+# 	for (s,p,o) in triples:
+# 		collect_statement_id_regarding_object.add(str(s))
+#
+# 	inter_section = collect_statement_id_regarding_object.intersection(collect_statement_id_regarding_subject)
+#
+# 	# do it the reverse way: (object, predicate, subject)
+# 	triples, cardinality = hdt_metalink.search_triples("", rdf_object, subject)
+# 	collect_statement_id_regarding_subject = set()
+#
+# 	for (s,p,o) in triples:
+# 		collect_statement_id_regarding_subject.add(str(s))
+#
+# 	triples, cardinality = hdt_metalink.search_triples("", rdf_subject, object)
+#
+# 	collect_statement_id_regarding_object = set()
+#
+# 	for (s,p,o) in triples:
+# 		collect_statement_id_regarding_object.add(str(s))
+#
+# 	inter_section2 = collect_statement_id_regarding_object.intersection(collect_statement_id_regarding_subject)
+#
+# 	if len (inter_section) >= 1:
+# 		return list(inter_section)[0] #
+# 	elif len (inter_section2) >= 1:
+# 		# print ('\nfound one in reverse!: \n', subject, '\t', object)
+# 		return list(inter_section2)[0] #:
+# 	else:
+# 		return None
 
 def find_weight (id):
 	cardinality = 0
@@ -120,52 +121,50 @@ def find_weight (id):
 
 
 ct = Counter ()
-count_sameas_triples_in_lod_a_lot = 0
-sameAs_satement_without_metalink_id = 0
-log_writer = open('sameas_laundromat_metalink_sum_weight_sep.log', 'w')
-
-with open('sameas_laundromat_metalink_sum_weight_sep.nt', 'w') as writer:
+count_statements_processed = 0
+log_writer = open('sameas_laundromat_metalink_sum_weight_Oct.log', 'w')
+distribution_writer = open('sameas_laundromat_metalink_sum_weight_Oct_distribution.log', 'w')
+start = time.time()
+with open('sameas_laundromat_metalink_sum_weight_Oct.nt', 'w') as writer:
 	# writer = csv.writer(output, delimiter=' ')
-
-	triples, cardinality = hdt_lod.search_triples("", sameas, "")
-	for (s, sameas, t) in triples:
+	visited = set()
+	triples, cardinality = hdt_source.search_triples("", my_exist_in_file, "")
+	for (id, _, _) in triples:
 		# if count_sameas_triples_in_lod_a_lot>=10000:
 		# 	break
+		try:
+			if id not in visited:
+				weight = find_weight(id)
+				ct [weight] += 1
+				visited.add(id)
+				line = '<' + id + '> '
+				line += '<' + my_has_num_occurences_in_files + '> '
+				line += '"'+str(weight)+'"^^<' + str(XSD.integer) + '> . \n'
+				writer.write(str(line))
+				count_statements_processed += 1
 
-		if s != t:
-			try :
-				id = find_statement_id(s, t)
-				if id == None:
-					sameAs_satement_without_metalink_id += 1
-					line = s +' -> ' + t + ' has no id in metalink'
-					log_writer.write(str(line))
-				else:
-					weight = find_weight(id)
-					# if weight == 0:
-					# 	pass
-						# print (s, ' -> ', t, ' has no weight')
-					ct[weight] += 1
-					# export the weight
-					# print (XSD.integer)
-					line = '<' + id + '> '
-					line += '<' + my_has_num_occurences_in_files + '> '
-					line += '"'+str(weight)+'"^^<' + str(XSD.integer) + '> . \n'
-					# print (line)
-					writer.write(str(line))
-			except Exception as inst:
-				print (s, t)
-				print (inst)
-
-		count_sameas_triples_in_lod_a_lot += 1
+			else:
+				continue
+		except Exception as inst:
+			print ('An exception happened!')
+		else:
+			pass
 
 
-print ('total statements processed: ', count_sameas_triples_in_lod_a_lot)
-print ('statements without metalink id: ', sameAs_satement_without_metalink_id)
-print (ct)
 
-log_writer.write('total statements processed: ' + str(count_sameas_triples_in_lod_a_lot) +'\n')
-log_writer.write('statements without metalink id: ' + str(sameAs_satement_without_metalink_id)+'\n')
+		if count_statements_processed %10000 == 0:
+
+			log_writer.write('total statements processed: ' + str(count_statements_processed) +'\n')
+			end = time.time()
+			hours, rem = divmod(end-start, 3600)
+			minutes, seconds = divmod(rem, 60)
+			time_formated = "{:0>2}:{:0>2}:{:05.2f}".format(int(hours),int(minutes),seconds)
+			log_writer.write ('time taken: ' + time_formated)
+			log_writer.flush()
+			# break
+
+
 
 for c in ct:
-	line = str(c) + ' : ' + str(ct[c]) +'\n'
-	log_writer.write(str(line))
+	line = str(c) + ' : ' + str(ct[c]) +',\n'
+	distribution_writer.write(str(line))
