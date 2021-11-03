@@ -138,10 +138,11 @@ def export_graph_edges (file_name, graph):
 	writer = csv.writer(file, delimiter='\t')
 	writer.writerow([ "SUBJECT", "OBJECT", "METALINK_ID"])
 	for (l, r) in graph.edges:
-		if graph.edges[l, r]['metalink_id'] == None:
-			writer.writerow([l, r, 'None'])
-		else:
-			writer.writerow([l, r, graph.edges[l, r]['metalink_id']])
+		if l != r:
+			if graph.edges[l, r]['metalink_id'] == None:
+				writer.writerow([l, r, 'None'])
+			else:
+				writer.writerow([l, r, graph.edges[l, r]['metalink_id']])
 
 # type A: explicit sources
 def export_explicit_source (file_name, graph):
@@ -698,7 +699,7 @@ print ('\tamong them,', sum_error_edges, ' are errorenous ->{:10.2f}'.format(sum
 # for id in gs:
 # 	file_nt = dir + str(id) + '_encoding_equivalent.nt'
 # 	print ('rdf2hdt ', file_nt, ' ', file_nt[:-2]+'hdt')
-# 
+#
 # for id in gs:
 # 	file_nt = dir + str(id) + '_encoding_equivalent.nt'
 # 	print ('rdf2hdt ', file_nt, ' ', file_nt[:-2]+'hdt')
