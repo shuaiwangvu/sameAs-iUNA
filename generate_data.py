@@ -19,12 +19,13 @@ from collections import Counter
 from hdt import HDTDocument, IdentifierPosition
 import glob
 from rfc3987 import  parse
+# import rfc3987.parse
 import urllib.parse
 import gzip
 from extend_metalink import *
 import requests
 from requests.exceptions import Timeout
-from SameAsEqGraph import get_simp_IRI, get_namespace, get_name
+from SameAsEqGraph import *
 
 PATH_META = "/home/jraad/ssd/data/identity/metalink/metalink-2/metalink-2.hdt"
 hdt_metalink = HDTDocument(PATH_META)
@@ -296,7 +297,8 @@ def obtain_redirect_graph(graph):
 					# print ('error at the first! ')
 					# print ('via_entities', via_entities)
 					# redi_graph.add_node(t, remark = 'unknown')
-					redi_graph.add_edge(e, via_entities[0])
+					# redi_graph.add_edge(e, via_entities[0])
+					via_entities = [e] + via_entities
 				if len (via_entities) > 1:
 					for i, s in enumerate(via_entities[:-1]):
 						t = via_entities[i+1]
@@ -509,38 +511,36 @@ def obtain_ee_graph(graph):
 	for n in graph.nodes:
 		# print ('\n\niri = ', n)
 		rule='IRI'
-		d = parse(n, rule) # ’IRI_reference’
+		d = parse(n, rule) # ’IRI_reference’ rfc3987.
 
 		# print ('authority = ',d['authority'])
 		if d['authority'] in authority_map.keys():
 			authority_map[d['authority']].append(n)
 		else:
-			authority_map[d['authority']] = []
+			authority_map[d['authority']] = [n]
 		# print ('authority map for ', d['authority'], ' :')
 		# print(authority_map[d['authority']])
 	# step 2: construct a dictionary of each node against
 		# first, do the decoding and add to the list
+		variance_map[n] = set()
 
 		uq = urllib.parse.unquote(n)
-		# print ('uq = ', uq)
-		variance_map[n] = set()
-		if d != n:
+		if uq != n:
 			variance_map[n].add(uq)
+
 		# second, get an ecoding of the current iri
 		prefix, sign, name  = get_name(n)
 		quote_name = urllib.parse.quote(name)
-		new_iri = prefix + sign + quote_name
-		# print ('new_iri = ', new_iri)
+		new_iri = prefix + quote_name
+
 		if new_iri != n:
 			variance_map[n].add(new_iri)
 
-		# print ('prefix', prefix)
-		# print ('sign', sign)
-		# print ('name', name)
-		# print ('quote_name', quote_name)
-		# print ('new iri = ', new_iri)
-		#
-		# print ('its variance map = ',variance_map[n])
+		# if uq != n or new_iri != n:
+		# 	print ('node IRI = ', n)
+		# 	print ('uq = ', uq)
+		# 	print ('new_iri = ', new_iri)
+
 
 	encoding_equality_graph = nx.Graph()
 	for iri_with_same_authority in authority_map.values():
@@ -548,7 +548,7 @@ def obtain_ee_graph(graph):
 			for j in iri_with_same_authority:
 				if i != j: # avoid reflexive edges
 					# test if i is the same as any of j's variances
-					if i in variance_map[j]:
+					if i in variance_map[j] or j in variance_map[i]:
 						encoding_equality_graph.add_edge(i, j)
 
 	print ('original graph has ', graph.number_of_nodes(), ' nodes')
@@ -620,6 +620,9 @@ sum_correct_edges = 0
 
 prefix_ct = Counter()
 prefix_ct_unknown = Counter()
+
+sum_edges_ee = 0
+
 for id in gs:
 	print ('\n***************\n')
 	dir = './gold/'
@@ -649,12 +652,12 @@ for id in gs:
 
 
 	# step 2: obtain metalink ID:
-	for (l, r) in g.edges():
-		meta_id = find_statement_id(l, r)
-		if meta_id != None:
-			g[l][r]['metalink_id'] = meta_id
-		else:
-			g[l][r]['metalink_id'] = None
+	# for (l, r) in g.edges():
+	# 	meta_id = find_statement_id(l, r)
+	# 	if meta_id != None:
+	# 		g[l][r]['metalink_id'] = meta_id
+	# 	else:
+	# 		g[l][r]['metalink_id'] = None
 
 	# #step 3: export the edges and the metalink ID
 	# edges_file_name = dir + str(id) +'_edges.tsv'
@@ -679,13 +682,14 @@ for id in gs:
 
 	# step 6: obtain the encoding equivalence graph
 	# ee_graph = obtain_ee_graph(g)
+	# sum_edges_ee += ee_graph.number_of_edges()
 	# ee_file_path = dir + str(id) + '_encoding_equivalent.nt'
 	# export_ee_graph_edges (ee_file_path, ee_graph)
 
-	# get the weights from sameas_laundromat_metalink_Sep.hdt
-	obtain_weight_graph(g)
-	weight_file_path = dir + str(id) + '_weight.tsv'
-	export_weight_graph(weight_file_path, g)
+	# Step 7: finally, get the weights from sameas_laundromat_metalink_Sep.hdt
+	# obtain_weight_graph(g)
+	# weight_file_path = dir + str(id) + '_weight.tsv'
+	# export_weight_graph(weight_file_path, g)
 
 print ('there are in total ', sum_num_entities, ' nodes')
 print ('\tamong them, ', total_num_unknown, ' are unkonwn')
@@ -693,31 +697,31 @@ print ('\nthere are in total ', sum_num_edges, ' edges')
 print ('\tamong them,', sum_correct_edges, ' are correct ->{:10.2f}'.format(sum_correct_edges/sum_num_edges * 100))
 print ('\tamong them,', sum_error_edges, ' are errorenous ->{:10.2f}'.format(sum_error_edges/sum_num_edges *100))
 
+print ('\tThere are in total', sum_edges_ee, ' edges in ee_graph')
+
+# The following is to generate the script to translate nt to hdt
+for id in gs:
+	file_nt = dir + str(id) + '_encoding_equivalent.nt'
+	print ('rdf2hdt ', file_nt, ' ', file_nt[:-2]+'hdt')
+
+for id in gs:
+	file_nt = dir + str(id) + '_encoding_equivalent.nt'
+	print ('rdf2hdt ', file_nt, ' ', file_nt[:-2]+'hdt')
 
 
 # The following is to generate the script to translate nt to hdt
-# for id in gs:
-# 	file_nt = dir + str(id) + '_encoding_equivalent.nt'
-# 	print ('rdf2hdt ', file_nt, ' ', file_nt[:-2]+'hdt')
-#
-# for id in gs:
-# 	file_nt = dir + str(id) + '_encoding_equivalent.nt'
-# 	print ('rdf2hdt ', file_nt, ' ', file_nt[:-2]+'hdt')
+for id in gs:
+	# 42616_redirect_nodes.tsv
+	path_to_redi_graph_nodes = dir + str(id) +'_redirect_nodes.tsv'
+	# 42616_redirect_edges.nt
+	path_to_redi_graph_edges = dir + str(id) +'_redirect_edges.nt'
+	print ('rdf2hdt ', path_to_redi_graph_edges, ' ', path_to_redi_graph_edges[:-2]+'hdt')
 
+	path_to_explicit_source = dir+str(id) + '_explicit_source.nt'
+	print ('rdf2hdt ', path_to_explicit_source, ' ', path_to_explicit_source[:-2]+'hdt')
 
-# The following is to generate the script to translate nt to hdt
-# for id in gs:
-# 	# 42616_redirect_nodes.tsv
-# 	path_to_redi_graph_nodes = dir + str(id) +'_redirect_nodes.tsv'
-# 	# 42616_redirect_edges.nt
-# 	path_to_redi_graph_edges = dir + str(id) +'_redirect_edges.nt'
-# 	print ('rdf2hdt ', path_to_redi_graph_edges, ' ', path_to_redi_graph_edges[:-2]+'hdt')
-#
-# 	path_to_explicit_source = dir+str(id) + '_explicit_source.nt'
-# 	print ('rdf2hdt ', path_to_explicit_source, ' ', path_to_explicit_source[:-2]+'hdt')
-#
-# 	path_to_implicit_label_source = dir+str(id) + '_implicit_label_source.nt'
-# 	print ('rdf2hdt ', path_to_implicit_label_source, ' ', path_to_implicit_label_source[:-2]+'hdt')
-#
-# 	path_to_implicit_comment_source = dir+str(id) + '_implicit_comment_source.nt'
-# 	print ('rdf2hdt ', path_to_implicit_comment_source, ' ', path_to_implicit_comment_source[:-2]+'hdt')
+	path_to_implicit_label_source = dir+str(id) + '_implicit_label_source.nt'
+	print ('rdf2hdt ', path_to_implicit_label_source, ' ', path_to_implicit_label_source[:-2]+'hdt')
+
+	path_to_implicit_comment_source = dir+str(id) + '_implicit_comment_source.nt'
+	print ('rdf2hdt ', path_to_implicit_comment_source, ' ', path_to_implicit_comment_source[:-2]+'hdt')
