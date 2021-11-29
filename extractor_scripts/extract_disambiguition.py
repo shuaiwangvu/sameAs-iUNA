@@ -34,61 +34,35 @@ dbo_interlan = "http://dbpedia.org/ontology/wikiPageInterLanguageLink"
 
 rdf_type = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 
+
+# all_eq_classes_of_disambig = find_subPropertyOf_eqPropertyOf_closure(set([dbr_disambig]), 1000)
 use_template = "http://dbpedia.org/property/wikiPageUsesTemplate"
 dbr_disambig = "http://dbpedia.org/resource/Template:Disambig" #105043
 dbr_disambiguation = "http://dbpedia.org/resource/Template:Disambiguation" # 54271
 
-# find all the transitive closure of subPropertyOf, sameAs:
-def find_subPropertyOf_eqPropertyOf_closure(source_relations, sizebound):
-	size = 0
-	while size != len (source_relations):
-		# update size record
-		size = len (source_relations)
-		print ('so far, I found ', size)
-		# find all the new relations
-		new_relations = set()
-		for r in source_relations:
-			triples, cardinality = hdt_lod.search_triples("", rdfs_subclass, r)
-			for s, _, _  in triples:
-				new_relations.add(s)
 
-			triples, cardinality = hdt_lod.search_triples("", owl_equivalentClass, r)
-			for s, _, _  in triples:
-				new_relations.add(s)
+pairs_dis = [
+("http://it.dbpedia.org/property/wikiPageUsesTemplate","http://it.dbpedia.org/resource/Template:Disambigua"),
+("http://es.dbpedia.org/property/wikiPageUsesTemplate","http://es.dbpedia.org/resource/Plantilla:Desambiguación"),
+("http://ru.dbpedia.org/property/wikiPageUsesTemplate","http://ru.dbpedia.org/resource/Шаблон:Неоднозначность"),
+("http://sr.dbpedia.org/property/wikiPageUsesTemplate","http://sr.dbpedia.org/resource/Шаблон:Вишезначна_одредница"),
+("http://sco.dbpedia.org/property/wikiPageUsesTemplate","http://sco.dbpedia.org/resource/Template:Disambig"),
+("http://fa.dbpedia.org/property/wikiPageUsesTemplate","http://fa.dbpedia.org/resource/الگو:ابهام_زدایی"),
+("http://fr.dbpedia.org/property/wikiPageUsesTemplate","http://fr.dbpedia.org/resource/Modèle:Homonymie"),
+("http://de.dbpedia.org/property/wikiPageUsesTemplate","http://de.dbpedia.org/resource/Vorlage:Begriffsklärung"),
+("http://no.dbpedia.org/property/wikiPageUsesTemplate","http://no.dbpedia.org/resource/Mal:Pekerside"),
+("http://lt.dbpedia.org/property/wikiPageUsesTemplate","http://lt.dbpedia.org/resource/Šablonas:Disambig"),
+("http://sv.dbpedia.org/property/wikiPageUsesTemplate","http://sv.dbpedia.org/resource/Mall:Gren"),
+("http://ja.dbpedia.org/property/wikiPageUsesTemplate","http://ja.dbpedia.org/resource/Template:Aimai"),
+("http://pt.dbpedia.org/property/wikiPageUsesTemplate","http://pt.dbpedia.org/resource/Predefinição:Disambig"),
+("http://pl.dbpedia.org/property/wikiPageUsesTemplate","http://pl.dbpedia.org/resource/Szablon:Ujednoznacznienie"),
+("http://hy.dbpedia.org/property/wikiPageUsesTemplate","http://hy.dbpedia.org/resource/Կաղապար:Բի"),
+("http://uk.dbpedia.org/property/wikiPageUsesTemplate","http://uk.dbpedia.org/resource/Шаблон:DisambigG"),
+("http://ca.dbpedia.org/property/wikiPageUsesTemplate","http://ca.dbpedia.org/resource/Plantilla:Desambiguació")
+]
 
-			triples, cardinality = hdt_lod.search_triples(r, owl_equivalentClass, "")
-			for _, _, s  in triples:
-				new_relations.add(s)
 
-			triples, cardinality = hdt_lod.search_triples(r, dbo_interlan, "")
-			for _, _, s  in triples:
-				new_relations.add(s)
-
-			triples, cardinality = hdt_lod.search_triples("", dbo_interlan, r)
-			for s, _, _  in triples:
-				new_relations.add(s)
-
-		source_relations = source_relations.union(new_relations)
-
-	print ('After computing the closure (under equicalenceClass and subClassOf), we found ', len (source_relations), ' relations!')
-	count = 0
-	to_return = []
-	for s in source_relations:
-		s_triples, s_cardinality = hdt_lod.search_triples("", use_template, s) # use_template
-		if s_cardinality >= sizebound:
-			to_return.append(s)
-			count += 1
-			print ('\t',s)
-			print ("\t\tWith", s_cardinality)
-	print ("There are ", count, " properties (with more than", sizebound ," entries) above")
-	return to_return
-
-# all_eq_classes_of_disambig = find_subPropertyOf_eqPropertyOf_closure(set([dbr_disambig]), 1000)
-
-dbr_disambig = "http://dbpedia.org/resource/Template:Disambig" #105043
-dbr_disambiguation = "http://dbpedia.org/resource/Template:Disambiguation" # 54271
-
-with open( "sameas_disambiguation_entities.nt", 'w') as output:
+with open( "sameas_disambiguation_entities_Nov.nt", 'w') as output:
 	writer = csv.writer(output, delimiter=' ')
 
 	print ('For dbr:Dis')
@@ -118,3 +92,20 @@ with open( "sameas_disambiguation_entities.nt", 'w') as output:
 
 	print (count_dis , 'out of ', s_cardinality, ' are in the identity graph')
 	print ('{:10.2f}'.format(count_dis/s_cardinality))
+
+
+	count_dis = 0
+	count_all_language = 0
+	for (ut, disamb) in pairs_dis:
+		triples, s_cardinality = hdt_lod.search_triples("", ut, disamb)
+		count_all_language += s_cardinality
+		for (s,_,_) in triples:
+			_, cardinality = hdt_metalink.search_triples("", rdf_subject, s)
+			_, cardinality2 = hdt_metalink.search_triples("", rdf_object, s)
+
+			if cardinality2 >0 or cardinality >0 :
+				count_dis += 1
+				writer.writerow(['<'+s+'>', '<'+ut+'>', '<' + disamb + '>', '.'])
+
+	print (count_dis , 'out of ', count_all_language, ' are in the identity graph')
+	print ('{:10.2f}'.format(count_dis/count_all_language))
