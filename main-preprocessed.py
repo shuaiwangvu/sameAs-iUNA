@@ -337,8 +337,8 @@ class GraphSolver():
 		# update the entity_to_partition
 
 		# update the partition
-		for k in self.partition_to_entities.keys():
-			print ('partition ',k, ' has ', len(self.partition_to_entities[k]), ' entities')
+		# for k in self.partition_to_entities.keys():
+		# 	print ('partition ',k, ' has ', len(self.partition_to_entities[k]), ' entities')
 		# print ('partition is like ', self.partition_to_entities)
 		# print ('partition is like ', self.entity_to_partition)
 
@@ -739,9 +739,13 @@ class GraphSolver():
 		return (removed_edges, resulting_graphs)
 
 	def evaluate_partitioning_result(self):
-		if len (self.error_edges) == 0 :
+		if len (self.removed_edges) == 0 :
 			print ('total removed edges = ', len(self.removed_edges))
-			return None
+			evaluation_result = {}
+			evaluation_result ['num_edges_removed'] = 0
+			evaluation_result['precision'] = 0
+			evaluation_result['recall'] = 0
+			return evaluation_result
 		else:
 			print ('num of edges removed: ', len(self.removed_edges))
 
@@ -766,20 +770,27 @@ class GraphSolver():
 			evaluation_result = {}
 			evaluation_result ['num_edges_removed'] = len(self.removed_edges)
 
-			if self.removed_edges != []:
-				print ('precision = ', count_correctly_removed/len (self.removed_edges))
-				evaluation_result['precision'] = count_correctly_removed / len (self.removed_edges)
-				print ('recall = ', count_correctly_removed/len (self.error_edges))
-				evaluation_result['recall'] = count_correctly_removed / len (self.error_edges)
-				return evaluation_result
-			else:
-				print ('no edge removed')
-				return None
+
+			print ('precision = ', count_correctly_removed/len (self.removed_edges))
+			evaluation_result['precision'] = count_correctly_removed / len (self.removed_edges)
+			print ('recall = ', count_correctly_removed/len (self.error_edges))
+			evaluation_result['recall'] = count_correctly_removed / len (self.error_edges)
 
 
+			# compute new evaluation matrix
+			cc = [c for c in nx.connected_components(self.result_graph)]
+			count_entities_in_consistent_cc = 0
+			for c in cc:
+				annotations = set()
+				for n in c:
+					anno = self.input_graph.nodes[n]['annotation']
+					if anno != 'unknown':
+						annotations.add(anno)
+				if len (annotations) == 1:
+					count_entities_in_consistent_cc += len (c)
+			evaluation_result['m1'] = count_entities_in_consistent_cc/self.input_graph.number_of_nodes()
 
-
-
+			return evaluation_result
 
 avg_precision = 0
 avg_recall = 0
@@ -790,8 +801,8 @@ count_invalid_result = 0
 
 hard_graph_ids = [39036, 33122, 11116, 6927]
 # graph_ids = hard_graph_ids
-graph_ids = evaluation_multiple
-# graph_ids = validate_multiple
+# graph_ids = evaluation_multiple
+graph_ids = validate_multiple
 # hard_graph_ids
 start = time.time()
 for graph_id in [240577]: # graph_ids:
@@ -807,24 +818,29 @@ for graph_id in [240577]: # graph_ids:
 	gs.partition_leuven()
 	# gs.show_result_graph()
 	e_result = gs.evaluate_partitioning_result()
-	if e_result != None:
+	if e_result ['num_edges_removed'] != 0:
 		p = e_result['precision']
 		r = e_result['recall']
+		m = e_result ['m1']
 		print ('leuven gives precision =', p)
 		print ('leuven gives  recall   =', r)
-
+		print ('leuven gives  m1   =', m)
 	gs.solve_SMT()
 	e_result = gs.evaluate_partitioning_result()
-	if e_result != None:
+	if e_result ['num_edges_removed'] != 0:
 		p = e_result['precision']
 		r = e_result['recall']
+		m = e_result ['m1']
+		print ('smt gives precision =', p)
+		print ('smt gives  recall   =', r)
+		print ('smt gives  m1   =', m)
 		count_valid_result += 1
 		avg_precision += e_result['precision']
 		avg_recall += e_result['recall']
 		num_edges_removed += e_result['num_edges_removed']
 	else:
 		count_invalid_result += 1
-	gs.show_result_graph()
+	# gs.show_result_graph()
 
 if count_valid_result > 0:
 	avg_precision /= count_valid_result
