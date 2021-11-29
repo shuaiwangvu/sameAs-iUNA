@@ -69,9 +69,8 @@ gs = [4170, 5723,6617,6927,9411,9756,11116,12745,14872,18688,25604,33122,37544,
 single = []
 multiple = []
 
-PATH_DIS = "../sameas_disambiguation_entities.hdt"
+PATH_DIS = "../sameas_disambiguation_entities_Nov.hdt"
 hdt_dis = HDTDocument(PATH_DIS)
-
 
 
 sum_num_entities = 0
