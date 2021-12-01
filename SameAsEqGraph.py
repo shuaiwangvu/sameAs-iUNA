@@ -141,7 +141,7 @@ def load_encoding_equivalence (path_ee):
 def load_redi_graph(path_to_redi_graph_nodes, path_to_redi_graph_edges):
 	redi_g = nx.DiGraph()
 
-
+	print('loading redi_graph at ', path_to_redi_graph_edges)
 	hdt_redi_edges = HDTDocument(path_to_redi_graph_edges)
 	(triples, cardi) = hdt_redi_edges.search_triples("", "", "")
 	for (s,_,t) in triples:
