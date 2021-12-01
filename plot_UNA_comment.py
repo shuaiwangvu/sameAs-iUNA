@@ -40,7 +40,7 @@ gs = validation_set + evaluation_set
 
 
 
-print ('in the validation dataset, there are ', validation_set, ' files (connected components)')
+# print ('in the validation dataset, there are ', validation_set, ' files (connected components)')
 
 count_total_nodes = 0
 count_total_edges = 0
@@ -136,6 +136,13 @@ for id in gs:
 	redi_graph = load_redi_graph(path_to_redi_graph_nodes, path_to_redi_graph_edges)
 	print ('loaded the redi graph with ', redi_graph.number_of_nodes(), 'nodes and ', redi_graph.number_of_edges(), ' edges')
 
+	# encoding equivalence
+	in_use_ee_graph = nx.Graph()
+	# path_to_ee_graph_nodes = dir + str(id) +'_redirect_nodes.tsv'
+	path_to_ee_graph_edges = dir + str(id) +'_encoding_equivalent.hdt'
+	ee_graph = load_encoding_equivalence(path_to_ee_graph_edges)
+	print ('loaded the ee graph with ', ee_graph.number_of_nodes(), 'nodes and ', redi_graph.number_of_edges(), ' edges')
+
 
 	annotation_to_entities = {}
 	for n in g.nodes():
@@ -181,11 +188,13 @@ for id in gs:
 				entities = comment_source[ls]
 				# for each ls+prefix :
 				ls_prefix = {}
+				ls_and_p = []
 				for e in entities:
 					for p in restricted_prefix_list:
 						if p in e:
 							if ls+p not in ls_prefix.keys():
 								ls_prefix[ls+p] = [e]
+								ls_and_p.append(ls+p)
 							else:
 								ls_prefix[ls+p].append(e)
 					else:
@@ -194,23 +203,29 @@ for id in gs:
 						else:
 							ls_prefix[ls].append(e)
 				# print ('size with prefix = ', len(ls_prefix.keys()))
-				for entities in ls_prefix.values():
+
+				# only those in the restricted_prefix_list
+				for ls_p in ls_and_p:
+					entities = ls_prefix[ls_p]
+					# for entities in ls_prefix.values():
 					# filter out all the redirect
 					redi_pairs = []
 					# remove all the entities that are dead
 					to_remove = []
 					# f = redi_graph.nodes[e]['remark']
 					for e in entities:
-						if redi_graph.nodes[e]['remark'] in ['Error', 'NotFound']:
-							to_remove.append(e)
+						if e in redi_graph.nodes():
+							if redi_graph.nodes[e]['remark'] in ['Error', 'NotFound']:
+								to_remove.append(e)
 
 					for e in to_remove:
 						entities.remove(e)
 					# print ('remove ', len (to_remove), ' dead nodes')
 					for e in entities:
 					# collect all the pairs that one directs to the other
-						for f in redi_graph.neighbors(e):
-							redi_pairs.append((e, f))
+						if e in redi_graph.nodes():
+							for f in redi_graph.neighbors(e):
+								redi_pairs.append((e, f))
 
 					for (e, f) in redi_pairs:
 						if f in entities:
@@ -258,20 +273,29 @@ for id in gs:
 					to_remove = []
 					# f = redi_graph.nodes[e]['remark']
 					for e in entities:
-						if redi_graph.nodes[e]['remark'] in ['Error', 'Timeout', 'NotFound', 'RedirectedUntilTimeout', 'RedirectedUntilError', 'RedirectedUntilNotFound']:
+						if e in redi_graph.nodes():
+							if redi_graph.nodes[e]['remark'] in ['Error', 'Timeout', 'NotFound', 'RedirectedUntilTimeout', 'RedirectedUntilError', 'RedirectedUntilNotFound']:
+								to_remove.append(e)
+
+					for e in entities:
+						if e in ee_graph.nodes():
 							to_remove.append(e)
 
 					for e in to_remove:
-						entities.remove(e)
+						if e in entities:
+							entities.remove(e)
+
 					# print ('remove ', len (to_remove), ' dead nodes')
 					for e in entities:
-					# collect all the pairs that one directs to the other
-						for f in redi_graph.neighbors(e):
-							redi_pairs.append((e, f))
+						if e in redi_graph.nodes():
+						# collect all the pairs that one directs to the other
+							for f in redi_graph.neighbors(e):
+								redi_pairs.append((e, f))
 
 					for (e, f) in redi_pairs:
-						if f in entities:
-							entities.remove(e)
+						if e in redi_graph.nodes() and f in redi_graph.nodes():
+							if f in entities:
+								entities.remove(e)
 
 					# if len(entities) != len(comment_source[ls]):
 					# 	print ('before there are ', len(comment_source[ls]))
@@ -282,7 +306,7 @@ for id in gs:
 
 f = plt.figure()
 f.set_figwidth(4)
-f.set_figheight(1.5)
+f.set_figheight(2.5)
 barWidth = 0.33
 ax = plt.subplot(111)
 
@@ -292,7 +316,7 @@ size_comment_source_to_entities_counter_sorted = collections.OrderedDict(sorted(
 print ('UNA-provenence', size_comment_source_to_entities_counter_sorted)
 x1 = size_comment_source_to_entities_counter_sorted.keys()
 y1 = size_comment_source_to_entities_counter_sorted.values()
-ax.bar(x1, y1, color ='green', width=barWidth, label='UNA-provenance', align='center')
+ax.bar(x1, y1, color ='green', width=barWidth, label='nUNA', align='center')
 # next, see what it is like for each entity each source
 b = size_comment_source_to_entities_counter[1]
 sum_b = 0
@@ -309,7 +333,7 @@ print ('UNA-restricted', size_comment_source_to_entities_counter_sorted)
 x2 = size_comment_source_to_entities_counter_sorted.keys()
 x2 = [x + barWidth for x in x2]
 y2 = size_comment_source_to_entities_counter_sorted.values()
-ax.bar(x2, y2, color ='red', width=barWidth, label='UNA-restricted', align='center')
+ax.bar(x2, y2, color ='red', width=barWidth, label='qUNA', align='center')
 # next, see what it is like for each entity each source
 b = size_comment_source_to_entities_counter[1]
 sum_b = 0
@@ -348,8 +372,8 @@ ax.legend()
 
 
 plt.yscale('log')
-plt.xlabel("Number of entities in implicit comment-like source among all equivalence classes")
-plt.ylabel("Frequency (log scale)")
+plt.xlabel("Number of entities")
+plt.ylabel("Frequency")
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 # plt.title('Frequency of number of entities in comment-like sources in equivalence classes')

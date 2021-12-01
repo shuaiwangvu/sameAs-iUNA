@@ -29,7 +29,8 @@ ax = plt.subplot(111)
 
 count_total_edges_gold = 232347
 
-count_weight_distribution_gold = {2: 118642, 1: 72041, 3: 30142, 5: 5747, 0: 3312, 4: 2376, 6: 54, 8: 21, 7: 12}
+count_weight_distribution_gold = {2: 118642, 1: 75353, 3: 30142, 5: 5747, 4: 2376, 6: 54, 8: 21, 7: 12}
+# count_weight_distribution_gold = {2: 118642, 1: 72041, 3: 30142, 5: 5747, 0: 3312, 4: 2376, 6: 54, 8: 21, 7: 12}
 #
 # count_weight_distribution_overall = {2 : 193970384,
 # 1 : 199500469,
@@ -83,7 +84,7 @@ ax.legend()
 
 # plt.yscale('log')
 plt.xlabel("Weight")
-plt.ylabel("Frequency (in percentage)")
+plt.ylabel("Frequency")
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 # ax.legend()
