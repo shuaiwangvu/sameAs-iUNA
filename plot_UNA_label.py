@@ -80,8 +80,8 @@ count_error_between_dbpedia_multilingual = 0
 count_edges_between_dbpedia_multilingual_and_dbpedia = 0
 count_error_between_dbpedia_multilingual_and_dbpedia = 0
 
-size_label_source_to_entities_UNA_provenence = []
-size_label_source_to_entities_UNA_restricted = []
+size_label_source_to_entities_nUNA = []
+size_label_source_to_entities_qUNA = []
 size_label_source_to_entities_iUNA = []
 
 restricted_prefix_list = ["http://dblp.rkbexplorer.com/id/",
@@ -153,169 +153,186 @@ for id in gs:
 			annotation_to_entities[a].append(n)
 		else:
 			annotation_to_entities[a] = [n]
-
+	# nUNA
 	for a in annotation_to_entities.keys():
 		if a != 'unknown':
 			# for each source, how many entities are there?
 			# first, collect all the sources
-			label_source = {}
+			label_source_to_entities = {}
 			for n in annotation_to_entities[a]:
 				#find its label-like sources
 				for ls in g.nodes[n]['implicit_label_source']:
-					if ls in label_source.keys():
-						label_source[ls].append(n)
+					if ls in label_source_to_entities.keys():
+						label_source_to_entities[ls].append(n)
 					else:
-						label_source[ls] = [n]
+						label_source_to_entities[ls] = [n]
 
-			for ls in label_source.keys():
-				size_label_source_to_entities_UNA_provenence.append(len(label_source[ls]))
+			for ls in label_source_to_entities.keys():
+				size_label_source_to_entities_nUNA.append(len(label_source_to_entities[ls]))
 
-	# for UNA-restricted
+	# for UNA-quasi
 	for a in annotation_to_entities.keys():
 		if a != 'unknown':
 			# for each source, how many entities are there?
 			# first, collect all the sources
-			label_source = {}
+			label_source_to_entities = {}
 			for n in annotation_to_entities[a]:
-
 				#find its label-like sources
-
 				for ls in g.nodes[n]['implicit_label_source']:
-					if ls in label_source.keys():
-						label_source[ls].append(n)
+					if ls in label_source_to_entities.keys():
+						label_source_to_entities[ls].append(n)
 					else:
-						label_source[ls] = [n]
+						label_source_to_entities[ls] = [n]
 
-			for ls in label_source.keys():
-				entities = label_source[ls]
-				# for each ls+prefix :
-				ls_prefix = {}
-				ls_and_p = []
+
+			for ls in label_source_to_entities.keys():
+				entities = label_source_to_entities[ls]
+				to_remove = []
+				# filter out the entities that are dead nodes
 				for e in entities:
+					if e in redi_graph.nodes:
+						if redi_graph.nodes[e]['remark'] in ['Error', 'NotFound']:
+							to_remove.append(e)
+
+				# filter out the entities that are in the redirect graph
+				for e in entities:
+					redirect_awareness_flag_e = False
 					for p in restricted_prefix_list:
 						if p in e:
-							if ls+p not in ls_prefix.keys():
-								ls_prefix[ls+p] = [e]
-								ls_and_p.append(ls+p)
-							else:
-								ls_prefix[ls+p].append(e)
-					else:
-						if ls not in ls_prefix.keys():
-							ls_prefix[ls] = [e]
-						else:
-							ls_prefix[ls].append(e)
-				# print ('size with prefix = ', len(ls_prefix.keys()))
-
-				for ls_p in ls_and_p:
-					entities = ls_prefix[ls_p]
-					# for entities in ls_prefix.values():
-					# filter out all the redirect
-					redi_pairs = []
-					# remove all the entities that are dead
-					to_remove = []
-					# f = redi_graph.nodes[e]['remark']
-					for e in entities:
-						if e in redi_graph.nodes:
-							if redi_graph.nodes[e]['remark'] in ['Error', 'NotFound']:
-								to_remove.append(e)
-
-					for e in to_remove:
-						if e in entities:
-							entities.remove(e)
-					# print ('remove ', len (to_remove), ' dead nodes')
-					for e in entities:
-					# collect all the pairs that one directs to the other
+							redirect_awareness_flag_e = True
+					if redirect_awareness_flag_e:
 						if e in redi_graph.nodes():
-							for f in redi_graph.neighbors(e):
-								redi_pairs.append((e, f))
+							to_remove.append(e)
 
-					for (e, f) in redi_pairs:
-						if f in entities:
-							entities.remove(e)
+				for e in to_remove:
+					if e in entities:
+						entities.remove(e)
+				# update it
+				label_source_to_entities[ls] = entities
 
-					# if len(entities) != len(label_source[ls]):
-					# 	print ('before there are ', len(label_source[ls]))
-					# 	print ('after there are ', len (entities))
-					if len(entities) != 0:
-						size_label_source_to_entities_UNA_restricted.append(len(entities))
+			for ls in label_source_to_entities.keys():
+				if len(label_source_to_entities[ls]) != 0:
+					size_label_source_to_entities_qUNA.append(len(label_source_to_entities[ls]))
 
 	# for iUNA
 	for a in annotation_to_entities.keys():
 		if a != 'unknown':
 			# for each source, how many entities are there?
 			# first, collect all the sources
-			label_source = {}
+			label_source_to_entities = {}
 			for n in annotation_to_entities[a]:
-
 				#find its label-like sources
-
 				for ls in g.nodes[n]['implicit_label_source']:
-					if ls in label_source.keys():
-						label_source[ls].append(n)
+					if ls in label_source_to_entities.keys():
+						label_source_to_entities[ls].append(n)
 					else:
-						label_source[ls] = [n]
+						label_source_to_entities[ls] = [n]
 
-			for ls in label_source.keys():
-				entities = label_source[ls]
-				# for each ls+prefix :
-				ls_prefix = {}
+
+			for ls in label_source_to_entities.keys():
+				entities = label_source_to_entities[ls]
+				# print ('there are ', len(entities), ' entities')
+				to_remove = []
+				# filter out the entities that are dead nodes
 				for e in entities:
-					p = get_prefix(e)
-					if p in e:
-						if ls+p not in ls_prefix.keys():
-							ls_prefix[ls+p] = [e]
-						else:
-							ls_prefix[ls+p].append(e)
-
-				# print ('size with prefix = ', len(ls_prefix.keys()))
-				for entities in ls_prefix.values():
-					# filter out all the redirect
-					redi_pairs = []
-					# remove all the entities that are dead
-					to_remove = []
-					# f = redi_graph.nodes[e]['remark']
-					for e in entities:
-						if e in redi_graph.nodes():
-							if redi_graph.nodes[e]['remark'] in ['Error', 'Timeout', 'NotFound', 'RedirectedUntilTimeout', 'RedirectedUntilError', 'RedirectedUntilNotFound']:
-								to_remove.append(e)
-
-					for e in entities:
-						if e in ee_graph.nodes():
+					if e in redi_graph.nodes:
+						if redi_graph.nodes[e]['remark'] in ['Error', 'Timeout', 'NotFound', 'RedirectedUntilTimeout', 'RedirectedUntilError', 'RedirectedUntilNotFound']:
 							to_remove.append(e)
+				# print ('# to remove after filtering dead nodes', len(to_remove))
+				# filter out the entities that are in the redirect graph
+				for e in entities:
+					if e in redi_graph.nodes():
+						to_remove.append(e)
+				# print ('# to remove after redirect', len(to_remove))
 
-					for e in to_remove:
-						if e in entities:
-							entities.remove(e)
+				for e in to_remove:
+					if e in entities:
+						entities.remove(e)
+				# update it
+				label_source_to_entities[ls] = entities
 
-					# print ('remove ', len (to_remove), ' dead nodes')
-					for e in entities:
-						if e in redi_graph.nodes():
-						# collect all the pairs that one directs to the other
-							for f in redi_graph.neighbors(e):
-								redi_pairs.append((e, f))
+			for ls in label_source_to_entities.keys():
+				if len(label_source_to_entities[ls]) != 0:
+					size_label_source_to_entities_iUNA.append(len(label_source_to_entities[ls]))
 
-					for (e, f) in redi_pairs:
-						if e in redi_graph.nodes() and f in redi_graph.nodes():
-							if f in entities:
-								entities.remove(e)
-
-					# if len(entities) != len(label_source[ls]):
-					# 	print ('before there are ', len(label_source[ls]))
-					# 	print ('after there are ', len (entities))
-					if len(entities) != 0:
-						size_label_source_to_entities_iUNA.append(len(entities))
+	#
+	# # for iUNA
+	# for a in annotation_to_entities.keys():
+	# 	if a != 'unknown':
+	# 		# for each source, how many entities are there?
+	# 		# first, collect all the sources
+	# 		label_source = {}
+	# 		for n in annotation_to_entities[a]:
+	#
+	# 			#find its label-like sources
+	#
+	# 			for ls in g.nodes[n]['implicit_label_source']:
+	# 				if ls in label_source.keys():
+	# 					label_source[ls].append(n)
+	# 				else:
+	# 					label_source[ls] = [n]
+	#
+	# 		for ls in label_source.keys():
+	# 			entities = label_source[ls]
+	# 			# for each ls+prefix :
+	# 			ls_prefix = {}
+	# 			for e in entities:
+	# 				p = get_prefix(e)
+	# 				if p in e:
+	# 					if ls+p not in ls_prefix.keys():
+	# 						ls_prefix[ls+p] = [e]
+	# 					else:
+	# 						ls_prefix[ls+p].append(e)
+	#
+	# 			# print ('size with prefix = ', len(ls_prefix.keys()))
+	# 			for entities in ls_prefix.values():
+	# 				# filter out all the redirect
+	# 				redi_pairs = []
+	# 				# remove all the entities that are dead
+	# 				to_remove = []
+	# 				# f = redi_graph.nodes[e]['remark']
+	# 				for e in entities:
+	# 					if e in redi_graph.nodes():
+	# 						if redi_graph.nodes[e]['remark'] in ['Error', 'Timeout', 'NotFound', 'RedirectedUntilTimeout', 'RedirectedUntilError', 'RedirectedUntilNotFound']:
+	# 							to_remove.append(e)
+	#
+	# 				for e in entities:
+	# 					if e in ee_graph.nodes():
+	# 						to_remove.append(e)
+	#
+	# 				for e in to_remove:
+	# 					if e in entities:
+	# 						entities.remove(e)
+	#
+	# 				# print ('remove ', len (to_remove), ' dead nodes')
+	# 				for e in entities:
+	# 					if e in redi_graph.nodes():
+	# 					# collect all the pairs that one directs to the other
+	# 						for f in redi_graph.neighbors(e):
+	# 							redi_pairs.append((e, f))
+	#
+	# 				for (e, f) in redi_pairs:
+	# 					if e in redi_graph.nodes() and f in redi_graph.nodes():
+	# 						if f in entities:
+	# 							entities.remove(e)
+	#
+	# 				# if len(entities) != len(label_source[ls]):
+	# 				# 	print ('before there are ', len(label_source[ls]))
+	# 				# 	print ('after there are ', len (entities))
+	# 				if len(entities) != 0:
+	# 					size_label_source_to_entities_iUNA.append(len(entities))
 
 
 f = plt.figure()
-f.set_figwidth(4)
+f.set_figwidth(7)
 f.set_figheight(2.5)
 barWidth = 0.33
 ax = plt.subplot(111)
 
-print ('********* UNA-provenence *********')
-size_label_source_to_entities_counter = collections.Counter(size_label_source_to_entities_UNA_provenence)
+print ('********* nUNA *********')
+size_label_source_to_entities_counter = collections.Counter(size_label_source_to_entities_nUNA)
 size_label_source_to_entities_counter_sorted = collections.OrderedDict(sorted(size_label_source_to_entities_counter.items()))
-print ('UNA-provenence', size_label_source_to_entities_counter_sorted)
+print ('nUNA ', size_label_source_to_entities_counter_sorted)
 x1 = size_label_source_to_entities_counter_sorted.keys()
 y1 = size_label_source_to_entities_counter_sorted.values()
 ax.bar(x1, y1, color ='green', width=barWidth, label='nUNA', align='center')
@@ -328,10 +345,10 @@ print ('sum_one ', sum_b)
 if sum_b != 0 :
 	print ('proportion of one entity each resource',b /sum_b)
 
-print ('********* UNA-restricted *********')
-size_label_source_to_entities_counter = collections.Counter(size_label_source_to_entities_UNA_restricted)
+print ('********* qUNA *********')
+size_label_source_to_entities_counter = collections.Counter(size_label_source_to_entities_qUNA)
 size_label_source_to_entities_counter_sorted = collections.OrderedDict(sorted(size_label_source_to_entities_counter.items()))
-print ('UNA-restricted', size_label_source_to_entities_counter_sorted)
+print ('qUNA', size_label_source_to_entities_counter_sorted)
 x2 = size_label_source_to_entities_counter_sorted.keys()
 x2 = [x + barWidth for x in x2]
 y2 = size_label_source_to_entities_counter_sorted.values()
@@ -374,8 +391,9 @@ ax.legend()
 
 
 plt.yscale('log')
-plt.xlabel("Number of entities")
-plt.ylabel("Frequency")
+plt.xscale('log')
+plt.xlabel("number of entities")
+plt.ylabel("frequency")
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 # plt.title('Frequency of number of entities in label-like sources in equivalence classes')
