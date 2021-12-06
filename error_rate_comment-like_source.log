@@ -1,0 +1,162 @@
+This is a logbook of the output of the three tests we did
+for the understanding of error rate of randomly sampled pairs, as well the following
+1) the error rate of those that violates nUNA
+2) the error rate of those that violates qUNA
+3) the error rate of those that violates iUNA
+
+=== the first output ===
+number of files examined:  28
+number of entities:  8394
+number of edges:  119665
+total edges generated:  119665
+total correct edges:  38142
+total error edges:  56210
+
+correct rate    0.3187
+error rate    0.4697
+the error rate is therefore between    0.4697
+and     0.6813
+
+
+ nUNA
+
+total edges generated:  119665
+total edges generated that violates nUNA:  51154
+total correct edges:  27477
+total error edges:  16712
+
+correct rate    0.5371
+error rate    0.3267
+the error rate is therefore between    0.3267
+and     0.4629
+
+
+ qUNA
+
+total edges generated:  119665
+total edges generated that violates qUNA:  33947
+total correct edges:  17352
+total error edges:  11119
+
+correct rate    0.5111
+error rate    0.3275
+the error rate is therefore between    0.3275
+and     0.4889
+
+
+ iUNA
+
+total edges generated:  119665
+total edges generated that violates iUNA:  339
+total correct edges:  264
+total error edges:  29
+
+correct rate    0.7788
+error rate    0.0855
+the error rate is therefore between    0.0855
+and     0.2212
+
+
+== the second output ==
+number of files examined:  28
+number of entities:  8394
+number of edges:  119665
+total edges generated:  119665
+total correct edges:  37949
+total error edges:  56532
+
+correct rate    0.3171
+error rate    0.4724
+the error rate is therefore between    0.4724
+and     0.6829
+
+
+ nUNA
+
+total edges generated:  119665
+total edges generated that violates nUNA:  50762
+total correct edges:  26904
+total error edges:  16888
+
+correct rate    0.5300
+error rate    0.3327
+the error rate is therefore between    0.3327
+and     0.4700
+
+
+ qUNA
+
+total edges generated:  119665
+total edges generated that violates qUNA:  33580
+total correct edges:  17061
+total error edges:  11013
+
+correct rate    0.5081
+error rate    0.3280
+the error rate is therefore between    0.3280
+and     0.4919
+
+
+ iUNA
+
+total edges generated:  119665
+total edges generated that violates iUNA:  365
+total correct edges:  286
+total error edges:  34
+
+correct rate    0.7836
+error rate    0.0932
+the error rate is therefore between    0.0932
+and     0.2164
+
+== the third run ===
+number of files examined:  28
+number of entities:  8394
+number of edges:  119665
+total edges generated:  119665
+total correct edges:  38225
+total error edges:  56238
+
+correct rate    0.3194
+error rate    0.4700
+the error rate is therefore between    0.4700
+and     0.6806
+
+
+ nUNA
+
+total edges generated:  119665
+total edges generated that violates nUNA:  50541
+total correct edges:  26784
+total error edges:  16817
+
+correct rate    0.5299
+error rate    0.3327
+the error rate is therefore between    0.3327
+and     0.4701
+
+
+ qUNA
+
+total edges generated:  119665
+total edges generated that violates qUNA:  33418
+total correct edges:  16988
+total error edges:  10975
+
+correct rate    0.5083
+error rate    0.3284
+the error rate is therefore between    0.3284
+and     0.4917
+
+
+ iUNA
+
+total edges generated:  119665
+total edges generated that violates iUNA:  364
+total correct edges:  292
+total error edges:  32
+
+correct rate    0.8022
+error rate    0.0879
+the error rate is therefore between    0.0879
+and     0.1978
