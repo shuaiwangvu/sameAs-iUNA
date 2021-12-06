@@ -1,3 +1,5 @@
+# this script tests the correctness of redirect and encoding equivalence
+# validate_iUNA2 tests the correctness of randomly sampled edges.
 
 import pandas as pd
 import numpy as np
@@ -21,7 +23,7 @@ import gzip
 from extend_metalink import *
 import requests
 from requests.exceptions import Timeout
-from SameAsEqGraph import get_prefix, get_name
+from SameAsEqGraph import *
 
 
 # there are in total 28 entities. 14 each
@@ -335,8 +337,8 @@ for id in gs:
 					count_total_ee_edges_existing_correct += 1
 				if  g.nodes[n]['annotation'] != g.nodes[m]['annotation']:
 					count_total_ee_edges_existing_error += 1
-					print (n, ' has annotation ', g.nodes[n]['annotation'])
-					print (m, ' has annotation ', g.nodes[m]['annotation'])
+					# print (n, ' has annotation ', g.nodes[n]['annotation'])
+					# print (m, ' has annotation ', g.nodes[m]['annotation'])
 		elif e not in g.edges():
 			(n,m) = e
 			in_use_ee_graph.add_edge(n,m)
