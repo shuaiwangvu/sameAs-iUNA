@@ -62,7 +62,7 @@ def get_name (e):
 
 
 
-def load_graph (nodes_filename, edges_filename):
+def load_undi_graph (nodes_filename, edges_filename): # load undirected graph
 	g = nx.Graph()
 	nodes_file = open(nodes_filename, 'r')
 	reader = csv.DictReader(nodes_file, delimiter='\t',)
@@ -86,6 +86,30 @@ def load_graph (nodes_filename, edges_filename):
 	edges_file.close()
 	return g
 
+def load_graph (nodes_filename, edges_filename):
+	g = nx.DiGraph()
+	nodes_file = open(nodes_filename, 'r')
+	reader = csv.DictReader(nodes_file, delimiter='\t',)
+	for row in reader:
+		s = row["Entity"]
+		a = row["Annotation"]
+		c = row["Comment"]
+		g.add_node(s, annotation = a, comment = c)
+
+	edges_file = open(edges_filename, 'r')
+	reader = csv.DictReader(edges_file, delimiter='\t',)
+	for row in reader:
+		s = row["SUBJECT"]
+		t = row["OBJECT"]
+		id = row["METALINK_ID"]
+		if s!=t:
+			g.add_edge(s, t, metalink_id = id)
+		else:
+			print ('FOUND reflexive EDGES!')
+	# nodes_file.close()
+	# edges_file.close()
+	return g
+
 
 def load_edge_weights (path_to_edge_weights, graph):
 	# print ('loading weights... ')
@@ -100,6 +124,7 @@ def load_edge_weights (path_to_edge_weights, graph):
 			graph[s][t]['weight'] = int (w)
 		# else:
 		# 	print('this edge is not there')
+	edge_weights_file.close()
 
 def load_explicit (path_to_explicit_source, graph):
 	hdt_explicit = HDTDocument(path_to_explicit_source)
@@ -141,7 +166,7 @@ def load_encoding_equivalence (path_ee):
 def load_redi_graph(path_to_redi_graph_nodes, path_to_redi_graph_edges):
 	redi_g = nx.DiGraph()
 
-	print('loading redi_graph at ', path_to_redi_graph_edges)
+	# print('loading redi_graph at ', path_to_redi_graph_edges)
 	hdt_redi_edges = HDTDocument(path_to_redi_graph_edges)
 	(triples, cardi) = hdt_redi_edges.search_triples("", "", "")
 	for (s,_,t) in triples:
