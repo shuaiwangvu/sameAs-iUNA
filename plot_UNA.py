@@ -55,8 +55,10 @@ def load_graph (nodes_filename, edges_filename):
 		s = row["SUBJECT"]
 		t = row["OBJECT"]
 		id = row["METALINK_ID"]
-		g.add_edge(s, t, metalink_id = id)
-
+		if s!=t:
+			g.add_edge(s, t, metalink_id = id)
+		else:
+			print ('FOUND reflexive EDGES!')
 	return g
 
 def load_redi_graph(path_to_redi_graph_nodes, path_to_redi_graph_edges):
@@ -560,19 +562,24 @@ y = size_of_clusters_counter_sorted.values()
 # f.set_figwidth(4)
 # f.set_figheight(1.5)
 #
-# ax = plt.subplot(111)
+
 # #
-# ax.bar(x, y, color ='black')
-# ax.set_yscale('log')
-# #
-# print('x = ', x)
-# print ('y = ',y)
-# plt.xlabel("The size of equivalent classes")
-# plt.ylabel("Frequency")
-# ax.spines['top'].set_visible(False)
-# ax.spines['right'].set_visible(False)
-# # plt.title('Frequency of size of equivalent classes in connected components')
-# plt.savefig('size_equi.png', bbox_inches='tight', dpi = 300)
+
+f = plt.figure()
+f.set_figwidth(7)
+f.set_figheight(2.5)
+ax = plt.subplot(111)
+ax.bar(x, y, color ='black')
+ax.set_yscale('log')
+#
+print('x = ', x)
+print ('y = ',y)
+plt.xlabel("size of equivalent classes")
+plt.ylabel("frequency")
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+# plt.title('Frequency of size of equivalent classes in connected components')
+plt.savefig('size_equi.png', bbox_inches='tight', dpi = 300)
 # # plt.show()
 
 size_label_source_to_entities_counter = collections.Counter(size_label_source_to_entities)
