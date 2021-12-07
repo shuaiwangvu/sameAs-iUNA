@@ -1,6 +1,6 @@
 # this script extracts the weight from
 # sameas_laundromat_metalink_sum_weight.hdt
-#
+# 
 
 import networkx as nx
 from SameAsEqGraph import get_simp_IRI, get_namespace, get_name

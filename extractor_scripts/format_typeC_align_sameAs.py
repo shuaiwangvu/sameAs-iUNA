@@ -1,5 +1,5 @@
 # load the local test.nt file and convert it to a format ready to be handled.
-# when a string is there, conver it to ""^^<http://www.w3.org/2001/XMLSchema#string>
+# when a string is there, convert it to ""^^<http://www.w3.org/2001/XMLSchema#string>
 
 import pandas as pd
 import numpy as np

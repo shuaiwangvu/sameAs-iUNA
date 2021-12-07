@@ -700,28 +700,28 @@ print ('\tamong them,', sum_error_edges, ' are errorenous ->{:10.2f}'.format(sum
 print ('\tThere are in total', sum_edges_ee, ' edges in ee_graph')
 
 # The following is to generate the script to translate nt to hdt
-for id in gs:
-	file_nt = dir + str(id) + '_encoding_equivalent.nt'
-	print ('rdf2hdt ', file_nt, ' ', file_nt[:-2]+'hdt')
-
-for id in gs:
-	file_nt = dir + str(id) + '_encoding_equivalent.nt'
-	print ('rdf2hdt ', file_nt, ' ', file_nt[:-2]+'hdt')
-
+# for id in gs:
+# 	file_nt = dir + str(id) + '_encoding_equivalent.nt'
+# 	print ('rdf2hdt ', file_nt, ' ', file_nt[:-2]+'hdt')
+#
+# for id in gs:
+# 	file_nt = dir + str(id) + '_encoding_equivalent.nt'
+# 	print ('rdf2hdt ', file_nt, ' ', file_nt[:-2]+'hdt')
+#
 
 # The following is to generate the script to translate nt to hdt
-for id in gs:
-	# 42616_redirect_nodes.tsv
-	path_to_redi_graph_nodes = dir + str(id) +'_redirect_nodes.tsv'
-	# 42616_redirect_edges.nt
-	path_to_redi_graph_edges = dir + str(id) +'_redirect_edges.nt'
-	print ('rdf2hdt ', path_to_redi_graph_edges, ' ', path_to_redi_graph_edges[:-2]+'hdt')
-
-	path_to_explicit_source = dir+str(id) + '_explicit_source.nt'
-	print ('rdf2hdt ', path_to_explicit_source, ' ', path_to_explicit_source[:-2]+'hdt')
-
-	path_to_implicit_label_source = dir+str(id) + '_implicit_label_source.nt'
-	print ('rdf2hdt ', path_to_implicit_label_source, ' ', path_to_implicit_label_source[:-2]+'hdt')
-
-	path_to_implicit_comment_source = dir+str(id) + '_implicit_comment_source.nt'
-	print ('rdf2hdt ', path_to_implicit_comment_source, ' ', path_to_implicit_comment_source[:-2]+'hdt')
+# for id in gs:
+# 	# 42616_redirect_nodes.tsv
+# 	path_to_redi_graph_nodes = dir + str(id) +'_redirect_nodes.tsv'
+# 	# 42616_redirect_edges.nt
+# 	path_to_redi_graph_edges = dir + str(id) +'_redirect_edges.nt'
+# 	print ('rdf2hdt ', path_to_redi_graph_edges, ' ', path_to_redi_graph_edges[:-2]+'hdt')
+#
+# 	path_to_explicit_source = dir+str(id) + '_explicit_source.nt'
+# 	print ('rdf2hdt ', path_to_explicit_source, ' ', path_to_explicit_source[:-2]+'hdt')
+#
+# 	path_to_implicit_label_source = dir+str(id) + '_implicit_label_source.nt'
+# 	print ('rdf2hdt ', path_to_implicit_label_source, ' ', path_to_implicit_label_source[:-2]+'hdt')
+#
+# 	path_to_implicit_comment_source = dir+str(id) + '_implicit_comment_source.nt'
+# 	print ('rdf2hdt ', path_to_implicit_comment_source, ' ', path_to_implicit_comment_source[:-2]+'hdt')

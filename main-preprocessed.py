@@ -55,10 +55,11 @@ REDIRECT = 5
 
 
 # there are in total 28 entities. 14 each
+# the training set (for the validation of the method)
 validate_single = [96073, 712342, 9994282, 18688, 1140988, 25604]
 validate_multiple = [33122, 11116,   12745, 6617,4170, 42616, 6927, 39036]
 validation_set = validate_single + validate_multiple
-
+# the evaluation set
 evaluation_single = [9411, 9756, 97757, 99932, 337339, 1133953]
 evaluation_multiple = [5723, 14872, 37544, 236350, 240577, 395175, 4635725, 14514123]
 evaluation_set = evaluation_single + evaluation_multiple
@@ -832,15 +833,19 @@ class GraphSolver():
 		return omega
 
 	def evaluate_partitioning_result(self):
+		evaluation_result = {}
+		evaluation_result['Omega'] = self.compute_omega()
+
 		if len (self.removed_edges) == 0 :
-			print ('total removed edges = ', len(self.removed_edges))
-			evaluation_result = {}
+			evaluation_result ['flag'] = 'invalid precision or recall'
 			evaluation_result ['num_edges_removed'] = 0
-			evaluation_result['precision'] = 0
-			evaluation_result['recall'] = 0
+			return evaluation_result
+		if len (self.error_edges) == 0:
+			evaluation_result ['flag'] = 'invalid precision or recall'
+			evaluation_result ['num_edges_removed'] = len(self.removed_edges)
 			return evaluation_result
 		else:
-			print ('num of edges removed: ', len(self.removed_edges))
+			# print ('num of edges removed: ', len(self.removed_edges))
 
 			count_removed_by_mistake = 0
 			count_correctly_removed = 0
@@ -860,97 +865,139 @@ class GraphSolver():
 			# print ('\t #Mistakenly Removed = ', count_removed_by_mistake)
 			# print ('\t # unknown = ', count_removed_unknown)
 
-			evaluation_result = {}
+			# evaluation_result = {}
 			evaluation_result ['num_edges_removed'] = len(self.removed_edges)
 
-
+			evaluation_result ['flag'] = 'valid precision and recall'
 			print ('precision = ', count_correctly_removed/len (self.removed_edges))
 			evaluation_result['precision'] = count_correctly_removed / len (self.removed_edges)
 			print ('recall = ', count_correctly_removed/len (self.error_edges))
 			evaluation_result['recall'] = count_correctly_removed / len (self.error_edges)
 
-
-			# compute new evaluation matrix
-			# cc = [c for c in nx.connected_components(self.result_graph)]
-			# count_entities_in_consistent_cc = 0
-			# for c in cc:
-			# 	annotations = set()
-			# 	for n in c:
-			# 		anno = self.input_graph.nodes[n]['annotation']
-			# 		if anno != 'unknown':
-			# 			annotations.add(anno)
-			# 	if len (annotations) == 1:
-			# 		count_entities_in_consistent_cc += len (c)
-			# evaluation_result['m1'] = count_entities_in_consistent_cc/self.input_graph.number_of_nodes()
-
-			evaluation_result['Omega'] = self.compute_omega()
 			return evaluation_result
 
-avg_precision = 0
-avg_recall = 0
-avg_omega = 0
-num_edges_removed = 0
 
-count_valid_result = 0
-count_invalid_result = 0
-
-hard_graph_ids = [39036, 33122, 11116, 6927]
-# graph_ids = hard_graph_ids
-# graph_ids = evaluation_multiple
 graph_ids = validate_multiple
-# hard_graph_ids
-start = time.time()
-for graph_id in hard_graph_ids: # graph_ids:
-	print ('\n\n\ngraph id = ', str(graph_id))
+# validation_set + evaluation_set
+export_dir = './log/'
+which_method = 'louvain' # 'smt'
+overall_logbook_filename = dir + which_method + '_overall' + '.log'
+NUM_ITER = 2
 
-	dir = './gold/'
-	gs = GraphSolver(dir, graph_id)
-
-	# gs.show_input_graph()
-	# gs.show_gold_standard_graph()
-	# gs.show_redirect_graph()
-	# gs.show_encoding_equivalence_graph()
-
-	# gs.partition_leuven()
-	gs.solve_SMT()
-	e_result = gs.evaluate_partitioning_result()
-	if e_result ['num_edges_removed'] != 0:
-		p = e_result['precision']
-		r = e_result['recall']
-		m = e_result ['Omega']
-		print ('smt gives precision =', p)
-		print ('smt gives  recall   =', r)
-		print ('smt gives  omega   =', m)
-		count_valid_result += 1
-		avg_precision += e_result['precision']
-		avg_recall += e_result['recall']
-		avg_omega += e_result['Omega']
-		num_edges_removed += e_result['num_edges_removed']
+for which_set in ['validation', 'evaluation']:
+	if which_set == 'validation':
+		graph_ids = validation_set [:2]
 	else:
-		count_invalid_result += 1
-	# gs.show_result_graph()
+		graph_ids = evaluation_set [:2]
 
-if count_valid_result > 0:
-	avg_precision /= count_valid_result
-	avg_recall /= count_valid_result
-	print ('*'*20)
-	print ('There are ', len (graph_ids), ' graphs in evaluation')
-	print ('Count valid results ', count_valid_result)
-	print ('Count invalid results ', count_invalid_result)
-	print ('The average precision: ', avg_precision)
-	print ('The average recall: ', avg_recall)
-	print ('The average Omega: ', avg_omega)
-	print ('Overall num edges removed ', num_edges_removed)
-else:
-	print ('No valid result')
+	overall_avg_precision = 0
+	overall_avg_recall = 0
+	overall_avg_omega = 0
+	overall_avg_num_edges_removed = 0
+	overall_avg_valid_result = 0
+	overall_avg_invalid_result = 0
 
-end = time.time()
-hours, rem = divmod(end-start, 3600)
-minutes, seconds = divmod(rem, 60)
-time_formated = "{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds)
-print ('time taken: ' + time_formated)
+	for i in range (NUM_ITER): # repeat 5 times.
+		logbook_filename = export_dir + which_method + '_' + which_set +'_Run' + str(i) + '.log'
+
+		avg_precision = 0
+		avg_recall = 0
+		avg_omega = 0
+		num_edges_removed = 0
+
+		count_valid_result = 0
+		count_invalid_result = 0
+		start = time.time()
+		for graph_id in graph_ids: # graph_ids:
+
+			# removed_edge_name  = open( "convert_typeC_progress.tsv", 'w')
+			# no_metalink_writer = csv.writer(file_no_metalink, delimiter='\t')
+			# no_metalink_writer.writerow(['Count', 'Time'])
+			filename_removed_edges = export_dir + which_method + '_' + which_set +'_Run' + str(i) + '_Graph' + str(graph_id) + '_removed_edges.tsv'
+			edge_writer = csv.writer(open(filename_removed_edges, 'w'), delimiter='\t')
+			edge_writer.writerow(['Source', 'Target'])
+
+			print ('\n\n\ngraph id = ', str(graph_id))
+			dir = './gold/'
+			gs = GraphSolver(dir, graph_id)
+
+			# gs.show_input_graph()
+			# gs.show_gold_standard_graph()
+			# gs.show_redirect_graph()
+			# gs.show_encoding_equivalence_graph()
+
+			if which_method == 'louvain':
+				gs.partition_leuven()
+			else:
+				gs.solve_SMT()
+
+			e_result = gs.evaluate_partitioning_result()
+			if e_result ['num_edges_removed'] != 0:
+				for (s, t) in gs.removed_edges:
+					edge_writer.writerow([s, t]) #removed_edges
+
+			if e_result['flag'] == 'valid precision and recall':
+				p = e_result['precision']
+				r = e_result['recall']
+				m = e_result ['Omega']
+				print ('smt gives precision =', p)
+				print ('smt gives  recall   =', r)
+				print ('smt gives  omega   =', m)
+				count_valid_result += 1
+				avg_precision += e_result['precision']
+				avg_recall += e_result['recall']
+				avg_omega += e_result['Omega']
+				num_edges_removed += e_result['num_edges_removed']
+			else:
+				count_invalid_result += 1
+			# gs.show_result_graph()
 
 
+
+
+		if count_valid_result > 0:
+			avg_precision /= count_valid_result
+			avg_recall /= count_valid_result
+			print ('*'*20)
+			print ('There are ', len (graph_ids), ' graphs in evaluation')
+			print ('Count valid results ', count_valid_result)
+			print ('Count invalid results ', count_invalid_result)
+			print ('The average precision: ', avg_precision)
+			print ('The average recall: ', avg_recall)
+			print ('The average Omega: ', avg_omega)
+			print ('Overall num edges removed ', num_edges_removed)
+
+			overall_avg_precision += avg_precision
+			overall_avg_recall += avg_recall
+			overall_avg_omega += avg_omega
+			overall_avg_num_edges_removed += num_edges_removed
+			overall_avg_valid_result += count_valid_result
+			overall_avg_invalid_result += count_invalid_result
+
+		else:
+			print ('No valid result')
+
+		end = time.time()
+		hours, rem = divmod(end-start, 3600)
+		minutes, seconds = divmod(rem, 60)
+		time_formated = "{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds)
+		print ('time taken: ' + time_formated)
+
+	overall_avg_precision /= NUM_ITER
+	overall_avg_recall /= NUM_ITER
+	overall_avg_omega /= NUM_ITER
+	overall_avg_num_edges_removed /= NUM_ITER
+	overall_avg_valid_result /= NUM_ITER
+	overall_avg_invalid_result /= NUM_ITER
+	print ('='*20)
+	print ('total number of iterations over the dataset ', NUM_ITER)
+	print ('OVERALL There are ', len (graph_ids), ' graphs in evaluation')
+	print ('OVERALL Count valid results ', count_valid_result)
+	print ('OVERALL Count invalid results ', count_invalid_result)
+	print ('OVERALL The average precision: ', avg_precision)
+	print ('OVERALL The average recall: ', avg_recall)
+	print ('OVERALL The average Omega: ', avg_omega)
+	print ('OVERALL Overall num edges removed ', num_edges_removed)
 
 # --
 # gs.get_encoding_equality_graph()

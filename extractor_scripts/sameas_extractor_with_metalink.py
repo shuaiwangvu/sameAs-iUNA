@@ -202,6 +202,8 @@ no_metalink_writer.writerow(['FILE'])
 start = time.time()
 ct_decoding_method = Counter()
 
+
+
 with open( which + "_laundromat_metalink_Sep23.nt", 'w') as output:
 	writer = csv.writer(output, delimiter=' ')
 
