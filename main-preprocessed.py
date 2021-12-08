@@ -31,11 +31,12 @@ EFFECIENT = 1
 FINETUNNED = 2
 
 
-MODE = EFFECIENT
+MODE = FINETUNNED  # FINETUNNED EFFECIENT
 WITH_WEIGHT = False
 WITH_DISAMBIG = False
-source_switch = 'implicit_label_source'
-# source_switch = 'implicit_comment_source'
+
+which_source = 'implicit_label_source'
+# which_source = 'implicit_comment_source'
 # ===================
 
 UNKNOWN = 0
@@ -56,9 +57,9 @@ REDIRECT = 5
 
 # there are in total 28 entities. 14 each
 # the training set (for the validation of the method)
-validate_single = [96073, 712342, 9994282, 18688, 1140988, 25604]
-validate_multiple = [33122, 11116,   12745, 6617,4170, 42616, 6927, 39036]
-validation_set = validate_single + validate_multiple
+validation_single = [96073, 712342, 9994282, 18688, 1140988, 25604]
+validation_multiple = [33122, 11116, 12745, 6617,4170, 42616, 6927, 39036]
+validation_set = validation_single + validation_multiple
 # the evaluation set
 evaluation_single = [9411, 9756, 97757, 99932, 337339, 1133953]
 evaluation_multiple = [5723, 14872, 37544, 236350, 240577, 395175, 4635725, 14514123]
@@ -67,6 +68,15 @@ evaluation_set = evaluation_single + evaluation_multiple
 
 gs = validation_set + evaluation_set
 
+
+hard_graphs = [6927, 37544, 4635725]
+
+restricted_prefix_list = ["http://dblp.rkbexplorer.com/id/",
+"http://dbpedia.org/resource/",
+"http://rdf.freebase.com/ns/m/",
+"http://sws.geonames.org/",
+"http://dbtune.org/musicbrainz/resource/",
+"http://bio2rdf.org/uniprot:"]
 
 
 
@@ -83,11 +93,11 @@ class GraphSolver():
 		path_to_nodes = dir + str(id) +'.tsv'
 		path_to_edges = dir + str(id) +'_edges.tsv'
 		self.input_graph = load_graph(path_to_nodes, path_to_edges)
-		print ('number of nodes', self.input_graph.number_of_nodes())
-		print ('number of (directed) edges ', self.input_graph.number_of_edges())
+		# print ('number of nodes', self.input_graph.number_of_nodes())
+		# print ('number of (directed) edges ', self.input_graph.number_of_edges())
 		self.input_graph = nx.Graph(self.input_graph)
-		print ('number of nodes', self.input_graph.number_of_nodes())
-		print ('number of (undirected) edges ', self.input_graph.number_of_edges())
+		# print ('number of nodes', self.input_graph.number_of_nodes())
+		# print ('number of (undirected) edges ', self.input_graph.number_of_edges())
 		self.error_edges = []
 		for e in self.input_graph.edges():
 			(s, t) = e
@@ -150,8 +160,7 @@ class GraphSolver():
 		self.partition_to_entities = {}
 
 		self.result_graph = None
-		self.reduced_weight_disambiguation = 1
-		self.rate_for_remainging_other_edges = 0.15
+
 		# the parameters
 		# if MODE == GENERAL:
 		# 	self.rate_for_remainging_other_edges = 1
@@ -168,19 +177,20 @@ class GraphSolver():
 			self.weight_encoding_equivalence = 1 #5
 			self.weight_redirect = 1 #5
 		elif MODE == FINETUNNED:  # corresponds to w2 in the paper
-			self.default_weight = 36
-			self.weight_iUNA_uneq_edge = 17 # weight of attacking edge
-			self.weight_encoding_equivalence = 5
-			self.weight_redirect = 5
+			self.default_weight = 35
+			self.weight_iUNA_uneq_edge = 15 # weight of attacking edge
+			self.weight_encoding_equivalence = 10
+			self.weight_redirect = 10
 		else:
 			print ('ERROR in MODE')
 
 
-
-
-		# self.max_clusters = 2 + int(len(self.input_graph.nodes())/150)
+		# self.max_equivalent_classes = 2 + int(len(self.input_graph.nodes())/150)
 		# attacking related
-		self.beta = 0.85 #
+		self.beta = 0.55 #
+		self.reduced_weight_disambiguation = 5
+		self.increased_weight_geq_2 = 2
+		self.rate_for_remainging_other_edges = 0.15
 
 		# additional information
 
@@ -200,7 +210,7 @@ class GraphSolver():
 
 
 	def show_redirect_graph(self):
-		print ('\n\n <<< Getting redirect graph >>>')
+		# print ('\n\n <<< Getting redirect graph >>>')
 		g = self.redirect_graph
 		plt.figure(figsize=(10,5))
 
@@ -339,17 +349,10 @@ class GraphSolver():
 			else:
 				self.removed_edges.append((s,t))
 
-		# update the entity_to_partition
-
-		# update the partition
-		# for k in self.partition_to_entities.keys():
-		# 	print ('partition ',k, ' has ', len(self.partition_to_entities[k]), ' entities')
-		# print ('partition is like ', self.partition_to_entities)
-		# print ('partition is like ', self.entity_to_partition)
 
 	def violates_nUNA (self, left, right):
-		source_left =  self.input_graph.nodes[left][source_switch]
-		source_right =  self.input_graph.nodes[right][source_switch]
+		source_left =  self.input_graph.nodes[left][which_source]
+		source_right =  self.input_graph.nodes[right][which_source]
 
 		if len(set(source_left).difference(set(source_right))) > 0:
 			return True
@@ -358,8 +361,8 @@ class GraphSolver():
 
 
 	def violates_qUNA (self, left, right):
-		source_left =  self.input_graph.nodes[left][source_switch]
-		source_right =  self.input_graph.nodes[right][source_switch]
+		source_left =  self.input_graph.nodes[left][which_source]
+		source_right =  self.input_graph.nodes[right][which_source]
 		flag_left = False
 		flag_right = False
 
@@ -393,8 +396,8 @@ class GraphSolver():
 		return False
 
 	def violates_iUNA (self, left, right):
-		source_left =  self.input_graph.nodes[left][source_switch]
-		source_right =  self.input_graph.nodes[right][source_switch]
+		source_left =  self.input_graph.nodes[left][which_source]
+		source_right =  self.input_graph.nodes[right][which_source]
 
 
 		if left in self.redirect_graph.nodes():
@@ -432,142 +435,198 @@ class GraphSolver():
 		# print ('graph.number_of_nodes = ', graph.number_of_nodes())
 		# print ('exp(-1*graph.number_of_nodes()/2500) = ', exp(-1*graph.number_of_nodes()/2500))
 		pairs = set()
-		if method == 'existing_edges':
-			for e in graph.edges():
-				(left, right) = e
-				if self.violates_iUNA(left, right):
-					pairs.add((left, right))
-			print ('paris generated : ', len (pairs))
-			return pairs
-		elif method == 'generated_pairs':
+		# if method == 'existing_edges':
+		# 	for e in graph.edges():
+		# 		(left, right) = e
+		# 		if self.violates_iUNA(left, right):
+		# 			pairs.add((left, right))
+		# 	print ('paris generated : ', len (pairs))
+		# 	return pairs
+		# elif method == 'generated_pairs':
 
-			prefix_to_entities = {}
-			for n in graph.nodes():
-				p = get_prefix(n)
-				if p in prefix_to_entities.keys():
-					prefix_to_entities[p].append(n)
-				else:
-					prefix_to_entities[p] = [n]
+		prefix_to_entities = {}
+		for n in graph.nodes():
+			p = get_prefix(n)
+			if p in prefix_to_entities.keys():
+				prefix_to_entities[p].append(n)
+			else:
+				prefix_to_entities[p] = [n]
 
-			for p in prefix_to_entities.keys():
-				j = len(prefix_to_entities[p])
-				if j > 1 and len (pairs) < graph.number_of_nodes():
-					num_to_try = int(j*(j-1)/2 * self.beta)
+		for p in prefix_to_entities.keys():
+			j = len(prefix_to_entities[p])
+			if j > 1 and len (pairs) < graph.number_of_nodes():
+				num_to_try = int(j*(j-1)/2 * self.beta)
 
-					tried = set()
-					# print ('j', j)
-					# print ('int(j*(j-1)/2 = ', int(j*(j-1)/2))
-					# print ('num_to_try = ', num_to_try)
-					if num_to_try == 0:
-						num_to_try = 1
-					# print ('j = ', j, ' num try = ', num_to_try)
-					for i in range(num_to_try):
+				tried = set()
+				# print ('j', j)
+				# print ('int(j*(j-1)/2 = ', int(j*(j-1)/2))
+				# print ('num_to_try = ', num_to_try)
+				# if num_to_try == 0:
+				# 	num_to_try = 1
+				# print ('j = ', j, ' num try = ', num_to_try)
+				for i in range(num_to_try):
+					[left, right] = random.choices(prefix_to_entities[p], k=2)
+					while (left, right) in tried:
 						[left, right] = random.choices(prefix_to_entities[p], k=2)
-						while (left, right) in tried:
-							[left, right] = random.choices(prefix_to_entities[p], k=2)
-						if self.violates_iUNA(left, right) and left != right and len (pairs) < 2*graph.number_of_nodes():
+					# print ('left = ', left)
+					# print ('right = ', right)
+					if left!=right:
+						if self.violates_iUNA(left, right):
 							pairs.add((left, right))
-						tried.add((left, right))
+					tried.add((left, right))
 
-			print ('paris generated : ', len (pairs))
-			return list(pairs)
+		# print ('paris generated : ', len (pairs))
+		return list(pairs)
 
-	def solve_SMT (self):
+
+	def get_pairs_from_qUNA(self, method, graph, beta):
+		# print ('graph.number_of_nodes = ', graph.number_of_nodes())
+		# print ('exp(-1*graph.number_of_nodes()/2500) = ', exp(-1*graph.number_of_nodes()/2500))
+		pairs = set()
+		# if method == 'existing_edges':
+		# 	for e in graph.edges():
+		# 		(left, right) = e
+		# 		if self.violates_iUNA(left, right):
+		# 			pairs.add((left, right))
+		# 	print ('paris generated : ', len (pairs))
+		# 	return pairs
+		# elif method == 'generated_pairs':
+
+		prefix_to_entities = {}
+		for n in graph.nodes():
+			p = get_prefix(n)
+			if p in prefix_to_entities.keys():
+				prefix_to_entities[p].append(n)
+			else:
+				prefix_to_entities[p] = [n]
+
+		for p in prefix_to_entities.keys():
+			j = len(prefix_to_entities[p])
+			if j > 1 and len (pairs) < graph.number_of_nodes():
+				num_to_try = int(j*(j-1)/2 * self.beta) + 1
+
+				tried = set()
+				# print ('j', j)
+				# print ('int(j*(j-1)/2 = ', int(j*(j-1)/2))
+				# print ('num_to_try = ', num_to_try)
+				if num_to_try == 0:
+					num_to_try = 1
+				# print ('j = ', j, ' num try = ', num_to_try)
+				for i in range(num_to_try):
+					[left, right] = random.choices(prefix_to_entities[p], k=2)
+					while (left, right) in tried:
+						[left, right] = random.choices(prefix_to_entities[p], k=2)
+					if self.violates_qUNA(left, right) and left != right and len (pairs) < 2*graph.number_of_nodes():
+						pairs.add((left, right))
+					tried.add((left, right))
+
+		# print ('paris generated : ', len (pairs))
+		return list(pairs)
+
+
+	def solve_SMT (self, una, weighting_scheme): # gs.solve_SMT(una = selected_UNA, weighting_scheme = selected_weighting_scheme)
 		collect_resulting_graphs = []
 		collect_removed_edges = []
-		iter_result = self.solve_SMT_iter (self.input_graph)
+		iter_result = self.solve_SMT_iter (self.input_graph, una, weighting_scheme)
 		if iter_result == SMT_UNKNOWN:
-			print ('not enough time for SMT')
-			return None
-		removed_edges, graphs = iter_result
-		collect_removed_edges += removed_edges
-		print ('# first round removed edges = ', len(removed_edges))
-		for g in graphs:
-			if g.number_of_nodes()<=1:
-				collect_resulting_graphs.append(g)
-		graphs = list(filter(lambda x: x.number_of_nodes()>1, graphs))
-
-		count_round = 1
-		# print ('after round 1, there are still ', len(graphs), 'graphs. ')
-		print ('after round 1, there are ', len(collect_removed_edges), 'edges removed. ')
-		count_correct = 0
-		count_error = 0
-		for (left,right) in collect_removed_edges:
-			if self.input_graph.nodes[left]['annotation'] != 'unknown' and self.input_graph.nodes[right]['annotation'] != 'unknown':
-				if self.input_graph.nodes[left]['annotation'] != self.input_graph.nodes[right]['annotation']:
-					count_correct += 1
-				else:
-					count_error += 1
-			# else:
-			# 	print ('left : ', left)
-			# 	print ('right: ', right)
-		print ('correct = ', count_correct)
-		print ('error = ', count_error)
-		if len(collect_removed_edges) != 0:
-			print ('precision now = ', count_correct/len(collect_removed_edges))
-
-		condition = True
-		if len (removed_edges) == 0:
-			condition = False
+			print ('not enough time for SMT, keep the graph as it is')
 			self.removed_edges = []
-			return None # finish here, no need to continue
-
-		while condition:
-			count_round += 1
-			print ('\n\nThis is round ', count_round)
-			collect_graphs = []
-			removed_edges = []
+			self.result_graph = self.input_graph.copy()
+			return SMT_UNKNOWN
+		else:
+			removed_edges, graphs = iter_result
+			collect_removed_edges += removed_edges
+			if len(removed_edges) == 0:
+				self.result_graph = self.input_graph.copy()
+				self.removed_edges = []
+			# print ('# first round removed edges = ', len(removed_edges))
 			for g in graphs:
-				iter_result = self.solve_SMT_iter(g)
-				if iter_result != SMT_UNKNOWN:
-					new_removed_edges, new_graphs = iter_result
-					print ('->removed ', len(new_removed_edges), ' edges')
-					if len(new_removed_edges) > 0:
-						removed_edges += new_removed_edges
-						if len (new_graphs) > 1: # stop condition: removed some edges but still connected
-							collect_graphs += new_graphs
+				if g.number_of_nodes()<=1:
+					collect_resulting_graphs.append(g)
+			graphs = list(filter(lambda x: x.number_of_nodes()>1, graphs))
+
+			count_round = 1
+			# print ('after round 1, there are still ', len(graphs), 'graphs. ')
+			# print ('after round 1, there are ', len(collect_removed_edges), 'edges removed. ')
+			count_correct = 0
+			count_error = 0
+			for (left,right) in collect_removed_edges:
+				if self.input_graph.nodes[left]['annotation'] != 'unknown' and self.input_graph.nodes[right]['annotation'] != 'unknown':
+					if self.input_graph.nodes[left]['annotation'] != self.input_graph.nodes[right]['annotation']:
+						count_correct += 1
+					else:
+						count_error += 1
+				# else:
+				# 	print ('left : ', left)
+				# 	print ('right: ', right)
+			# print ('correct = ', count_correct)
+			# print ('error = ', count_error)
+			# if len(collect_removed_edges) != 0:
+			# 	print ('precision now = ', count_correct/len(collect_removed_edges))
+
+			condition = True
+			if len (removed_edges) == 0:
+				condition = False
+				self.removed_edges = []
+				return None # finish here, no need to continue
+
+			while condition:
+				count_round += 1
+				print ('\n\nThis is round ', count_round)
+				collect_graphs = []
+				removed_edges = []
+				for g in graphs:
+					iter_result = self.solve_SMT_iter(g, una, weighting_scheme)
+					if iter_result != SMT_UNKNOWN:
+						new_removed_edges, new_graphs = iter_result
+						# print ('->removed ', len(new_removed_edges), ' edges')
+						if len(new_removed_edges) > 0:
+							removed_edges += new_removed_edges
+							if len (new_graphs) > 1: # stop condition: removed some edges but still connected
+								collect_graphs += new_graphs
+							else:
+								collect_resulting_graphs += new_graphs
 						else:
 							collect_resulting_graphs += new_graphs
 					else:
-						collect_resulting_graphs += new_graphs
-				else:
-					collect_graphs.append(g) # give it a second chance
+						collect_graphs.append(g) # give it a second chance
 
-			collect_removed_edges += removed_edges
+				collect_removed_edges += removed_edges
 
-			# print ('before filtering, we have ', len (collect_graphs), ' graphs')
-			# collect_resulting_graphs
-			for g in collect_graphs:
-				if g.number_of_nodes()<=1:
-					collect_resulting_graphs.append(g)
-			collect_graphs = list(filter(lambda x: x.number_of_nodes()>1, collect_graphs))
-			# terminating condition:
-			# 1) no edges removed: see above
-			# 2) singleton graph
-			# print ('after filtering, there are ', len(collect_graphs),  'graphs remaining')
-			for g in collect_graphs:
-				print ( '\t#nodes: ', g.number_of_nodes(), ' #edges: ', g.number_of_edges())
+				# print ('before filtering, we have ', len (collect_graphs), ' graphs')
+				# collect_resulting_graphs
+				for g in collect_graphs:
+					if g.number_of_nodes()<=1:
+						collect_resulting_graphs.append(g)
+				collect_graphs = list(filter(lambda x: x.number_of_nodes()>1, collect_graphs))
+				# terminating condition:
+				# 1) no edges removed: see above
+				# 2) singleton graph
+				# print ('after filtering, there are ', len(collect_graphs),  'graphs remaining')
+				# for g in collect_graphs:
+				# 	print ( '\t#nodes: ', g.number_of_nodes(), ' #edges: ', g.number_of_edges())
 
-			if len (removed_edges) == 0 or len(collect_graphs) == 0:
-				condition = False
-			graphs = collect_graphs
+				if len (removed_edges) == 0 or len(collect_graphs) == 0:
+					condition = False
+				graphs = collect_graphs
 
-		print ('Overall, for this graph, we removed a total of ', len (collect_removed_edges))
-		self.removed_edges = collect_removed_edges
+			print ('Overall, for this graph, we removed a total of ', len (collect_removed_edges))
+			self.removed_edges = collect_removed_edges
 
-		self.result_graph = self.input_graph.copy()
-		self.result_graph.remove_edges_from(collect_removed_edges)
+			self.result_graph = self.input_graph.copy()
+			self.result_graph.remove_edges_from(collect_removed_edges)
 
-		# print (collect_resulting_graphs)
-		sizes = [c.number_of_nodes() for c in collect_resulting_graphs]
-		print ('size list = ',[c for c in sorted(sizes, reverse=True)])
+			# print (collect_resulting_graphs)
+			sizes = [c.number_of_nodes() for c in collect_resulting_graphs]
+			# print ('size list = ',[c for c in sorted(sizes, reverse=True)])
 
-	def solve_SMT_iter (self, graph): # get partition
+	def solve_SMT_iter (self, graph, una, weighting_scheme): # get partition
 
 		print ('\n\nThis graph has ',graph.number_of_nodes(), ' nodes')
-		print( 'and ', graph.number_of_edges(), 'edges')
-		max_clusters = 2 + int(len(graph.nodes())/30)
-		print(' max clusters: ', max_clusters)
+		# print( 'and ', graph.number_of_edges(), 'edges')
+		max_equivalent_classes = 2 + int(math.log10(len(graph.nodes())))
+		# max_equivalent_classes = 2 + int(len(graph.nodes())/50)
+		print(' max equivalent classes: ', max_equivalent_classes)
 		# print ('\n\nsolving using smt')
 		# resulting graph
 		result_graph = graph.copy()
@@ -576,6 +635,7 @@ class GraphSolver():
 		# encode the existing graph with weight 1
 		o = Optimize()
 		timeout = int(1000 * 60 * (graph.number_of_nodes()/100 + 0.2)) # depending on the size of the graph
+		# timeout = int(1000 * 60 * 0.1) # depending on the size of the graph
 		o.set("timeout", timeout)
 		# print('timeout = ',timeout/1000, 'seconds')
 		print('timeout = ',timeout/1000/60, 'mins')
@@ -586,7 +646,7 @@ class GraphSolver():
 		# print ('STEP 1: the input graph (nodes, edges and their weights)')
 		# default_weight = 35
 		# reduced_weight_disambiguation = 1
-		# self.max_clusters = 8 + int(len(graph.nodes())/150)
+		# self.max_equivalent_classes = 8 + int(len(graph.nodes())/150)
 		# weights_occ = False
 
 		# count_weighted_edges = 0
@@ -596,7 +656,7 @@ class GraphSolver():
 			encode[n] = Int(str(encode_id))
 			encode_id += 1
 			o.add(encode[n] > Int(0))
-			o.add(encode[n] < Int(max_clusters +1))
+			o.add(encode[n] < Int(max_equivalent_classes +1))
 
 		count_ignored = 0
 		# print ('total # edges ', len (graph.edges()))
@@ -609,46 +669,18 @@ class GraphSolver():
 		# method 3: minimum spaninng forest + ignore DBpedia multilingual equivalence
 		t = nx.Graph(graph)
 		to_remove = []
-		ms_edges = []
-		if MODE == FINETUNNED:
-			for (left, right) in graph.edges():
-				ignore = False
-				if 'dbpedia.org' in left and 'dbpedia.org' in right and 'http://dbpedia.org/resource/' not in left and 'http://dbpedia.org/resource/' not in right:
-					# if there is a common dbpedia.org neighbor, then we ignore this.
-					if get_authority(left) != get_authority(right):
-						left_neigh = graph.neighbors(left)
-						right_neigh = graph.neighbors(right)
 
-						if len(set(left_neigh).difference(set(right_neigh))) > 0:
-							to_remove.append((left, right))
-				t.remove_edges_from(to_remove)
-				ms_edges = list(nx.minimum_spanning_edges(t, data= False))
-			print ('the num of remaining edges in the minimum spanning forest is ', len(ms_edges))
-		elif MODE == EFFECIENT:
-			ms_edges = list(nx.minimum_spanning_edges(t, data= False))
-			print ('the num of remaining edges in the minimum spanning forest is ', len(ms_edges))
-
-		else:
-			ms_edges = t.edges()
-
+		ms_edges = list(nx.minimum_spanning_edges(t, data= False))
 
 		total_edges_considered = 0
 		for (left, right) in graph.edges():
 			ignore = False
-			if MODE == GENERAL:
+
+			if (left, right) in ms_edges:
 				ignore = False
-			elif MODE == EFFECIENT:
-				if (left, right) in ms_edges:
-					ignore = False
-				else:
-					ignore = True
-					count_ignored += 1
-			elif MODE == FINETUNNED:
-				if (left, right) in ms_edges:
-					ignore = False
-				elif random.random () > (self.rate_for_remainging_other_edges):
-					ignore = True
-					count_ignored += 1
+			elif random.random () > (self.rate_for_remainging_other_edges):
+				ignore = True
+				count_ignored += 1
 
 			if ignore == False:
 				clause = (encode[left] == encode[right])
@@ -665,28 +697,22 @@ class GraphSolver():
 					# print ('!!!!!!! I have weight',w)
 					if w != None:
 						if w >= 2:
-							soft_clauses[clause] += 1
+							soft_clauses[clause] += self.increased_weight_geq_2
 						# else:
 						# 	soft_clauses[clause] = self.default_weight
 					else:
 						print ('weighting error?!')
-				# else:
-				# 	soft_clauses[clause] = self.default_weight
+
 
 		# print ('count_weighted_edges = ', count_weighted_edges)
 		# print ('count_ignored edges between DBpedia multilingual entities', count_ignored)
-		print ('total number of edges = ', total_edges_considered)
+		# print ('total number of edges = ', total_edges_considered)
 		# STEP 2: the attacking edges
 		# print ('STEP 2: the attacking edges')
-
-
-		# uneq_pairs = self.get_pairs_from_iUNA(method = 'existing_edges')
-		uneq_pairs = self.get_pairs_from_iUNA(method = 'generated_pairs', graph=graph, beta = self.beta)
-
-		# if graph.number_of_nodes() <30:
-		# 	for (left, right) in uneq_pairs:
-		# 		print ('attacking left = ', left)
-		# 		print ('attacking right = ', right)
+		if una == 'iUNA':
+			uneq_pairs = self.get_pairs_from_iUNA(method = 'generated_pairs', graph=graph, beta = self.beta)
+		elif una == 'qUNA':
+			uneq_pairs = self.get_pairs_from_qUNA(method = 'generated_pairs', graph=graph, beta = self.beta)
 
 		if len (uneq_pairs) <= 1:
 			removed_edges = []
@@ -703,9 +729,9 @@ class GraphSolver():
 				else:
 					count_mistaken_attack += 1
 
-		print ('count  correct ', count_correct_attack, ' -> ', count_correct_attack/len(uneq_pairs))
-		print ('count mistaken ', count_mistaken_attack, ' -> ', count_mistaken_attack/len(uneq_pairs))
-		print ('This round, the weight is ', int(self.weight_iUNA_uneq_edge )) # * exp(-1*graph.number_of_nodes()/2500)))
+		# print ('count  correct ', count_correct_attack, ' -> ', count_correct_attack/len(uneq_pairs))
+		# print ('count mistaken ', count_mistaken_attack, ' -> ', count_mistaken_attack/len(uneq_pairs))
+		# print ('This round, the weight is ', int(self.weight_iUNA_uneq_edge )) # * exp(-1*graph.number_of_nodes()/2500)))
 		for (left,right) in uneq_pairs:
 			clause = Not(encode[left] == encode[right])
 			if clause in soft_clauses.keys():
@@ -716,6 +742,7 @@ class GraphSolver():
 		# STEP 3: the confirming edges
 		# add confirming edges: encoding equivalence
 		# weight_encoding_equivalence = 10
+		number_ee_edges = 0
 		for (left, right) in self.encoding_equality_graph.edges():
 			if left in graph.nodes() and right in graph.nodes():
 				clause = (encode[left] == encode[right])
@@ -723,7 +750,8 @@ class GraphSolver():
 					soft_clauses[clause] += self.weight_encoding_equivalence
 				else:
 					soft_clauses[clause] = self.weight_encoding_equivalence
-
+				number_ee_edges +=1
+		# print ('number of confirming edges added from the ee graph ', number_ee_edges)
 
 		# add confirming edges: redirect
 		# self.redi_undirected = self.redirect_graph.copy()
@@ -869,29 +897,33 @@ class GraphSolver():
 			evaluation_result ['num_edges_removed'] = len(self.removed_edges)
 
 			evaluation_result ['flag'] = 'valid precision and recall'
-			print ('precision = ', count_correctly_removed/len (self.removed_edges))
+			# print ('precision = ', count_correctly_removed/len (self.removed_edges))
 			evaluation_result['precision'] = count_correctly_removed / len (self.removed_edges)
-			print ('recall = ', count_correctly_removed/len (self.error_edges))
+			# print ('recall = ', count_correctly_removed/len (self.error_edges))
 			evaluation_result['recall'] = count_correctly_removed / len (self.error_edges)
 
 			return evaluation_result
 
 
-graph_ids = validate_multiple
+graph_ids = []
 # validation_set + evaluation_set
 export_dir = './log/'
-which_method = 'louvain' # 'smt'
-overall_logbook_filename = export_dir + which_method + '_overall' + '.log'
-overall_logbook_writer = open(overall_logbook_filename, 'w')
-NUM_ITER = 5
+which_method = 'smt' #
+# which_method = 'louvain' #
 
-overall_logbook_writer.write('\nmethod = ' + which_method)
+NUM_ITER = 3
+
 if which_method == 'louvain':
+# if True:
+	overall_logbook_filename = export_dir + which_method + '_overall' + '.log'
+	overall_logbook_writer = open(overall_logbook_filename, 'w')
+	overall_logbook_writer.write('\nmethod = ' + which_method)
 	for which_set in ['validation', 'evaluation']:
 		if which_set == 'validation':
-			graph_ids = validation_set
+			graph_ids =  validation_set
 		else:
-			graph_ids = evaluation_set
+			graph_ids =  evaluation_set
+
 		overall_logbook_writer.write ('\n********\ndataset = ' + which_set)
 
 		overall_avg_precision = 0
@@ -901,19 +933,21 @@ if which_method == 'louvain':
 		overall_avg_valid_result = 0
 		overall_avg_invalid_result = 0
 
-		overall_avg_termination_precision = 0
-		overall_avg_termination_recall = 0
+		overall_avg_termination_tp = 0
+		overall_avg_termination_fp = 0
+		overall_avg_termination_accuracy = 0
 
 		for i in range (NUM_ITER): # repeat 5 times.
 			logbook_filename = export_dir + which_method + '_' + which_set +'_Run' + str(i) + '.log'
 
 			avg_precision = 0
 			avg_recall = 0
-			avg_termination_precision = 0
-			avg_termination_recall = 0
+			avg_termination_tp = 0
+			avg_termination_fp = 0
 			termination_tp = 0
-			termination_p = 0
+			termination_tn = 0
 			termination_fp = 0
+			termination_fn = 0
 
 			avg_omega = 0
 			num_edges_removed = 0
@@ -939,8 +973,9 @@ if which_method == 'louvain':
 				# gs.show_gold_standard_graph()
 				# gs.show_redirect_graph()
 				# gs.show_encoding_equivalence_graph()
-
+				# if which_method == "louvain":
 				gs.partition_leuven()
+
 
 
 				e_result = gs.evaluate_partitioning_result()
@@ -952,6 +987,7 @@ if which_method == 'louvain':
 				if e_result ['num_error_edges_gold_standard'] == 0:
 					count_graph_no_error_edges += 1
 
+				num_edges_removed += e_result['num_edges_removed']
 				avg_omega += e_result['Omega']
 				if e_result['flag'] == 'valid precision and recall':
 					p = e_result['precision']
@@ -964,19 +1000,28 @@ if which_method == 'louvain':
 					avg_precision += e_result['precision']
 					avg_recall += e_result['recall']
 
-					num_edges_removed += e_result['num_edges_removed']
+
 				else:
 					count_invalid_result += 1
-					if e_result['num_edges_removed'] == 0:
-						if e_result['num_error_edges_gold_standard'] == 0:
-							termination_tp += 1
-						else:
-							termination_fp += 1
 
-						termination_p += 1
+				if e_result['num_edges_removed'] == 0:
+					if e_result['num_error_edges_gold_standard'] == 0:
+						termination_tp += 1
+					else:
+						termination_fp += 1
+				else:
+					if e_result['num_error_edges_gold_standard'] == 0:
+						termination_fn += 1
+					else:
+						termination_tn += 1
 
-				avg_termination_precision = 0
-				avg_termination_recall = 0
+				avg_termination_tp += termination_tp
+				avg_termination_fp += temination_fp
+				# avg_termination_accuracy += temination_tp /(termination_tp + temination_fp)
+				# if (termination_tp + termination_fp) >0 :
+				# 	avg_termination_tp = termination_tp / (termination_tp + termination_fp)
+				# if (termination_tp+ termination_fn) > 0:
+				# 	avg_termination_fp = termination_tp / (termination_tp+ termination_fn)
 
 			# evaluation_result ['num_edges_removed'] = len(self.removed_edges)
 			# evaluation_result ['num_error_edges_gold_standard'] = len(self.removed_edges)
@@ -985,8 +1030,8 @@ if which_method == 'louvain':
 			# gs.show_result_graph()
 			overall_avg_omega += avg_omega
 			print ('The average Omega: ', avg_omega)
-			print ('Count valid results ', count_valid_result)
-			print ('Count invalid results ', count_invalid_result)
+			print ('Count result [where precision and recall works] ', count_valid_result)
+			print ('Count inresult [where precision and recall do not apply] ', count_invalid_result)
 
 			if count_valid_result > 0:
 				avg_precision /= count_valid_result
@@ -1002,15 +1047,17 @@ if which_method == 'louvain':
 				overall_avg_precision += avg_precision
 				overall_avg_recall += avg_recall
 
-				overall_avg_num_edges_removed += num_edges_removed
+			overall_avg_num_edges_removed += num_edges_removed
 
 
-			if count_invalid_result > 0:
-				avg_termination_precision /= count_invalid_result
-				avg_termination_recall /= count_invalid_result
+			# if count_invalid_result > 0:
+			avg_termination_tp /= len(graph_ids)
+			avg_termination_fp /= len(graph_ids)
+			# avg_termination_accuracy /= len(graph_ids)
 
-			overall_avg_termination_precision += avg_termination_precision
-			overall_avg_termination_recall += avg_termination_recall
+			overall_avg_termination_tp += avg_termination_tp
+			overall_avg_termination_fp += avg_termination_fp
+			# overall_avg_termination_accuracy += avg_termination_accuracy
 
 			overall_avg_valid_result += count_valid_result
 			overall_avg_invalid_result += count_invalid_result
@@ -1027,36 +1074,275 @@ if which_method == 'louvain':
 		overall_avg_num_edges_removed /= NUM_ITER
 		overall_avg_valid_result /= NUM_ITER
 		overall_avg_invalid_result /= NUM_ITER
-		overall_avg_termination_precision /= NUM_ITER
-		overall_avg_termination_recall /= NUM_ITER
+		overall_avg_termination_tp /= NUM_ITER
+		overall_avg_termination_fp /= NUM_ITER
+		# overall_avg_termination_accuracy /= NUM_ITER
 
 		print ('='*20)
 		print ('total number of iterations over the dataset ', NUM_ITER)
 		print ('OVERALL There are ', len (graph_ids), ' graphs')
 		print ('   ' + str(count_graph_no_error_edges) + ' has no error edge')
-		print ('OVERALL Count valid results ', count_valid_result)
-		print ('OVERALL Count invalid results ', count_invalid_result)
+		print ('OVERALL Count result [where precision and recall works] ', count_valid_result)
+		print ('OVERALL Count inresult [where precision and recall do not apply] ', count_invalid_result)
 		print ('OVERALL The average precision: ', avg_precision)
 		print ('OVERALL The average recall: ', avg_recall)
-		print ('OVERALL The average precision: [for termination]', overall_avg_termination_precision)
-		print ('OVERALL The average recall: [for termination]', overall_avg_termination_recall)
+		print ('OVERALL The average tp: [for termination]', overall_avg_termination_tp)
+		print ('OVERALL The average fp: [for termination]', overall_avg_termination_fp)
+		# print ('OVERALL The average accuracy: [for termination]', overall_avg_termination_accuracy)
 		print ('OVERALL The average Omega: ', avg_omega)
 		print ('OVERALL Overall num edges removed ', num_edges_removed)
 
 		overall_logbook_writer.write ('\n\ntotal number of iterations over this dataset ' +str(NUM_ITER))
 		overall_logbook_writer.write ('\nOVERALL There are '+str(len (graph_ids)) + ' graphs')
 		overall_logbook_writer.write ('   ' + str(count_graph_no_error_edges) + ' has no error edge')
-		overall_logbook_writer.write ('\nOVERALL Count valid results '+ str(count_valid_result))
-		overall_logbook_writer.write ('\nOVERALL Count invalid results ' +str(count_invalid_result))
+		overall_logbook_writer.write ('\nOVERALL Count result [where precision and recall works] '+ str(count_valid_result))
+		overall_logbook_writer.write ('\nOVERALL Count result [where precision and recall do not apply] ' +str(count_invalid_result))
 		overall_logbook_writer.write ('\nOVERALL The average precision: ' +str(avg_precision))
 		overall_logbook_writer.write ('\nOVERALL The average recall: '+str(avg_recall))
-		overall_logbook_writer.write ('\nOVERALL The average precision [for termination]: ' +str(overall_avg_termination_precision))
-		overall_logbook_writer.write ('\nOVERALL The average recall [for termination]: '+str(overall_avg_termination_recall))
+		overall_logbook_writer.write ('\nOVERALL The average tp [for termination]: ' +str(overall_avg_termination_tp))
+		overall_logbook_writer.write ('\nOVERALL The average fp [for termination]: '+str(overall_avg_termination_fp))
+		# overall_logbook_writer.write ('\nOVERALL The average accuracy [for termination]: '+str(overall_avg_termination_accuracy))
+
 		overall_logbook_writer.write ('\nOVERALL The average Omega: '+str(avg_omega))
 		overall_logbook_writer.write ('\nOVERALL Overall num edges removed '+str(num_edges_removed))
 
 elif which_method == 'smt':
-	pass
+	for selected_UNA in ['iUNA', 'qUNA']:
+		for which_source in ['implicit_label_source', 'implicit_comment_source']:
+			for selected_weighting_scheme in ['w2', 'w1']:
+
+				additional = ''
+				if WITH_WEIGHT:
+					additional += '_[weights]'
+				if WITH_DISAMBIG:
+					additional += '_[disambiguation]'
+
+				overall_logbook_filename = export_dir + which_method +'_' + selected_UNA+ '_' + which_source+ '_'+ selected_weighting_scheme + '_overall' + additional + '.log'
+				overall_logbook_writer = open(overall_logbook_filename, 'w')
+				overall_logbook_writer.write('\n method = ' + which_method)
+				overall_logbook_writer.write('\n UNA = ' + selected_UNA)
+
+				if WITH_WEIGHT:
+					overall_logbook_writer.write('\n Additioinal info = weight')
+				if WITH_DISAMBIG:
+					overall_logbook_writer.write('\n Additioinal info = disambiguation')
+
+
+
+				if selected_weighting_scheme == 'w1':
+					MODE = EFFECIENT
+					# print ('weighting scheme is w1: ',MODE)
+				elif selected_weighting_scheme == 'w2':
+					MODE = FINETUNNED
+					# print ('weighting scheme is w2: ',MODE)
+
+				overall_logbook_writer.write('\n source = ' + which_source)
+				overall_logbook_writer.write('\n weighting scheme = ' + selected_weighting_scheme)
+
+				for which_set in [ 'validation', 'evaluation']:
+					time_taken = 0
+					if which_set == 'validation':
+						graph_ids =  validation_set
+					else:
+						graph_ids =  evaluation_set
+
+					overall_logbook_writer.write ('\n********\ndataset = ' + which_set)
+
+					overall_avg_precision = 0
+					overall_avg_recall = 0
+					overall_avg_omega = 0
+					overall_avg_num_edges_removed = 0
+					overall_avg_valid_result = 0
+					overall_avg_invalid_result = 0
+
+					overall_avg_termination_tp = 0
+					overall_avg_termination_fp = 0
+					overall_avg_termination_accuracy = 0
+
+					overall_avg_timeout = 0
+					for i in range (NUM_ITER): # repeat 5 times.
+						logbook_filename = export_dir + which_method +'_' + selected_UNA+ '_'+ which_source +'_' + selected_weighting_scheme + '_' + which_set +'_Run' + str(i) + '.log'
+
+						avg_precision = 0
+						avg_recall = 0
+						avg_termination_tp = 0
+						avg_termination_fp = 0
+						avg_termination_accuracy = 0
+
+						termination_tp = 0
+						termination_tn = 0
+						termination_fp = 0
+						termination_fn = 0
+
+
+						avg_omega = 0
+						num_edges_removed = 0
+
+						count_valid_result = 0
+						count_invalid_result = 0
+						start = time.time()
+						count_graph_no_error_edges = 0
+						count_timeout = 0
+
+						for graph_id in graph_ids: # graph_ids:
+
+							# removed_edge_name  = open( "convert_typeC_progress.tsv", 'w')
+							# no_metalink_writer = csv.writer(file_no_metalink, delimiter='\t')
+							# no_metalink_writer.writerow(['Count', 'Time'])
+							filename_removed_edges = export_dir + which_method +'_' + selected_UNA+ '_'+ which_source +'_' + selected_weighting_scheme + which_set +'_Run' + str(i) + '_Graph' + str(graph_id) + additional + '_removed_edges.tsv'
+							edge_writer = csv.writer(open(filename_removed_edges, 'w'), delimiter='\t')
+							edge_writer.writerow(['Source', 'Target'])
+
+							print ('\n\n\ngraph id = ', str(graph_id))
+							gold_dir = './gold/'
+							gs = GraphSolver(gold_dir, graph_id)
+
+							# gs.show_input_graph()
+							# gs.show_gold_standard_graph()
+							# gs.show_redirect_graph()
+							# gs.show_encoding_equivalence_graph()
+
+							solving_result = gs.solve_SMT(una = selected_UNA, weighting_scheme = selected_weighting_scheme)
+							if solving_result  == SMT_UNKNOWN:
+								count_timeout += 1
+
+							e_result = gs.evaluate_partitioning_result()
+
+							if e_result ['num_edges_removed'] != 0:
+								for (s, t) in gs.removed_edges:
+									edge_writer.writerow([s, t]) #removed_edges
+
+							if e_result ['num_error_edges_gold_standard'] == 0:
+								count_graph_no_error_edges += 1
+
+							avg_omega += e_result['Omega']
+							num_edges_removed += e_result['num_edges_removed']
+							print ('omega   =', e_result ['Omega'])
+							if e_result['flag'] == 'valid precision and recall':
+								p = e_result['precision']
+								r = e_result['recall']
+								m = e_result ['Omega']
+								print ('precision =', p)
+								print ('recall   =', r)
+
+								count_valid_result += 1
+								avg_precision += e_result['precision']
+								avg_recall += e_result['recall']
+							else:
+								count_invalid_result += 1
+
+
+							if e_result['num_edges_removed'] == 0:
+								if e_result['num_error_edges_gold_standard'] == 0:
+									termination_tp += 1
+								else:
+									termination_fp += 1
+							else:
+								if e_result['num_error_edges_gold_standard'] == 0:
+									termination_fn += 1
+								else:
+									termination_tn += 1
+
+							avg_termination_tp += termination_tp
+							avg_termination_fp += termination_fp
+							# avg_termination_accuracy += termination_tp /(termination_tp + termination_fp)
+							# if (termination_tp + termination_fp) >0 :
+							# 	avg_termination_tp = termination_tp / (termination_tp + termination_fp)
+							# if (termination_tp+ termination_fn) > 0:
+							# 	avg_termination_fp = termination_tp / (termination_tp+ termination_fn)
+
+						# evaluation_result ['num_edges_removed'] = len(self.removed_edges)
+						# evaluation_result ['num_error_edges_gold_standard'] = len(self.removed_edges)
+
+						avg_omega /= len(graph_ids)
+						overall_avg_timeout += count_timeout
+						# gs.show_result_graph()
+						overall_avg_omega += avg_omega
+						print ('The average Omega: ', avg_omega)
+						print ('Count results with precision-recall', count_valid_result)
+						print ('Count results without precision-recall', count_invalid_result)
+						print ('Count timeout (SMT)', count_timeout)
+						if count_valid_result > 0:
+							avg_precision /= count_valid_result
+							avg_recall /= count_valid_result
+							print ('*'*20)
+							print ('There are ', len (graph_ids), ' graphs in evaluation')
+							print ('   ', count_graph_no_error_edges, ' has no error edge')
+							print ('The average precision: ', avg_precision)
+							print ('The average recall: ', avg_recall)
+
+							print ('Overall num edges removed ', num_edges_removed)
+
+							overall_avg_precision += avg_precision
+							overall_avg_recall += avg_recall
+
+						overall_avg_num_edges_removed += num_edges_removed
+
+
+						# if count_invalid_result > 0:
+						avg_termination_tp /= len(graph_ids)
+						avg_termination_fp /= len(graph_ids)
+
+						overall_avg_termination_tp += avg_termination_tp
+						overall_avg_termination_fp += avg_termination_fp
+						# overall_avg_termination_accuracy += avg_termination_accuracy
+
+						overall_avg_valid_result += count_valid_result
+						overall_avg_invalid_result += count_invalid_result
+
+						end = time.time()
+						time_taken += end-start
+						hours, rem = divmod(end-start, 3600)
+						minutes, seconds = divmod(rem, 60)
+						time_formated = "{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds)
+						print ('time taken: ' + time_formated)
+
+					time_taken /= NUM_ITER
+					overall_avg_precision /= NUM_ITER
+					overall_avg_recall /= NUM_ITER
+					overall_avg_omega /= NUM_ITER
+					overall_avg_num_edges_removed /= NUM_ITER
+					overall_avg_valid_result /= NUM_ITER
+					overall_avg_invalid_result /= NUM_ITER
+					overall_avg_termination_tp /= NUM_ITER
+					overall_avg_termination_fp /= NUM_ITER
+					# overall_avg_termination_accuracy /= NUM_ITER
+					overall_avg_timeout /= NUM_ITER
+
+					print ('='*20)
+					print ('total number of iterations over the dataset ', NUM_ITER)
+					print ('OVERALL There are ', len (graph_ids), ' graphs')
+					print ('   ' + str(count_graph_no_error_edges) + ' has no error edge')
+					print ('OVERALL Count results precision-recall', count_valid_result)
+					print ('OVERALL Count results without precision-recall', count_invalid_result)
+					print ('OVERALL COUNT SMT timeout ', overall_avg_timeout)
+					print ('OVERALL The average precision: ', avg_precision)
+					print ('OVERALL The average recall: ', avg_recall)
+					print ('OVERALL The average tp: [for termination]', overall_avg_termination_tp)
+					print ('OVERALL The average fp: [for termination]', overall_avg_termination_fp)
+					# print ('OVERALL The average accuracy: [for termination]', overall_avg_termination_accuracy)
+					print ('OVERALL The average Omega: ', avg_omega)
+					print ('OVERALL Overall num edges removed ', num_edges_removed)
+
+					hours, rem = divmod(time_taken, 3600)
+					minutes, seconds = divmod(rem, 60)
+					time_formated = "{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds)
+					print ('avg time taken: ' + time_formated)
+
+					overall_logbook_writer.write ('\n\ntotal number of iterations over this dataset ' +str(NUM_ITER))
+					overall_logbook_writer.write ('\nOVERALL There are '+str(len (graph_ids)) + ' graphs')
+					overall_logbook_writer.write ('   ' + str(count_graph_no_error_edges) + ' has no error edge')
+					overall_logbook_writer.write ('\nOVERALL Count results with precision-recall '+ str(count_valid_result))
+					overall_logbook_writer.write ('\nOVERALL Count results without precision-recall ' +str(count_invalid_result))
+					overall_logbook_writer.write ('\nOVERALL Avg timeout ' +str(overall_avg_timeout))
+					overall_logbook_writer.write ('\nOVERALL The average precision: ' +str(avg_precision))
+					overall_logbook_writer.write ('\nOVERALL The average recall: '+str(avg_recall))
+					overall_logbook_writer.write ('\nOVERALL The average tp [for termination]: ' +str(overall_avg_termination_tp))
+					overall_logbook_writer.write ('\nOVERALL The average fp [for termination]: '+str(overall_avg_termination_fp))
+					# overall_logbook_writer.write ('\nOVERALL The average accuracy [for termination]: '+str(overall_avg_termination_accuracy))
+					overall_logbook_writer.write ('\nOVERALL The average Omega: '+str(avg_omega))
+					overall_logbook_writer.write ('\nOVERALL Overall num edges removed '+str(num_edges_removed))
+					overall_logbook_writer.write ('\n avg time taken: ' + time_formated)
 
 
 
