@@ -177,17 +177,17 @@ class GraphSolver():
 			self.weight_encoding_equivalence = 1 #5
 			self.weight_redirect = 1 #5
 		elif MODE == FINETUNNED:  # corresponds to w2 in the paper
-			self.default_weight = 35
-			self.weight_iUNA_uneq_edge = 15 # weight of attacking edge
-			self.weight_encoding_equivalence = 10
-			self.weight_redirect = 10
+			self.default_weight = 31
+			self.weight_iUNA_uneq_edge = 16 # weight of attacking edge
+			self.weight_encoding_equivalence = 5
+			self.weight_redirect = 5
 		else:
 			print ('ERROR in MODE')
 
 
 		# self.max_equivalent_classes = 2 + int(len(self.input_graph.nodes())/150)
 		# attacking related
-		self.beta = 0.55 #
+		self.beta = 0.50 #
 		self.reduced_weight_disambiguation = 5
 		self.increased_weight_geq_2 = 2
 		self.rate_for_remainging_other_edges = 0.15
@@ -624,8 +624,8 @@ class GraphSolver():
 
 		print ('\n\nThis graph has ',graph.number_of_nodes(), ' nodes')
 		# print( 'and ', graph.number_of_edges(), 'edges')
-		max_equivalent_classes = 2 + int(math.log10(len(graph.nodes())))
-		# max_equivalent_classes = 2 + int(len(graph.nodes())/50)
+		# max_equivalent_classes = 2 + int(math.log10(len(graph.nodes())))
+		max_equivalent_classes = 2 + int(len(graph.nodes())/50)
 		print(' max equivalent classes: ', max_equivalent_classes)
 		# print ('\n\nsolving using smt')
 		# resulting graph
