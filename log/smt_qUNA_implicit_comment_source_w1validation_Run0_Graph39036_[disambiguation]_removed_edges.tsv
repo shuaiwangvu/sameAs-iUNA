@@ -1,0 +1,10 @@
+Source	Target
+http://dbpedia.org/resource/Berlin	http://data.nytimes.com/N50987186835223032381
+http://dbpedia.org/resource/Tirana	http://data.nytimes.com/N15100443101042130241
+http://rdf.freebase.com/ns/m.07m_f	http://data.nytimes.com/N15100443101042130241
+http://dbpedia.org/resource/Point_Reyes_National_Seashore	http://data.nytimes.com/80989572077620084871
+http://dbpedia.org/resource/Point_Reyes_National_Seashore	http://sws.geonames.org/5384015/
+http://data.nytimes.com/N15100443101042130241	http://sws.geonames.org/3183875/
+http://data.nytimes.com/N50987186835223032381	http://rdf.freebase.com/ns/en.berlin
+http://data.nytimes.com/N50987186835223032381	http://sws.geonames.org/2950159/
+http://data.nytimes.com/N50987186835223032381	http://rdf.freebase.com/ns/guid.9202a8c04000641f80000000000094d6

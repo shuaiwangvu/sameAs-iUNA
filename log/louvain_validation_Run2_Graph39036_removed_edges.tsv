@@ -9346,6 +9346,7 @@ http://bg.dbpedia.org/resource/Флинт	http://war.dbpedia.org/resource/Flint,
 http://bg.dbpedia.org/resource/Флинт	http://www.wikidata.org/entity/Q490584
 http://bg.dbpedia.org/resource/Флинт	http://zh.dbpedia.org/resource/弗林特_(密西根州)
 http://bg.dbpedia.org/resource/Флинт	http://bg.dbpedia.org/resource/%D0%A4%D0%BB%D0%B8%D0%BD%D1%82
+http://cy.dbpedia.org/resource/Flint,_Michigan	http://es.dbpedia.org/resource/Flint_(Míchigan)
 http://cy.dbpedia.org/resource/Flint,_Michigan	http://fa.dbpedia.org/resource/فلینت،_میشیگان
 http://cy.dbpedia.org/resource/Flint,_Michigan	http://ja.dbpedia.org/resource/フリント_(ミシガン州)
 http://cy.dbpedia.org/resource/Flint,_Michigan	http://kk.dbpedia.org/resource/Сити_оф_Флинт_(Мичиган)
@@ -9356,6 +9357,7 @@ http://cy.dbpedia.org/resource/Flint,_Michigan	http://sr.dbpedia.org/resource/Ф
 http://cy.dbpedia.org/resource/Flint,_Michigan	http://uk.dbpedia.org/resource/Флінт_(Мічиган)
 http://cy.dbpedia.org/resource/Flint,_Michigan	http://ur.dbpedia.org/resource/فلنٹ،_مشی_گن
 http://cy.dbpedia.org/resource/Flint,_Michigan	http://zh.dbpedia.org/resource/弗林特_(密西根州)
+http://dbpedia.org/resource/Flint,_Michigan	http://es.dbpedia.org/resource/Flint_(Míchigan)
 http://dbpedia.org/resource/Flint,_Michigan	http://fa.dbpedia.org/resource/فلینت،_میشیگان
 http://dbpedia.org/resource/Flint,_Michigan	http://ja.dbpedia.org/resource/フリント_(ミシガン州)
 http://dbpedia.org/resource/Flint,_Michigan	http://kk.dbpedia.org/resource/Сити_оф_Флинт_(Мичиган)
@@ -9374,7 +9376,7 @@ http://dbpedia.org/resource/Flint,_Michigan	http://rdf.freebase.com/ns/m/0m2rv
 http://dbpedia.org/resource/Flint,_Michigan	http://sh.dbpedia.org/resource/Flint,_Michigan
 http://dbpedia.org/resource/Flint,_Michigan	http://wikidata.org/entity/Q490584
 http://dbpedia.org/resource/Flint,_Michigan	http://data.nytimes.com/N4134482040463221051
-http://dbpedia.org/resource/Flint,_Michigan	http://www4.wiwiss.fu-berlin.de/flickrwrappr/photos/Flint,_Michigan
+http://de.dbpedia.org/resource/Flint_(Michigan)	http://es.dbpedia.org/resource/Flint_(Míchigan)
 http://de.dbpedia.org/resource/Flint_(Michigan)	http://fa.dbpedia.org/resource/فلینت،_میشیگان
 http://de.dbpedia.org/resource/Flint_(Michigan)	http://ja.dbpedia.org/resource/フリント_(ミシガン州)
 http://de.dbpedia.org/resource/Flint_(Michigan)	http://kk.dbpedia.org/resource/Сити_оф_Флинт_(Мичиган)
@@ -9385,6 +9387,7 @@ http://de.dbpedia.org/resource/Flint_(Michigan)	http://sr.dbpedia.org/resource/�
 http://de.dbpedia.org/resource/Flint_(Michigan)	http://uk.dbpedia.org/resource/Флінт_(Мічиган)
 http://de.dbpedia.org/resource/Flint_(Michigan)	http://ur.dbpedia.org/resource/فلنٹ،_مشی_گن
 http://de.dbpedia.org/resource/Flint_(Michigan)	http://zh.dbpedia.org/resource/弗林特_(密西根州)
+http://eo.dbpedia.org/resource/Flint	http://es.dbpedia.org/resource/Flint_(Míchigan)
 http://eo.dbpedia.org/resource/Flint	http://ja.dbpedia.org/resource/フリント_(ミシガン州)
 http://eo.dbpedia.org/resource/Flint	http://ko.dbpedia.org/resource/플린트_(미시간_주)
 http://eo.dbpedia.org/resource/Flint	http://mk.dbpedia.org/resource/Флинт_(Мичиген)
@@ -9395,15 +9398,36 @@ http://eo.dbpedia.org/resource/Flint	http://ur.dbpedia.org/resource/فلنٹ،_�
 http://eo.dbpedia.org/resource/Flint	http://zh.dbpedia.org/resource/弗林特_(密西根州)
 http://eo.dbpedia.org/resource/Flint	http://fa.dbpedia.org/resource/فلینت،_میشیگان
 http://eo.dbpedia.org/resource/Flint	http://kk.dbpedia.org/resource/Сити_оф_Флинт_(Мичиган)
+http://es.dbpedia.org/resource/Flint_(Míchigan)	http://br.dbpedia.org/resource/Flint_(Michigan)
 http://es.dbpedia.org/resource/Flint_(Míchigan)	http://fa.dbpedia.org/resource/فلینت،_میشیگان
+http://es.dbpedia.org/resource/Flint_(Míchigan)	http://fi.dbpedia.org/resource/Flint_(Michigan)
+http://es.dbpedia.org/resource/Flint_(Míchigan)	http://fr.dbpedia.org/resource/Flint_(Michigan)
+http://es.dbpedia.org/resource/Flint_(Míchigan)	http://id.dbpedia.org/resource/Flint,_Michigan
+http://es.dbpedia.org/resource/Flint_(Míchigan)	http://it.dbpedia.org/resource/Flint_(Michigan)
 http://es.dbpedia.org/resource/Flint_(Míchigan)	http://ja.dbpedia.org/resource/フリント_(ミシガン州)
 http://es.dbpedia.org/resource/Flint_(Míchigan)	http://kk.dbpedia.org/resource/Сити_оф_Флинт_(Мичиган)
 http://es.dbpedia.org/resource/Flint_(Míchigan)	http://ko.dbpedia.org/resource/플린트_(미시간_주)
 http://es.dbpedia.org/resource/Flint_(Míchigan)	http://mk.dbpedia.org/resource/Флинт_(Мичиген)
+http://es.dbpedia.org/resource/Flint_(Míchigan)	http://nl.dbpedia.org/resource/Flint_(Michigan)
+http://es.dbpedia.org/resource/Flint_(Míchigan)	http://no.dbpedia.org/resource/Flint_(Michigan)
+http://es.dbpedia.org/resource/Flint_(Míchigan)	http://pl.dbpedia.org/resource/Flint_(Michigan)
+http://es.dbpedia.org/resource/Flint_(Míchigan)	http://pt.dbpedia.org/resource/Flint_(Michigan)
+http://es.dbpedia.org/resource/Flint_(Míchigan)	http://rdf.freebase.com/ns/m.0m2rv
+http://es.dbpedia.org/resource/Flint_(Míchigan)	http://ro.dbpedia.org/resource/Flint,_Michigan
 http://es.dbpedia.org/resource/Flint_(Míchigan)	http://ru.dbpedia.org/resource/Флинт_(Мичиган)
+http://es.dbpedia.org/resource/Flint_(Míchigan)	http://simple.dbpedia.org/resource/Flint,_Michigan
+http://es.dbpedia.org/resource/Flint_(Míchigan)	http://sk.dbpedia.org/resource/Flint
 http://es.dbpedia.org/resource/Flint_(Míchigan)	http://sr.dbpedia.org/resource/Флинт_(Мичиген)
+http://es.dbpedia.org/resource/Flint_(Míchigan)	http://sv.dbpedia.org/resource/Flint,_Michigan
+http://es.dbpedia.org/resource/Flint_(Míchigan)	http://sw.dbpedia.org/resource/Flint,_Michigan
+http://es.dbpedia.org/resource/Flint_(Míchigan)	http://tl.dbpedia.org/resource/Flint,_Michigan
 http://es.dbpedia.org/resource/Flint_(Míchigan)	http://uk.dbpedia.org/resource/Флінт_(Мічиган)
 http://es.dbpedia.org/resource/Flint_(Míchigan)	http://ur.dbpedia.org/resource/فلنٹ،_مشی_گن
+http://es.dbpedia.org/resource/Flint_(Míchigan)	http://uz.dbpedia.org/resource/Flint_(Michigan)
+http://es.dbpedia.org/resource/Flint_(Míchigan)	http://vi.dbpedia.org/resource/Flint,_Michigan
+http://es.dbpedia.org/resource/Flint_(Míchigan)	http://vo.dbpedia.org/resource/Flint
+http://es.dbpedia.org/resource/Flint_(Míchigan)	http://war.dbpedia.org/resource/Flint,_Michigan
+http://es.dbpedia.org/resource/Flint_(Míchigan)	http://www.wikidata.org/entity/Q490584
 http://es.dbpedia.org/resource/Flint_(Míchigan)	http://zh.dbpedia.org/resource/弗林特_(密西根州)
 http://es.dbpedia.org/resource/Flint_(Míchigan)	http://es.dbpedia.org/resource/Flint_(M%C3%ADchigan)
 http://fr.dbpedia.org/resource/Flint_(Michigan)	http://fa.dbpedia.org/resource/فلینت،_میشیگان

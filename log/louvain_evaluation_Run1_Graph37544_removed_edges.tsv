@@ -6230,7 +6230,6 @@ http://da.dbpedia.org/resource/Boston	http://ur.dbpedia.org/resource/بوسٹن
 http://da.dbpedia.org/resource/Boston	http://yi.dbpedia.org/resource/באסטאן
 http://da.dbpedia.org/resource/Boston	http://zh-yue.dbpedia.org/resource/波士頓
 http://da.dbpedia.org/resource/Boston	http://zh.dbpedia.org/resource/波士顿
-http://dbpedia.org/resource/Boston	http://data.nytimes.com/87213190915053133621
 http://dbpedia.org/resource/Boston	http://el.dbpedia.org/resource/Βοστώνη
 http://dbpedia.org/resource/Boston	http://fa.dbpedia.org/resource/بوستون
 http://dbpedia.org/resource/Boston	http://fa.dbpedia.org/resource/بوستون،_ماساچوست
@@ -6257,7 +6256,6 @@ http://dbpedia.org/resource/Boston	http://sh.dbpedia.org/resource/Boston,_Massac
 http://dbpedia.org/resource/Boston	http://simple.dbpedia.org/resource/Boston
 http://dbpedia.org/resource/Boston	http://sr.dbpedia.org/resource/Бостон
 http://dbpedia.org/resource/Boston	http://sw.cyc.com/concept/Mx4rvVi3gZwpEbGdrcN5Y29ycA
-http://dbpedia.org/resource/Boston	http://sws.geonames.org/4930956/
 http://dbpedia.org/resource/Boston	http://ta.dbpedia.org/resource/பாஸ்டன்
 http://dbpedia.org/resource/Boston	http://te.dbpedia.org/resource/బోస్టన్
 http://dbpedia.org/resource/Boston	http://th.dbpedia.org/resource/บอสตัน
@@ -14207,6 +14205,7 @@ http://dbpedia.org/resource/Boston,_Massachusetts	http://sw.opencyc.org/concept/
 http://dbpedia.org/resource/Boston,_Massachusetts	http://sws.geonames.org/4930956/
 http://dbpedia.org/resource/Boston,_Massachusetts	http://www4.wiwiss.fu-berlin.de/flickrwrappr/photos/Boston,_Massachusetts
 http://data.nytimes.com/87213190915053133621	http://data.nytimes.com/boston_mass_geo
+http://sws.geonames.org/4930956/	http://dbpedia.org/resource/Boston%2C_Massachusetts
 http://dbpedia.org/resource/%E2%9A%BC	http://dbpedia.org/resource/⚼
 http://dbpedia.org/resource/Asstronomee	http://rdf.freebase.com/ns/guid.9202a8c04000641f8000000000062ffa
 http://hi.dbpedia.org/resource/ज्योतिष_सिद्धान्त	http://hi.dbpedia.org/resource/%E0%A4%9C%E0%A5%8D%E0%A4%AF%E0%A5%8B%E0%A4%A4%E0%A4%BF%E0%A4%B7_%E0%A4%B8%E0%A4%BF%E0%A4%A6%E0%A5%8D%E0%A4%A7%E0%A4%BE%E0%A4%A8%E0%A5%8D%E0%A4%A4

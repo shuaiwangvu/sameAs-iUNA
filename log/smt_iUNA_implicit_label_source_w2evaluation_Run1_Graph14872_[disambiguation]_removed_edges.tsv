@@ -1,0 +1,7 @@
+Source	Target
+http://d-nb.info/gnd/119399237	http://dbpedia.org/resource/John_Adams_(composer)
+http://dbpedia.org/resource/John_Adam%27s_Administration	http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000001fe18
+http://dbpedia.org/resource/John_Adams	http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000001fe18
+http://dbpedia.org/resource/John_Adams_%28Confederate_Army_officer%29	http://rdf.freebase.com/ns/guid.9202a8c04000641f8000000000e6166f
+http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000001fe18	http://dbpedia.org/resource/Adams%2C_John
+http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000001fe18	http://dbpedia.org/resource/John_Adams%2C_Jr.

@@ -1598,7 +1598,6 @@ http://dbpedia.org/resource/Río_Iguazú	http://rdf.freebase.com/ns/m.0292n2
 http://dbpedia.org/resource/Salto_De_Iguazu_Falls	http://rdf.freebase.com/ns/m.0cy6k
 http://dbpedia.org/resource/The_Devil's_Throat	http://rdf.freebase.com/ns/m.0cy6k
 http://dbpedia.org/resource/The_devils_throat	http://rdf.freebase.com/ns/m.0cy6k
-http://dbpedia.org/resource/Virginia_Beach%2C_Virginia	http://www.rdfabout.com/rdf/usgov/geo/us/va/counties/virginia_beach/virginia_beach
 http://dbpedia.org/resource/Virginia_Beach,_Virginia	http://el.dbpedia.org/resource/Βιρτζίνια_Μπιτς_(Βιρτζίνια)
 http://dbpedia.org/resource/Virginia_Beach,_Virginia	http://fa.dbpedia.org/resource/ویرجینیابیچ
 http://dbpedia.org/resource/Virginia_Beach,_Virginia	http://fi.dbpedia.org/resource/Virginia_Beach
@@ -1634,6 +1633,7 @@ http://dbpedia.org/resource/Virginia_Beach,_Virginia	http://vi.dbpedia.org/resou
 http://dbpedia.org/resource/Virginia_Beach,_Virginia	http://vo.dbpedia.org/resource/Virginia_Beach
 http://dbpedia.org/resource/Virginia_Beach,_Virginia	http://war.dbpedia.org/resource/Virginia_Beach,_Virginia
 http://dbpedia.org/resource/Virginia_Beach,_Virginia	http://wikidata.dbpedia.org/resource/Q49259
+http://dbpedia.org/resource/Virginia_Beach,_Virginia	http://www.rdfabout.com/rdf/usgov/geo/us/va/counties/virginia_beach/virginia_beach
 http://dbpedia.org/resource/Virginia_Beach,_Virginia	http://yo.dbpedia.org/resource/Virginia_Beach
 http://dbpedia.org/resource/Virginia_Beach,_Virginia	http://yo.dbpedia.org/resource/Virginia_Beach,_Virginia
 http://dbpedia.org/resource/Virginia_Beach,_Virginia	http://zh-min-nan.dbpedia.org/resource/Virginia_Beach
@@ -4473,7 +4473,6 @@ http://sw.dbpedia.org/resource/Virginia_Beach,_Virginia	http://tr.dbpedia.org/re
 http://sw.dbpedia.org/resource/Virginia_Beach,_Virginia	http://uk.dbpedia.org/resource/Вірджинія-Біч
 http://sw.dbpedia.org/resource/Virginia_Beach,_Virginia	http://www.wikidata.org/entity/Q49259
 http://sw.dbpedia.org/resource/Virginia_Beach,_Virginia	http://zh.dbpedia.org/resource/維珍尼亞海灘
-http://sws.geonames.org/4791259/	http://www.rdfabout.com/rdf/usgov/geo/us/va/counties/virginia_beach/virginia_beach
 http://ta.dbpedia.org/resource/%E0%AE%87%E0%AE%95%E0%AF%81%E0%AE%B5%E0%AE%BE%E0%AE%9A%E0%AF%81_%E0%AE%85%E0%AE%B0%E0%AF%81%E0%AE%B5%E0%AE%BF	http://ta.dbpedia.org/resource/இகுவாசு_அருவி
 http://ta.dbpedia.org/resource/இகுவாசு_அருவி	http://th.dbpedia.org/resource/น้ำตกอีกวาซู
 http://ta.dbpedia.org/resource/இகுவாசு_அருவி	http://tr.dbpedia.org/resource/Iguazú_Şelalesi

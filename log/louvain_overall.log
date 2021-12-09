@@ -2,3 +2,27 @@
 method = louvain
 ********
 dataset = validation
+
+total number of iterations over this dataset 3
+OVERALL There are 14 graphs   6 has no error edge
+OVERALL Count result [where precision and recall works] 8
+OVERALL Count result [where precision and recall do not apply] 6
+OVERALL The average precision: 0.020077197931925337
+OVERALL The average recall: 0.7585049772541956
+OVERALL The average tp [for termination]: 0.0
+OVERALL The average fp [for termination]: 0.0
+OVERALL The average Omega: 0.08464960622331352
+OVERALL Overall num edges removed 39271
+********
+dataset = evaluation
+
+total number of iterations over this dataset 3
+OVERALL There are 14 graphs   5 has no error edge
+OVERALL Count result [where precision and recall works] 9
+OVERALL Count result [where precision and recall do not apply] 5
+OVERALL The average precision: 0.03941317959307497
+OVERALL The average recall: 0.6599158510444669
+OVERALL The average tp [for termination]: 0.0
+OVERALL The average fp [for termination]: 0.0
+OVERALL The average Omega: 0.08253898338733243
+OVERALL Overall num edges removed 43642

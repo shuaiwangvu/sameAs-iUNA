@@ -1,0 +1,4 @@
+Source	Target
+http://dbpedia.org/resource/Jersey_City,_New_Jersey	http://data.nytimes.com/N50987186835223032381
+http://dbpedia.org/resource/Point_Reyes_National_Seashore	http://data.nytimes.com/80989572077620084871
+http://data.nytimes.com/80989572077620084871	http://sws.geonames.org/5384015/

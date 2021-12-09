@@ -1,0 +1,8 @@
+Source	Target
+http://dbpedia.org/resource/Jersey_City,_New_Jersey	http://data.nytimes.com/N42814424980517559061
+http://dbpedia.org/resource/Jersey_City,_New_Jersey	http://data.nytimes.com/N50987186835223032381
+http://dbpedia.org/resource/Tirana	http://data.nytimes.com/N15100443101042130241
+http://rdf.freebase.com/ns/m.07m_f	http://data.nytimes.com/N15100443101042130241
+http://data.nytimes.com/N15100443101042130241	http://sws.geonames.org/3183875/
+http://data.nytimes.com/N42814424980517559061	http://dbpedia.org/resource/Jersey_City%2C_New_Jersey
+http://data.nytimes.com/N42814424980517559061	http://sws.geonames.org/5099836/

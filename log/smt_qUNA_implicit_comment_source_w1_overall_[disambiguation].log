@@ -1,0 +1,36 @@
+
+ method = smt
+ UNA = qUNA
+ Additioinal info = disambiguation
+ source = implicit_comment_source
+ weighting scheme = w1
+********
+dataset = validation
+
+total number of iterations over this dataset 3
+OVERALL There are 14 graphs   6 has no error edge
+OVERALL Count results with precision-recall 6
+OVERALL Count results without precision-recall 8
+OVERALL Avg timeout 0.0
+OVERALL The average precision: 0.4116241156102318
+OVERALL The average recall: 0.16264199051112874
+OVERALL The average tp [for termination]: 4.928571428571429
+OVERALL The average fp [for termination]: 0.8095238095238094
+OVERALL The average Omega: 0.5729979974995297
+OVERALL Overall num edges removed 209
+ avg time taken: 00:03:46.99
+********
+dataset = evaluation
+
+total number of iterations over this dataset 3
+OVERALL There are 14 graphs   5 has no error edge
+OVERALL Count results with precision-recall 5
+OVERALL Count results without precision-recall 9
+OVERALL Avg timeout 1.0
+OVERALL The average precision: 0.1330703166935051
+OVERALL The average recall: 0.004584349463055662
+OVERALL The average tp [for termination]: 3.9285714285714284
+OVERALL The average fp [for termination]: 1.119047619047619
+OVERALL The average Omega: 0.5775646643989952
+OVERALL Overall num edges removed 43
+ avg time taken: 00:16:24.72
