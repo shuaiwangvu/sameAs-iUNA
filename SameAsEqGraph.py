@@ -106,8 +106,8 @@ def load_graph (nodes_filename, edges_filename):
 			g.add_edge(s, t, metalink_id = id)
 		else:
 			print ('FOUND reflexive EDGES!')
-	# nodes_file.close()
-	# edges_file.close()
+	nodes_file.close()
+	edges_file.close()
 	return g
 
 
