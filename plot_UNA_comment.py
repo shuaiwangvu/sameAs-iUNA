@@ -256,7 +256,7 @@ for id in gs:
 
 f = plt.figure()
 f.set_figwidth(7)
-f.set_figheight(2.5)
+f.set_figheight(1.6)
 barWidth = 0.33
 ax = plt.subplot(111)
 
@@ -266,6 +266,12 @@ size_comment_source_to_entities_counter_sorted = collections.OrderedDict(sorted(
 print ('nUNA', size_comment_source_to_entities_counter_sorted)
 x1 = size_comment_source_to_entities_counter_sorted.keys()
 y1 = size_comment_source_to_entities_counter_sorted.values()
+
+sum_size_iUNA = sum(size_comment_source_to_entities_counter.values())
+print ('y1 = ', y1)
+y1 = [y/sum_size_iUNA for y in y1]
+print ('y1 normalised = ', y1)
+y1 = [x *100 for x in y1]
 ax.bar(x1, y1, color ='green', width=barWidth, label='nUNA', align='center')
 # next, see what it is like for each entity each source
 b = size_comment_source_to_entities_counter[1]
@@ -283,6 +289,12 @@ print ('qUNA ', size_comment_source_to_entities_counter_sorted)
 x2 = size_comment_source_to_entities_counter_sorted.keys()
 x2 = [x + barWidth for x in x2]
 y2 = size_comment_source_to_entities_counter_sorted.values()
+
+sum_size_iUNA = sum(size_comment_source_to_entities_counter.values())
+print ('y2 = ', y2)
+y2 = [y/sum_size_iUNA for y in y2]
+print ('y2 normalised = ', y2)
+y2 = [x *100 for x in y2]
 ax.bar(x2, y2, color ='red', width=barWidth, label='qUNA', align='center')
 # next, see what it is like for each entity each source
 b = size_comment_source_to_entities_counter[1]
@@ -297,11 +309,19 @@ if sum_b != 0 :
 
 print ('********* iUNA *********')
 size_comment_source_to_entities_counter = collections.Counter(size_comment_source_to_entities_iUNA)
+
 size_comment_source_to_entities_counter_sorted = collections.OrderedDict(sorted(size_comment_source_to_entities_counter.items()))
 print ('iUNA', size_comment_source_to_entities_counter_sorted)
+print('sum = ', sum_size_iUNA)
 x2 = size_comment_source_to_entities_counter_sorted.keys()
 x2 = [x + barWidth*2 for x in x2]
 y2 = size_comment_source_to_entities_counter_sorted.values()
+
+sum_size_iUNA = sum(size_comment_source_to_entities_counter.values())
+print ('y2 = ', y2)
+y2 = [y/sum_size_iUNA for y in y2]
+print ('y2 normalised = ', y2)
+
 # next, see what it is like for each entity each source
 b = size_comment_source_to_entities_counter[1]
 sum_b = 0
@@ -311,6 +331,7 @@ print ('sum_one ', sum_b)
 if sum_b != 0 :
 	print ('proportion of one entity each resource',b /sum_b)
 
+y2 = [x *100 for x in y2]
 ax.bar(x2, y2, color ='blue', width=barWidth, label='iUNA', align='center')
 
 
@@ -323,7 +344,7 @@ ax.legend()
 
 plt.yscale('log')
 plt.xlabel("number of entities")
-plt.ylabel("frequency")
+plt.ylabel("proportion (%)")
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 # plt.title('Frequency of number of entities in comment-like sources in equivalence classes')
