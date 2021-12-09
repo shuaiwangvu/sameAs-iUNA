@@ -141,8 +141,8 @@ class GraphSolver():
 		load_implicit_comment_source(path_to_implicit_comment_source, self.input_graph)
 
 		# load disambiguation entities
-		path_to_disambiguation_entities = "sameas_disambiguation_entities.hdt"
-		self.dis_entities = load_disambiguation_entities(self.input_graph.nodes(), path_to_disambiguation_entities)
+		# path_to_disambiguation_entities = "sameas_disambiguation_entities.hdt"
+		# self.dis_entities = load_disambiguation_entities(self.input_graph.nodes(), path_to_disambiguation_entities)
 		# print ('there are ', len (self.dis_entities), ' entities about disambiguation (in this graph)')
 
 		# load the weight graph
@@ -687,9 +687,9 @@ class GraphSolver():
 				total_edges_considered += 1
 				soft_clauses[clause] = self.default_weight
 
-				if self.consider_disambiguation:
-					if left in self.dis_entities or right in self.dis_entities:
-						soft_clauses[clause] -= self.reduced_weight_disambiguation
+				# if self.consider_disambiguation:
+				# 	if left in self.dis_entities or right in self.dis_entities:
+				# 		soft_clauses[clause] -= self.reduced_weight_disambiguation
 
 				if self.weights_occ == True:
 					# otherwise, use the weights from the
@@ -1273,9 +1273,8 @@ elif which_method == 'smt':
 
 							print ('Overall num edges removed ', num_edges_removed)
 
-							overall_avg_precision += avg_precision
-							overall_avg_recall += avg_recall
-
+						overall_avg_precision += avg_precision
+						overall_avg_recall += avg_recall
 						overall_avg_num_edges_removed += num_edges_removed
 
 
@@ -1316,8 +1315,8 @@ elif which_method == 'smt':
 					print ('OVERALL Count results precision-recall', count_valid_result)
 					print ('OVERALL Count results without precision-recall', count_invalid_result)
 					print ('OVERALL COUNT SMT timeout ', overall_avg_timeout)
-					print ('OVERALL The average precision: ', avg_precision)
-					print ('OVERALL The average recall: ', avg_recall)
+					print ('OVERALL The average precision: ', overall_avg_precision)
+					print ('OVERALL The average recall: ', overall_avg_recall)
 					print ('OVERALL The average tp: [for termination]', overall_avg_termination_tp)
 					print ('OVERALL The average fp: [for termination]', overall_avg_termination_fp)
 					# print ('OVERALL The average accuracy: [for termination]', overall_avg_termination_accuracy)
@@ -1335,8 +1334,8 @@ elif which_method == 'smt':
 					overall_logbook_writer.write ('\nOVERALL Count results with precision-recall '+ str(count_valid_result))
 					overall_logbook_writer.write ('\nOVERALL Count results without precision-recall ' +str(count_invalid_result))
 					overall_logbook_writer.write ('\nOVERALL Avg timeout ' +str(overall_avg_timeout))
-					overall_logbook_writer.write ('\nOVERALL The average precision: ' +str(avg_precision))
-					overall_logbook_writer.write ('\nOVERALL The average recall: '+str(avg_recall))
+					overall_logbook_writer.write ('\nOVERALL The average precision: ' +str(overall_avg_precision))
+					overall_logbook_writer.write ('\nOVERALL The average recall: '+str(overall_avg_recall))
 					overall_logbook_writer.write ('\nOVERALL The average tp [for termination]: ' +str(overall_avg_termination_tp))
 					overall_logbook_writer.write ('\nOVERALL The average fp [for termination]: '+str(overall_avg_termination_fp))
 					# overall_logbook_writer.write ('\nOVERALL The average accuracy [for termination]: '+str(overall_avg_termination_accuracy))
