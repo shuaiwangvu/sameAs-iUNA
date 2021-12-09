@@ -1,0 +1,10 @@
+Source	Target
+http://dbpedia.org/resource/Madison,_Wisconsin	http://data.nytimes.com/N42015398622290083051
+http://dbpedia.org/resource/Xi'an	http://data.nytimes.com/56399731571712931101
+http://dbpedia.org/resource/%C3%9Atila	http://data.nytimes.com/N75304497924591241091
+http://dbpedia.org/resource/Madison	http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000006ec5d
+http://data.nytimes.com/56399731571712931101	http://dbpedia.org/resource/Xi%27an
+http://data.nytimes.com/56399731571712931101	http://sws.geonames.org/1790630/
+http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000008f989	http://dbpedia.org/resource/Hao_%28city%29
+http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000008f989	http://dbpedia.org/resource/Xi%27an
+http://sws.geonames.org/1790630/	http://dbpedia.org/resource/Xi%27an

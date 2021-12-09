@@ -1,0 +1,35 @@
+
+ method = smt
+ UNA = iUNA
+ source = implicit_label_source
+ weighting scheme = w2
+********
+dataset = validation
+
+total number of iterations over this dataset 3
+OVERALL There are 14 graphs   6 has no error edge
+OVERALL Count results with precision-recall 8
+OVERALL Count results without precision-recall 6
+OVERALL Avg timeout 0.0
+OVERALL The average precision: 0.16767868771131714
+OVERALL The average recall: 0.1083934554897018
+OVERALL The average tp [for termination]: 4.928571428571429
+OVERALL The average fp [for termination]: 0.0
+OVERALL The average Omega: 0.6194152018517728
+OVERALL Overall num edges removed 263
+ avg time taken: 00:05:48.58
+********
+dataset = evaluation
+
+total number of iterations over this dataset 3
+OVERALL There are 14 graphs   5 has no error edge
+OVERALL Count results with precision-recall 8
+OVERALL Count results without precision-recall 6
+OVERALL Avg timeout 1.0
+OVERALL The average precision: 0.06523477727680314
+OVERALL The average recall: 0.016156640853406352
+OVERALL The average tp [for termination]: 3.714285714285714
+OVERALL The average fp [for termination]: 0.14285714285714285
+OVERALL The average Omega: 0.6171971164412359
+OVERALL Overall num edges removed 175
+ avg time taken: 00:18:28.44

@@ -1,0 +1,6 @@
+Source	Target
+http://dbpedia.org/resource/Reuse_of_bottles	http://rdf.freebase.com/ns/m.02gd23
+http://dbpedia.org/resource/Reuse_of_water_bottles	http://rdf.freebase.com/ns/m.02gd23
+http://fr.dbpedia.org/resource/Réutilisation_des_bouteilles_d'eau	http://rdf.freebase.com/ns/m.02gd23
+http://ja.dbpedia.org/resource/リターナブル瓶	http://rdf.freebase.com/ns/m.02gd23
+http://rdf.freebase.com/ns/m.02gd23	http://www.wikidata.org/entity/Q3458214

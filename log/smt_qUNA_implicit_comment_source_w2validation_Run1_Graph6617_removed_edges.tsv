@@ -1,0 +1,13 @@
+Source	Target
+http://dbpedia.org/resource/Bandon,_Oregon	http://data.nytimes.com/43553777731027839441
+http://dbpedia.org/resource/Burgundy	http://rdf.freebase.com/ns/guid.9202a8c04000641f8000000000049a5a
+http://dbpedia.org/resource/Bay_of_Biscay	http://data.nytimes.com/N30038501401041739851
+http://rdf.freebase.com/ns/m.0d5sb	http://data.nytimes.com/N30038501401041739851
+http://nl.dbpedia.org/resource/Koninkrijk_Bourgondië	http://nl.dbpedia.org/resource/Koninkrijk_Bourgondi%C3%AB
+http://dbpedia.org/resource/Rulers_of_Provence	http://rdf.freebase.com/ns/m.053yrp
+http://de.dbpedia.org/resource/Gouverneur_der_Provence	http://rdf.freebase.com/ns/m.053yrp
+http://dbpedia.org/resource/List_of_rulers_of_Provence	http://rdf.freebase.com/ns/m.053yrp
+http://rdf.freebase.com/ns/m.053yrp	http://it.dbpedia.org/resource/Governanti_della_Provenza
+http://rdf.freebase.com/ns/m.053yrp	http://pl.dbpedia.org/resource/Władcy_Prowansji
+http://rdf.freebase.com/ns/m.053yrp	http://sv.dbpedia.org/resource/Grevarna_av_Provence
+http://rdf.freebase.com/ns/m.053yrp	http://www.wikidata.org/entity/Q1087505

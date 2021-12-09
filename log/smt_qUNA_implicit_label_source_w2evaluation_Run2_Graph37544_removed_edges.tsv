@@ -1,0 +1,15 @@
+Source	Target
+http://dbpedia.org/resource/Astrology	http://ne.dbpedia.org/resource/ज्योतिष
+http://dbpedia.org/resource/Boston	http://data.nytimes.com/87213190915053133621
+http://dbpedia.org/resource/Boston	http://sw.cyc.com/concept/Mx4rvVi3gZwpEbGdrcN5Y29ycA
+http://dbpedia.org/resource/Boston	http://sws.geonames.org/4930956/
+http://dbpedia.org/resource/Boston	http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000000af9f
+http://dbpedia.org/resource/Astronomy	http://sw.opencyc.org/concept/Mx4rvq2R25wpEbGdrcN5Y29ycA
+http://sws.geonames.org/4930956/	http://ru.dbpedia.org/resource/%D0%91%D0%BE%D1%81%D1%82%D0%BE%D0%BD
+http://sw.opencyc.org/2008/06/10/concept/Mx4rvq2R25wpEbGdrcN5Y29ycA	http://sw.opencyc.org/concept/Mx4rvq2R25wpEbGdrcN5Y29ycA
+http://sw.opencyc.org/concept/Mx4rvq2R25wpEbGdrcN5Y29ycA	http://sw.cyc.com/concept/Mx4rvq2R25wpEbGdrcN5Y29ycA
+http://sw.opencyc.org/concept/Mx4rvq2R25wpEbGdrcN5Y29ycA	http://umbel.org/umbel/sc/Astrophysics
+http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000000af9f	http://dbpedia.org/resource/Boston%2C_Massachusetts
+http://sw.cyc.com/concept/Mx4rwK4sEpwpEbGdrcN5Y29ycA	http://dbpedia.org/resource/Boston,_Massachusetts
+http://sw.opencyc.org/2008/06/10/concept/Mx4rvVkIA5wpEbGdrcN5Y29ycA	http://dbpedia.org/resource/Astronomy
+http://sw.opencyc.org/concept/Mx4rvVkIA5wpEbGdrcN5Y29ycA	http://dbpedia.org/resource/Astronomy

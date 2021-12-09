@@ -1,0 +1,9 @@
+Source	Target
+http://dbpedia.org/resource/Astrology	http://ne.dbpedia.org/resource/ज्योतिष
+http://dbpedia.org/resource/Astronomy	http://sw.opencyc.org/2008/06/10/concept/Mx4rvq2R25wpEbGdrcN5Y29ycA
+http://dbpedia.org/resource/Astronomy	http://sw.opencyc.org/concept/Mx4rvq2R25wpEbGdrcN5Y29ycA
+http://rdf.freebase.com/ns/m.0dc_v	http://dbpedia.org/resource/The_Hub_of_the_Universe
+http://data.nytimes.com/25227798254860164971	http://dbpedia.org/resource/Boston,_Massachusetts
+http://dbpedia.org/resource/Pensacola%2C_Florida	http://rdf.freebase.com/ns/guid.9202a8c04000641f80000000000bc63a
+http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000000af9f	http://dbpedia.org/resource/Beantown
+http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000000af9f	http://dbpedia.org/resource/Hub_of_the_Universe

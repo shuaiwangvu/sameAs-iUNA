@@ -1,0 +1,7 @@
+Source	Target
+http://data.nytimes.com/N43842223374210835271	http://dbpedia.org/resource/Iguazu_Falls
+http://dbpedia.org/resource/Iguaz%C3%BA	http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000005f4d1
+http://dbpedia.org/resource/Iguazu_River	http://sws.geonames.org/3433488/
+http://dbpedia.org/resource/Iguazú	http://rdf.freebase.com/ns/m.0cy6k
+http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000005f4d1	http://dbpedia.org/resource/Iguacu
+http://rdf.freebase.com/ns/m.0cy6k	http://dbpedia.org/resource/Iguacu

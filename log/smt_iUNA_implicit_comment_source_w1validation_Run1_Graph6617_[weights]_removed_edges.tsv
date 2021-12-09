@@ -1,0 +1,16 @@
+Source	Target
+http://dbpedia.org/resource/Bandon,_Oregon	http://data.nytimes.com/N87963426655427413891
+http://dbpedia.org/resource/Burgundy	http://rdf.freebase.com/ns/guid.9202a8c04000641f8000000000049a5a
+http://dbpedia.org/resource/Burgundy_(French_region)	http://data.nytimes.com/43553777731027839441
+http://dbpedia.org/resource/Bay_of_Biscay	http://data.nytimes.com/N30038501401041739851
+http://rdf.freebase.com/ns/m.0lpp8	http://data.nytimes.com/43553777731027839441
+http://rdf.freebase.com/ns/m.0d5sb	http://data.nytimes.com/N30038501401041739851
+http://fr.dbpedia.org/resource/Royaume_de_Bourgogne	http://ro.dbpedia.org/resource/Regatul_Burgundia
+http://rdf.freebase.com/ns/m.03w965y	http://dbpedia.org/resource/Burgundian_kingdom
+http://rdf.freebase.com/ns/m.0zcc1	http://data.nytimes.com/N87963426655427413891
+http://data.nytimes.com/43553777731027839441	http://dbpedia.org/resource/Bourgogne
+http://data.nytimes.com/43553777731027839441	http://sws.geonames.org/3030967/
+http://data.nytimes.com/43553777731027839441	http://dbpedia.org/resource/Burgundy_%28French_region%29
+http://data.nytimes.com/N87963426655427413891	http://dbpedia.org/resource/Bandon%2C_Oregon
+http://data.nytimes.com/N87963426655427413891	http://sws.geonames.org/5712417/
+http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000051f6f5	http://dbpedia.org/resource/Second_Kingdom_of_Burgundy

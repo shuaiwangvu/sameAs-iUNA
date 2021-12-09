@@ -1,0 +1,6 @@
+Source	Target
+http://dbpedia.org/resource/Madison,_Wisconsin	http://data.nytimes.com/N42015398622290083051
+http://dbpedia.org/resource/Natchez,_Mississippi	http://data.nytimes.com/56399731571712931101
+http://dbpedia.org/resource/%C3%9Atila	http://data.nytimes.com/N75304497924591241091
+http://dbpedia.org/resource/Madison	http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000006ec5d
+http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000008f989	http://dbpedia.org/resource/Hao_%28city%29

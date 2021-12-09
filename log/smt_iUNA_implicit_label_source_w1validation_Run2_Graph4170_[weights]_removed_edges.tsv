@@ -1,0 +1,4 @@
+Source	Target
+http://dbpedia.org/resource/Agra_district	http://sws.geonames.org/1279262/
+http://rdf.freebase.com/ns/m.07rlm3	http://dbpedia.org/resource/Agra_District
+http://dbpedia.org/resource/Agra_District	http://rdf.freebase.com/ns/guid.9202a8c04000641f80000000007bca63

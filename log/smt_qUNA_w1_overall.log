@@ -1,0 +1,30 @@
+
+ method = smt
+ UNA = qUNA
+ weighting scheme = w1
+********
+dataset = validation
+
+total number of iterations over this dataset 1
+OVERALL There are 14 graphs   6 has no error edge
+OVERALL Count valid results 2
+OVERALL Count invalid results 12
+OVERALL The average precision: 0.0
+OVERALL The average recall: 0.0
+OVERALL The average precision [for termination]: 0.03571428571428571
+OVERALL The average recall [for termination]: 0.07142857142857142
+OVERALL The average Omega: 0.5066777279483283
+OVERALL Overall num edges removed 2
+********
+dataset = evaluation
+
+total number of iterations over this dataset 1
+OVERALL There are 14 graphs   5 has no error edge
+OVERALL Count valid results 0
+OVERALL Count invalid results 14
+OVERALL The average precision: 0
+OVERALL The average recall: 0
+OVERALL The average precision [for termination]: 0.025510204081632654
+OVERALL The average recall [for termination]: 0.07142857142857142
+OVERALL The average Omega: 0.45799666267628897
+OVERALL Overall num edges removed 0

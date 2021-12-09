@@ -1,0 +1,7 @@
+Source	Target
+http://dbpedia.org/resource/Brandenburg	http://ia.dbpedia.org/resource/Brandenburg
+http://dbpedia.org/resource/Brandenburg	http://rdf.freebase.com/ns/guid.9202a8c04000641f8000000000009f6f
+http://dbpedia.org/resource/Brandenburg	http://yi.dbpedia.org/resource/בראנדנבורג
+http://rdf.freebase.com/ns/m.017wh	http://bg.dbpedia.org/resource/Бранденбург_(провинция)
+http://dbpedia.org/resource/Burg_(Spreewald)	http://gadm.geovocab.org/id/2_11557
+http://dbpedia.org/resource/Berlin-Brandenburg	http://rdf.freebase.com/ns/guid.9202a8c04000641f8000000000009f6f

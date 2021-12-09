@@ -1,0 +1,5 @@
+Source	Target
+http://dbpedia.org/resource/Natchez,_Mississippi	http://data.nytimes.com/N42015398622290083051
+http://dbpedia.org/resource/%C3%9Atila	http://data.nytimes.com/N75304497924591241091
+http://data.nytimes.com/N42015398622290083051	http://sws.geonames.org/4437982/
+http://dbpedia.org/resource/Natchez%2C_Mississippi	http://sws.geonames.org/4437982/

@@ -1,0 +1,11 @@
+Source	Target
+http://rdf.freebase.com/ns/m.01zxx9	http://dbpedia.org/resource/Eklavya_Sports_Stadium
+http://rdf.freebase.com/ns/m.01zxx9	http://dbpedia.org/resource/Āgra
+http://rdf.freebase.com/ns/m.01zxx9	http://dbpedia.org/resource/आगरा
+http://dbpedia.org/resource/%C4%80gra	http://rdf.freebase.com/ns/guid.9202a8c04000641f80000000001f7389
+http://rdf.freebase.com/ns/guid.9202a8c04000641f80000000001f7389	http://dbpedia.org/resource/%E0%A4%86%E0%A4%97%E0%A4%B0%E0%A4%BE
+http://rdf.freebase.com/ns/guid.9202a8c04000641f80000000001f7389	http://dbpedia.org/resource/Eklavya_Sports_Stadium
+http://ka.dbpedia.org/resource/აგარა_(მრავალმნიშვნელოვანი)	http://dbpedia.org/resource/Agara
+http://ru.dbpedia.org/resource/Агара	http://dbpedia.org/resource/Agara
+http://dbpedia.org/resource/Agara	http://vi.dbpedia.org/resource/Agara,_Yelandur
+http://dbpedia.org/resource/Agara	http://www.wikidata.org/entity/Q4691273

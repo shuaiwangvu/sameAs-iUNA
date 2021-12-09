@@ -1,0 +1,14 @@
+Source	Target
+http://dbpedia.org/resource/Astrology	http://ne.dbpedia.org/resource/ज्योतिष
+http://dbpedia.org/resource/Astronomy	http://sw.opencyc.org/2008/06/10/concept/Mx4rvq2R25wpEbGdrcN5Y29ycA
+http://dbpedia.org/resource/Astronomy	http://sw.opencyc.org/concept/Mx4rvq2R25wpEbGdrcN5Y29ycA
+http://rdf.freebase.com/ns/m.0dc_v	http://dbpedia.org/resource/The_Hub_of_the_Universe
+http://data.nytimes.com/25227798254860164971	http://dbpedia.org/resource/Boston,_Massachusetts
+http://dbpedia.org/resource/Pensacola%2C_Florida	http://rdf.freebase.com/ns/guid.9202a8c04000641f80000000000bc63a
+http://sws.geonames.org/4168228/	http://ru.dbpedia.org/resource/%D0%9F%D0%B5%D0%BD%D1%81%D0%B0%D0%BA%D0%BE%D0%BB%D0%B0
+http://dbpedia.org/resource/%E2%9A%BC	http://rdf.freebase.com/ns/guid.9202a8c04000641f8000000000006fd3
+http://sw.opencyc.org/concept/Mx4rv9fqF5wpEbGdrcN5Y29ycA	http://www.w3.org/2006/03/wn/wn20/instances/synset-astrological-adjective-1
+http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000000af9f	http://dbpedia.org/resource/Beantown
+http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000000af9f	http://dbpedia.org/resource/Hub_of_the_Universe
+http://rdf.freebase.com/ns/m.0dc_v	http://dbpedia.org/resource/Asstronomee
+http://dbpedia.org/resource/Asstronomee	http://rdf.freebase.com/ns/guid.9202a8c04000641f8000000000062ffa

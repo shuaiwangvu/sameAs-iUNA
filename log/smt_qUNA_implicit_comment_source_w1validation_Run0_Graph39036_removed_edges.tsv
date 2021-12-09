@@ -1,0 +1,6 @@
+Source	Target
+http://dbpedia.org/resource/Berlin	http://data.nytimes.com/N50987186835223032381
+http://dbpedia.org/resource/Flint,_Michigan	http://data.nytimes.com/N15100443101042130241
+http://data.nytimes.com/N50987186835223032381	http://rdf.freebase.com/ns/en.berlin
+http://data.nytimes.com/N50987186835223032381	http://sws.geonames.org/2950159/
+http://data.nytimes.com/N50987186835223032381	http://rdf.freebase.com/ns/guid.9202a8c04000641f80000000000094d6

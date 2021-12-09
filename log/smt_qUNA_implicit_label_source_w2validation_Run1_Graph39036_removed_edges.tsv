@@ -1,0 +1,11 @@
+Source	Target
+http://dbpedia.org/resource/Berlin	http://data.nytimes.com/16057429728088573361
+http://dbpedia.org/resource/Jersey_City,_New_Jersey	http://data.nytimes.com/N50987186835223032381
+http://dbpedia.org/resource/Flint,_Michigan	http://data.nytimes.com/N15100443101042130241
+http://dbpedia.org/resource/Point_Reyes_National_Seashore	http://data.nytimes.com/N42814424980517559061
+http://sws.geonames.org/2950159/	http://ontologycentral.com/2009/01/eurostat/cities#de001l
+http://sws.geonames.org/2950159/	http://ontologycentral.com/2009/01/eurostat/geo#de300
+http://sws.geonames.org/2950159/	http://ontologycentral.com/2009/01/eurostat/cities#de001c
+http://sw.cyc.com/concept/Mx4rvVjrhpwpEbGdrcN5Y29ycA	http://dbpedia.org/resource/Berlin
+http://dbpedia.org/resource/Berlin	http://sw.opencyc.org/2008/06/10/concept/Mx4rvVjrhpwpEbGdrcN5Y29ycA
+http://dbpedia.org/resource/Berlin	http://sw.opencyc.org/concept/Mx4rvVjrhpwpEbGdrcN5Y29ycA

@@ -1,0 +1,6 @@
+Source	Target
+http://dbpedia.org/resource/Function_%28mathematics%29	http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000014aaaa
+http://dbpedia.org/resource/Function_value	http://rdf.freebase.com/ns/m.019bpb
+http://dbpedia.org/resource/Propositional_function	http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000014aaaa
+http://dbpedia.org/resource/Propositional_function	http://rdf.freebase.com/ns/m/019bpb
+http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000014aaaa	http://dbpedia.org/resource/Real-valued

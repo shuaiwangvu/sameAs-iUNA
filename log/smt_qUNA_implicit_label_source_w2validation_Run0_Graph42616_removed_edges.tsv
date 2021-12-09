@@ -1,0 +1,9 @@
+Source	Target
+http://dbpedia.org/resource/Madison,_Wisconsin	http://sws.geonames.org/5261457/
+http://dbpedia.org/resource/Madison,_Wisconsin	http://www.rdfabout.com/rdf/usgov/geo/us/wi/counties/dane_county/madison
+http://dbpedia.org/resource/Madison,_Wisconsin	http://data.nytimes.com/N42015398622290083051
+http://dbpedia.org/resource/Natchez,_Mississippi	http://data.nytimes.com/56399731571712931101
+http://dbpedia.org/resource/%C3%9Atila	http://data.nytimes.com/N75304497924591241091
+http://data.nytimes.com/N75304497924591241091	http://dbpedia.org/resource/Madison%2C_Wisconsin
+http://data.nytimes.com/N75304497924591241091	http://sws.geonames.org/5261457/
+http://dbpedia.org/resource/Madison%2C_Wisconsin	http://sw.opencyc.org/concept/Mx4rvVijoZwpEbGdrcN5Y29ycA

@@ -1,0 +1,17 @@
+
+method = smt
+********
+dataset = validation
+
+total number of iterations over this dataset 1
+OVERALL There are 2 graphs   0 has no error edge
+OVERALL Count valid results 1
+OVERALL Count invalid results 1
+OVERALL The average precision: 0.3333333333333333
+OVERALL The average recall: 0.0220125786163522
+OVERALL The average precision [for termination]: 0.0
+OVERALL The average recall [for termination]: 0.0
+OVERALL The average Omega: 0.38278640199565983
+OVERALL Overall num edges removed 21
+********
+dataset = evaluation

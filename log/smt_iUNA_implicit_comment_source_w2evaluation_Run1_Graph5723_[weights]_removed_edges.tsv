@@ -1,0 +1,10 @@
+Source	Target
+http://dbpedia.org/resource/Barack_Obama	http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000029c277
+http://da.dbpedia.org/resource/Regeringen_Barack_Obama	http://dbpedia.org/resource/Presidential_transition_of_Barack_Obama
+http://de.dbpedia.org/resource/Kabinett_Obama	http://dbpedia.org/resource/Presidential_transition_of_Barack_Obama
+http://ka.dbpedia.org/resource/ობამას_კაბინეტი	http://dbpedia.org/resource/Presidential_transition_of_Barack_Obama
+http://nl.dbpedia.org/resource/Kabinet-Obama	http://dbpedia.org/resource/Presidential_transition_of_Barack_Obama
+http://dbpedia.org/resource/Presidential_transition_of_Barack_Obama	http://es.dbpedia.org/resource/Transición_presidencial_de_Barack_Obama
+http://dbpedia.org/resource/Presidential_transition_of_Barack_Obama	http://fr.dbpedia.org/resource/Administration_Obama
+http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000029c277	http://dbpedia.org/resource/President_Barack_Obama
+http://rdf.freebase.com/ns/guid.9202a8c04000641f800000000029c277	http://dbpedia.org/resource/President_Obama

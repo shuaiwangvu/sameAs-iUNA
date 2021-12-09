@@ -1,0 +1,16 @@
+Source	Target
+http://dbpedia.org/resource/Berlin	http://data.nytimes.com/16057429728088573361
+http://dbpedia.org/resource/Jersey_City,_New_Jersey	http://data.nytimes.com/N50987186835223032381
+http://dbpedia.org/resource/Tirana	http://sw.opencyc.org/2008/06/10/concept/Mx4rvViOHJwpEbGdrcN5Y29ycA
+http://dbpedia.org/resource/Tirana	http://sw.opencyc.org/concept/Mx4rvViOHJwpEbGdrcN5Y29ycA
+http://dbpedia.org/resource/Flint,_Michigan	http://data.nytimes.com/N15100443101042130241
+http://dbpedia.org/resource/Point_Reyes_National_Seashore	http://data.nytimes.com/N42814424980517559061
+http://data.nytimes.com/80989572077620084871	http://data.nytimes.com/point_reyes_national_seashore_calif_geo
+http://sws.geonames.org/2950159/	http://ontologycentral.com/2009/01/eurostat/cities#de001c
+http://rdf.freebase.com/ns/guid.9202a8c04000641f80000000000094d6	http://dbpedia.org/resource/Berolina
+http://rdf.freebase.com/ns/en.berlin	http://dbpedia.org/resource/Berolina
+http://dbpedia.org/resource/Tirana	http://data.nytimes.com/80989572077620084871
+http://data.nytimes.com/N50987186835223032381	http://dbpedia.org/resource/Berlin
+http://data.nytimes.com/N50987186835223032381	http://sws.geonames.org/2950159/
+http://rdf.freebase.com/ns/guid.9202a8c04000641f80000000000094d6	http://dbpedia.org/resource/Berlin
+http://rdf.freebase.com/ns/en.berlin	http://dbpedia.org/resource/Berlin
