@@ -1,4 +1,0 @@
-<http://data.nytimes.com/25227798254860164971> <http://www.w3.org/2004/02/skos/core#inScheme> "http://sws.geonames.org/4229546/about.rdf"^^<http://www.w3.org/2001/XMLSchema#string> .
-<http://sws.geonames.org/4168228/> <http://www.w3.org/2000/01/rdf-schema#isDefinedBy> "http://sws.geonames.org/4168228/about.rdf"^^<http://www.w3.org/2001/XMLSchema#string> .
-<http://data.nytimes.com/87213190915053133621> <http://www.w3.org/2004/02/skos/core#inScheme> "http://sws.geonames.org/6534293/about.rdf"^^<http://www.w3.org/2001/XMLSchema#string> .
-<http://sws.geonames.org/4930956/> <http://www.w3.org/2000/01/rdf-schema#isDefinedBy> "http://sws.geonames.org/4930956/about.rdf"^^<http://www.w3.org/2001/XMLSchema#string> .
