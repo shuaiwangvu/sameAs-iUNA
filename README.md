@@ -20,7 +20,9 @@ Other folder consists of Python scripts that are related to different sections o
 - `/script_for_metalink` are the files corresponding to the metalink. 
 - `validating_scripts` are the Python scripts used for the validation of the UNAs. 
 
-Some more scripts used for testing are included in `/testing_scripts`
+Some more scripts used for testing are included in `/testing_scripts`. The log files can be outdated. Please refer to the following repository for data. 
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7765113.svg)](https://doi.org/10.5281/zenodo.7765113)
 
 Please report errors to Shuai Wang at shuai.wang@vu.nl. Thank you!
 
