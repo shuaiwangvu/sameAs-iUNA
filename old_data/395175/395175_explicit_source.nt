@@ -1,5 +1,0 @@
-<http://sws.geonames.org/3433488/> <http://www.w3.org/2000/01/rdf-schema#isDefinedBy> "http://sws.geonames.org/3433488/about.rdf"^^<http://www.w3.org/2001/XMLSchema#string> .
-<http://sws.geonames.org/4791259/> <http://www.w3.org/2000/01/rdf-schema#isDefinedBy> "http://sws.geonames.org/4791259/about.rdf"^^<http://www.w3.org/2001/XMLSchema#string> .
-<http://sws.geonames.org/3461471/> <http://www.w3.org/2000/01/rdf-schema#isDefinedBy> "http://sws.geonames.org/3461471/about.rdf"^^<http://www.w3.org/2001/XMLSchema#string> .
-<http://data.nytimes.com/4719459804274384821> <http://www.w3.org/2004/02/skos/core#inScheme> "http://sws.geonames.org/586946/about.rdf"^^<http://www.w3.org/2001/XMLSchema#string> .
-<http://data.nytimes.com/N43842223374210835271> <http://www.w3.org/2004/02/skos/core#inScheme> "http://sws.geonames.org/5324442/about.rdf"^^<http://www.w3.org/2001/XMLSchema#string> .
